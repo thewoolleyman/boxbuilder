@@ -1,0 +1,2 @@
+# Example config script for boxbuilder
+export boxbuilder_example_var=example_value
