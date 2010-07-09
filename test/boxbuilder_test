@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+#  http://github.com/thewoolleyman/boxbuilder
+#  Copyright (c) 2010 Chad Woolley - The MIT License
+
+set -o noclobber
+set -e
+set -o pipefail
+set -o nounset
+trap 'echo BOXBUILDER - boxbuilder_test: error on line $LINENO' ERR
+
+. `dirname $0`/../boxbuilder_utils
+. `dirname $0`/test_helper
+
+setup() {
+  keypair=${keypair:?Please set 'keypair' to the path of your ssh private key file}
+  user=${user:?Please set 'user' to the ssh user on the box you are using to test}
+  host=${host:?Please set 'host' to the hostname or IP of the box you are using to test}
+}
+
+test_sets_domain_to_localdomain() {
+  domain_name=$(exec_remotely "hostname -d")
+  assert_equal 'localdomain' $domain_name 
+}
+
+suite() {
+  setup
+  test_sets_domain_to_localdomain
+  echo "All tests completed"
+}
+
+suite

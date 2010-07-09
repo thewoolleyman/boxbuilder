@@ -1,0 +1,11 @@
+#  http://github.com/thewoolleyman/boxbuilder
+#  Copyright (c) 2010 Chad Woolley - The MIT License
+
+exec_remotely() {
+  local arg_array i rc
+  for arg; do
+    arg_array[i++]=$(printf %q "$arg")
+  done
+#  echo "ssh -i $keypair $user@$host \"$@\""
+  ssh -i $keypair $user@$host "$@"
+}
