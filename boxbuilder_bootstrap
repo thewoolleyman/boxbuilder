@@ -7,7 +7,7 @@ set -o noclobber
 set -e
 set -o pipefail
 set -o nounset
-trap 'echo BOXBUILDER - boxbuilder_remote_bootstrap: error on line $LINENO' ERR
+trap 'echo BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO' ERR
 
 
 run() {
