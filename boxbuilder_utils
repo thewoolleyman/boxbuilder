@@ -6,6 +6,6 @@ exec_remotely() {
   for arg; do
     arg_array[i++]=$(printf %q "$arg")
   done
-#  echo "ssh -i $keypair $user@$host \"$@\""
-  ssh -i $keypair $user@$host "$@"
+#  echo "ssh -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_host \"$@\""
+  ssh -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_host "$@"
 }

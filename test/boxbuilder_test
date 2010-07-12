@@ -9,18 +9,18 @@ set -o pipefail
 set -o nounset
 trap 'echo BOXBUILDER - boxbuilder_test: error on line $LINENO' ERR
 
-. `dirname $0`/../boxbuilder_utils
-. `dirname $0`/test_helper
-
 setup() {
-  keypair=${keypair:?Please set 'keypair' to the path of your ssh private key file}
-  user=${user:?Please set 'user' to the ssh user on the box you are using to test}
-  host=${host:?Please set 'host' to the hostname or IP of the box you are using to test}
+  . `dirname $0`/../boxbuilder_utils
+  . `dirname $0`/test_helper
+  . $HOME/.boxbuilderrc
+  boxbuilder_keypair=${boxbuilder_keypair:?Please set 'boxbuilder_keypair' to the path of your ssh private key file}
+  boxbuilder_user=${boxbuilder_user:?Please set 'boxbuilder_user' to the ssh user on the box you are using to test}
+  boxbuilder_host=${boxbuilder_host:?Please set 'boxbuilder_host' to the hostname or IP of the box you are using to test}
 }
 
 test_sets_domain_to_localdomain() {
   domain_name=$(exec_remotely "hostname -d")
-  assert_equal 'localdomain' $domain_name 
+  assert_equal 'localdomain' $domain_name
 }
 
 suite() {

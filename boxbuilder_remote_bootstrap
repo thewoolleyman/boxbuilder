@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+#  http://github.com/thewoolleyman/boxbuilder
+#  Copyright (c) 2010 Chad Woolley - The MIT License
+
+set -o noclobber
+set -e
+set -o pipefail
+set -o nounset
+trap 'echo BOXBUILDER - boxbuilder: error on line $LINENO' ERR
+
+
+run() {
+}
+
+run

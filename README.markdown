@@ -68,9 +68,15 @@ some other automated process to automatically build boxes.
 boxbuilder\_remote\_bootstrap environment variables
 ---------------------------------------------------
 
+    boxbuilder_keypair=path_to_private_key
+    boxbuilder_user=user_for_box_to_build
     boxbuilder_host=hostname_or_ip_of_box_to_build
 
-Set 'boxbuilder\_host' to the hostname or IP address of the machine you want to build.
+Set 'boxbuilder\_keypair' to the path of your private key which will allow you to log in to
+machine to build (you should already have your public key in ~/.ssh/authorized_keys).  Set 
+'boxbuilder\_user' to the user, and 'boxbuilder\_host' to the hostname or IP address of the
+machine you want to build.
+
 'boxbuilder\_remote\_bootstrap' will issue remote SSH commands to automatically download
 and run 'boxbuilder\_bootstrap'.
 
@@ -134,3 +140,11 @@ boxbuilder\_remote_build\_ami script
 ====================================
 
 TODO: docs
+
+TESTING
+=======
+
+Boxbuilder has a test suite which runs boxbuilder against a live machine, then asserts that it was
+built correctly.  It requires the same SSH variables to be set as 'boxbuilder\_remote\_bootstrap'
+('boxbuilder\_keypair', 'boxbuilder\_user', and 'boxbuilder\_host').  It will also read these and
+any other variables set in ~/.boxbuilderrc.
