@@ -18,14 +18,21 @@ setup() {
   boxbuilder_host=${boxbuilder_host:?Please set 'boxbuilder_host' to the hostname or IP of the box you are using to test}
 }
 
-test_sets_domain_to_localdomain() {
-  domain_name=$(exec_remotely "hostname -d")
-  assert_equal 'localdomain' $domain_name
+test_can_log_in_as_user() {
+  remote_user=$(exec_remotely_quiet "whoami")
+  assert_equal $boxbuilder_user $remote_user
+}
+
+test_can_download_boxbuilder_bootstrap() {
+  `dirname $0`/../boxbuilder_remote_bootstrap
+  expected_path=$(exec_remotely_quiet "which /tmp/boxbuilder_bootstrap")
+  assert_equal '/tmp/boxbuilder_bootstrap' $expected_path
 }
 
 suite() {
   setup
-  test_sets_domain_to_localdomain
+  test_can_log_in_as_user
+  test_can_download_boxbuilder_bootstrap
   echo "All tests completed"
 }
 

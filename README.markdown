@@ -88,6 +88,12 @@ boxbuilder config variables from their default values or values which will be lo
 script; but is only passed on to the 'boxbuilder\_bootstrap' script when it is invoked via SSH on
 the remote box which is being built.
 
+    boxbuilder_bootstrap_url=http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap
+
+'boxbuilder\_bootstrap\_url' is the location from which the boxbuilder\_bootstrap script will be downloaded
+onto the remote box being built.  Override it to use your custom boxbuilder\_bootstrap script instead of
+the default.
+
 boxbuilder script
 =================
 
