@@ -11,6 +11,7 @@ trap 'echo BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO' ERR
 
 
 run() {
+  echo "BOXBUILDER: Running boxbuilder_bootstrap ..."
 }
 
 run

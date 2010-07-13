@@ -16,6 +16,7 @@ setup() {
   boxbuilder_user=${boxbuilder_user:?Please set 'boxbuilder_user' to the ssh user on the box you are using to test}
   boxbuilder_host=${boxbuilder_host:?Please set 'boxbuilder_host' to the hostname or IP of the box you are using to test}
   boxbuilder_bootstrap_url=${boxbuilder_bootstrap_url:-http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap}
+  boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder=boxbuilder_config_placeholder'}
 }
 
 remote_bootstrap() {
