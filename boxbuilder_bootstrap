@@ -70,6 +70,7 @@ check_out_boxbuilder() {
     echo "BOXBUILDER - boxbuilder_bootstrap: Directory $boxbuilder_dir already exists.  Not cloning"
   else
     echo "BOXBUILDER - boxbuilder_bootstrap: Cloning $boxbuilder_branch branch from $boxbuilder_repo to directory $boxbuilder_dir ..."
+    echo "BOXBUILDER - boxbuilder_bootstrap: git clone -b $boxbuilder_branch $boxbuilder_repo $boxbuilder_dir"
     git clone -b $boxbuilder_branch $boxbuilder_repo $boxbuilder_dir
   fi
 }
