@@ -76,7 +76,7 @@ check_out_boxbuilder() {
 }
 
 run_boxbuilder() {
-  $boxbuilder_script=$boxbuilder_dir/boxbuilder
+  boxbuilder_script=$boxbuilder_dir/boxbuilder
   if [ -x $boxbuilder_script ]; then
     echo "BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO - No executable script found at $boxbuilder_script."
     return 1
