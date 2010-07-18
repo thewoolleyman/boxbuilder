@@ -74,7 +74,7 @@ check_out_boxbuilder() {
   fi
 }
 
-invoke_boxbuilder() {
+run_boxbuilder() {
   $boxbuilder_script=$boxbuilder_dir/boxbuilder
   if [ -x $boxbuilder_script ]; then
     echo "BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO - No executable script found at $boxbuilder_script."
@@ -90,6 +90,8 @@ run() {
   setup
   grant_nopasswd_sudo_access
   install_git
+  check_out_boxbuilder
+  run_boxbuilder
 }
 
 run
