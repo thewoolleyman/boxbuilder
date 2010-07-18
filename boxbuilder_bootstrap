@@ -52,7 +52,7 @@ grant_nopasswd_sudo_access() {
     fi
     sudo cp /tmp/sudoers.new /etc/sudoers
   else
-    set +e
+    set -e
     echo "admin group already appears to have NOPASSWD sudo access."
   fi  
 }
