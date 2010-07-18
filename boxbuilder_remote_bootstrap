@@ -7,7 +7,7 @@ set -o noclobber
 set -e
 set -o pipefail
 set -o nounset
-trap 'echo BOXBUILDER - boxbuilder_remote_bootstrap: error on line $LINENO' ERR
+trap 'echo BOXBUILDER: boxbuilder_remote_bootstrap: error on line $LINENO' ERR
 
 # NOTE: the exec_remotely_* functions are duplicated here from boxbuilder_utils, so users
 # can easily wget and run boxbuilder_remote_bootstrap as a single standalone script
