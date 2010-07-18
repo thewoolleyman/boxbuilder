@@ -46,10 +46,11 @@ boxbuilder\_bootstrap environment variables
 -------------------------------------------
 
     boxbuilder_repo=git://github.com/thewoolleyman/boxbuilder.git
+    boxbuilder_branch=master
+    boxbuilder_dir=$HOME/.boxbuilder/
 
-The Git Repository from which to download and run the boxbuilder project.  If
-the ~/.boxbuilder/boxbuilder file already exists, nothing will be downloaded
-or overwritten.
+The Git repository, branch, and directory to use when cloning and run the boxbuilder project.  If
+the ~/.boxbuilder/ directory already exists, nothing will be downloaded or overwritten.
 
     boxbuilder_config="export override_variable1=value; export override_variable2=value"
 

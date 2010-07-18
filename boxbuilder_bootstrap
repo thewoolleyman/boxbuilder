@@ -7,63 +7,86 @@ set -o noclobber
 set -e
 set -o pipefail
 set -o nounset
-trap 'echo BOXBUILDER: boxbuilder_bootstrap: error on line $LINENO' ERR
+trap 'echo BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO' ERR
 
 setup() {
   if [ -e $HOME/.boxbuilderrc ]; then
     . $HOME/.boxbuilderrc
   fi
-  boxbuilder_user=${boxbuilder_user:-$USER}
-  boxbuilder_host=${boxbuilder_host:-$HOSTNAME}
   boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder=boxbuilder_config_placeholder'}
+  boxbuilder_user=$USER
+  boxbuilder_host=$HOSTNAME
+  boxbuilder_repo=${boxbuilder_repo:-git://github.com/thewoolleyman/boxbuilder.git}
+  boxbuilder_branch=${boxbuilder_host:-master}
+  boxbuilder_dir=${boxbuilder_dir:-$HOME/.boxbuilder/}
 }
 
 grant_nopasswd_sudo_access() {
-  echo "BOXBUILDER:Checking 'admin' group membership for user $boxbuilder_user on host $boxbuilder_host."
+  echo "BOXBUILDER: Checking 'admin' group membership for user $boxbuilder_user on host $boxbuilder_host."
   set +e
   groups | grep -q -e "admin"
   if [ ! $? = 0 ]; then
-    echo "BOXBUILDER: boxbuilder_bootstrap: error on line $LINENO: user $boxbuilder_user is not a member of the 'admin' group on host $boxbuilder_host.  Please add..."
+    echo "BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO - user $boxbuilder_user is not a member of the 'admin' group on host $boxbuilder_host.  Please add..."
     return 1
   fi
   set -e
 
-  echo "BOXBUILDER:Checking no-password sudo access for 'admin' group on host $boxbuilder_host and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
+  echo "BOXBUILDER - boxbuilder_bootstrap: Checking no-password sudo access for 'admin' group on host $boxbuilder_host and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
   set +e
   sudo grep -e "%admin.*ALL.*=.*NOPASSWD.*:.*ALL" /etc/sudoers
   if [ ! $? = 0 ]; then
     set -e
-    echo "BOXBUILDER: Giving user $boxbuilder_user NO PASSWORD sudo privileges"
+    echo "BOXBUILDER - boxbuilder_bootstrap: Giving user $boxbuilder_user NO PASSWORD sudo privileges"
     sudo rm -f /tmp/sudoers.new
     sudo cp /etc/sudoers /etc/sudoers.bak
     sudo cp /etc/sudoers /tmp/sudoers.new
     new_sudoers_line="%admin ALL=NOPASSWD: ALL"
     sudo sh -c "echo \"$new_sudoers_line\" >> /tmp/sudoers.new"
     if [ ! -e /tmp/sudoers.new ]; then
-      echo "BOXBUILDER: boxbuilder_bootstrap: error on line $LINENO: Could not add create /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+      echo "BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO - Could not add create /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
       return 1
     fi
     set -e
     sudo visudo -c -s -f /tmp/sudoers.new
     set +e
     if [ ! $? = 0 ]; then
-      echo "BOXBUILDER: boxbuilder_bootstrap: error on line $LINENO: Syntax error in /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+      echo "BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO -: Syntax error in /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
       return 1
     fi
     sudo cp /tmp/sudoers.new /etc/sudoers
   else
     set -e
-    echo "BOXBUILDER: admin group already appears to have NOPASSWD sudo access."
+    echo "BOXBUILDER - boxbuilder_bootstrap: admin group already appears to have NOPASSWD sudo access."
   fi  
 }
 
 install_git() {
-  echo "BOXBUILDER: Installing git"
+  echo "BOXBUILDER - boxbuilder_bootstrap: Installing git"
   sudo apt-get install -y git-core
 }
 
+check_out_boxbuilder() {
+  if [ -d $boxbuilder_dir ]; then
+    echo "BOXBUILDER - boxbuilder_bootstrap: Directory $boxbuilder_dir already exists.  Not cloning"
+  else
+    echo "BOXBUILDER - boxbuilder_bootstrap: Cloning $boxbuilder_branch branch from $boxbuilder_repo to directory $boxbuilder_dir ..."
+    git clone -b $boxbuilder_branch $boxbuilder_repo $boxbuilder_dir
+  fi
+}
+
+invoke_boxbuilder() {
+  $boxbuilder_script=$boxbuilder_dir/boxbuilder
+  if [ -x $boxbuilder_script ]; then
+    echo "BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO - No executable script found at $boxbuilder_script."
+    return 1
+  else
+    echo "BOXBUILDER - boxbuilder_bootstrap: Running boxbuilder script at $boxbuilder_script ..."
+    . $boxbuilder_script
+  fi
+}
+
 run() {
-  echo "BOXBUILDER: Running boxbuilder_bootstrap ..."
+  echo "BOXBUILDER - boxbuilder_bootstrap: Starting ..."
   setup
   grant_nopasswd_sudo_access
   install_git
