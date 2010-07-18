@@ -9,9 +9,58 @@ set -o pipefail
 set -o nounset
 trap 'echo BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO' ERR
 
+setup() {
+  if [ -e $HOME/.boxbuilderrc ]; then
+    . $HOME/.boxbuilderrc
+  fi
+  boxbuilder_user=${boxbuilder_user:-$USER}
+  boxbuilder_host=${boxbuilder_host:-$HOSTNAME}
+  boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder=boxbuilder_config_placeholder'}
+}
+
+grant_nopasswd_sudo_access() {
+  echo "Checking 'admin' group membership for user $boxbuilder_user on host $boxbuilder_host."
+  set +e
+  groups | grep -q -e "admin"
+  if [ ! $? = 0 ]; then
+    echo "BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO: user $boxbuilder_user is not a member of the 'admin' group on host $boxbuilder_host.  Please add..."
+    return 1
+  fi
+  set -e
+
+  echo "Checking no-password sudo access for 'admin' group on host $boxbuilder_host and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
+  set +e
+  sudo grep -e "%admin.*ALL.*=.*NOPASSWD.*:.*ALL" /etc/sudoers
+  if [ ! $? = 0 ]; then
+    set -e
+    echo "  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
+    sudo rm -f /tmp/sudoers.new
+    sudo cp /etc/sudoers /etc/sudoers.bak
+    sudo cp /etc/sudoers /tmp/sudoers.new
+    new_sudoers_line="%admin ALL=NOPASSWD: ALL"
+    sudo sh -c "echo \"$new_sudoers_line\" >> /tmp/sudoers.new"
+    if [ ! -e /tmp/sudoers.new ]; then
+      echo "BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO: Could not add create /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+      return 1
+    fi
+    set -e
+    sudo visudo -c -s -f /tmp/sudoers.new
+    set +e
+    if [ ! $? = 0 ]; then
+      echo "BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO: Syntax error in /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+      return 1
+    fi
+    sudo cp /tmp/sudoers.new /etc/sudoers
+  else
+    set +e
+    echo "admin group already appears to have NOPASSWD sudo access."
+  fi  
+}
 
 run() {
   echo "BOXBUILDER: Running boxbuilder_bootstrap ..."
+  setup
+  grant_nopasswd_sudo_access
 }
 
 run

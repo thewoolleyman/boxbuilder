@@ -1,0 +1,2 @@
+# Example/default config script for boxbuilder
+export boxbuilder_user=ubuntu
