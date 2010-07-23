@@ -1,15 +1,33 @@
 #  http://github.com/thewoolleyman/boxbuilder
 #  Copyright (c) 2010 Chad Woolley - The MIT License
 
+set -o noclobber
+set -e
+set -o pipefail
+set -o nounset
 trap 'echo BOXBUILDER: boxbuilder_test: error on line $LINENO' ERR
 
 assert_equal() {
   set +o nounset
   if [[ ! $1 = $2 ]]; then
     echo "Expected $2 to be equal to $1"
-    echo `caller 0`
+    echo "Failure at line, method, file:" `caller 0`
     set -o nounset
     return 1
   fi
   set -o nounset
+}
+
+assert_match() {
+  set +e
+  set +o nounset
+  echo $2 | grep -e $1
+  if [[ ! $? = 0 ]]; then
+    echo "Expected $2 to match $1"
+    echo "Failure at line, method, file:" `caller 0`
+    set -o nounset
+    return 1
+  fi
+  set -o nounset
+  set -e  
 }

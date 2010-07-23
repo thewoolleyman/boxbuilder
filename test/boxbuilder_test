@@ -18,7 +18,6 @@ exec_remotely_quiet() {
 }
 
 setup() {
-  . `dirname $0`/../boxbuilder_utils
   . `dirname $0`/test_helper
   . $HOME/.boxbuilderrc
   boxbuilder_keypair=${boxbuilder_keypair:?Please set 'boxbuilder_keypair' to the path of your ssh private key file}
