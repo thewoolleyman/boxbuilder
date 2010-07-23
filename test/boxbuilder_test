@@ -36,10 +36,17 @@ test_can_download_boxbuilder_bootstrap() {
   assert_equal '/tmp/boxbuilder_bootstrap' $expected_path
 }
 
+test_can_install_rvm() {
+  `dirname $0`/../boxbuilder_remote_bootstrap
+  rvm_info=$(exec_remotely_quiet "rvm info")
+  assert_match 'rubyqwerqwer' $rvm_info
+}
+
 suite() {
   setup
   test_can_log_in_as_user
   test_can_download_boxbuilder_bootstrap
+  test_can_install_rvm
   echo "All tests completed"
 }
 

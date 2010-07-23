@@ -29,5 +29,5 @@ assert_match() {
     return 1
   fi
   set -o nounset
-  set -e  
+  set -e
 }
