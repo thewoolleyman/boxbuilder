@@ -137,6 +137,10 @@ on the box which is being built.  This should be a path to a file
 in one of your 'boxbuilder\_chef\_repos' which boxbuilder automatically downloaded to
 ~/.chef/{your repo}
 
+    boxbuilder_default_ruby=1.8.7-p174
+
+'boxbuilder\_default\_ruby' is the version of the Ruby interpreter which will be installed as the
+RVM default, and used to install and run chef.
 
 boxbuilder\_build\_ami script
 =============================

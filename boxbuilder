@@ -18,11 +18,85 @@ setup() {
   boxbuilder_chef_repos=${boxbuilder_chef_repos:-"git://github.com/thewoolleyman/boxbuilder_example1_chef_repo.git,git://github.com/thewoolleyman/boxbuilder_example2_chef_repo.git"}
   boxbuilder_chef_config_path=${boxbuilder_chef_config_path:-"$HOME/.chef/boxbuilder_example1_chef_repo/config/solo.rb"}
   boxbuilder_chef_json_path=${boxbuilder_chef_json_path:-"$HOME/.chef/boxbuilder_chef_example1_chef_repo/config/node.json"}
+  boxbuilder_default_ruby=${boxbuilder_default:-'1.8.7-p174'}
 }
+
+setup_boxbuilderrc() {
+  echo "BOXBUILDER - boxbuilder:  Setting up ~/.boxbuilderrc ..."
+  echo "BOXBUILDER - boxbuilder:  Creating ~/.boxbuilderrc to call ~/.boxbuilderrc_donwload ..."
+  echo "BOXBUILDER - boxbuilder:  Downloading ~/.boxbuilderrc_download from $boxbuilderrc_url ..."
+  echo "BOXBUILDER - boxbuilder:  Finished setting up ~/.boxbuilderrc ..."
+}
+
+install_packages() {
+  echo "BOXBUILDER - boxbuilder:  Installing packages..."
+  echo "BOXBUILDER - boxbuilder:  Updating Aptitude..."
+  sudo apt-get update
+  echo "BOXBUILDER - boxbuilder:  Installing packages to build Ruby..."
+  sudo apt-get install -y build-essential zlib1g zlib1g-dev libssl-dev openssl libreadline5-dev
+  echo "BOXBUILDER - boxbuilder:  Installing packages used/recommended by RVM..."
+  sudo apt-get install -y bison libxml2-dev git-core autoconf
+  echo "BOXBUILDER - boxbuilder:  Finished installing packages..."
+}
+
+install_rvm() {
+  echo "BOXBUILDER - boxbuilder:  Installing RVM..."
+  curl -O http://rvm.beginrescueend.com/releases/rvm-install-latest
+  chmod a+x rvm-install-latest
+  ./rvm-install-latest
+  echo "BOXBUILDER - boxbuilder:  Finished installing RVM..."
+}
+
+enable_rvm() {
+  echo "BOXBUILDER - boxbuilder:  Enabling RVM in init file $init_file"
+  rvm_init="if [[ -s $HOME/.rvm/scripts/rvm ]] ; then source $HOME/.rvm/scripts/rvm ; fi"
+  if rvm_line=$(grep '.rvm' $init_file); test -z "$rvm_line"; then
+    echo $rvm_init >> $init_file
+  fi
+  # mount proc to avoid error message from sed: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=559539
+  # sudo mount -t proc none /proc/  # comment for now, fails if proc already mounted
+  sed -i'.bak' -e 's/^.*&& return.*$//' $init_file
+  source $init_file
+  echo "BOXBUILDER - boxbuilder:  Finished enabling RVM in init file $init_file"
+}
+
+install_rvm_ruby() {
+  echo "BOXBUILDER - boxbuilder:  Installing RVM default ruby: $boxbuilder_default_ruby"
+  rvm install $boxbuilder_default_ruby
+  echo "BOXBUILDER - boxbuilder:  Finished installing RVM default ruby: $boxbuilder_default_ruby"
+}
+
+set_rvm_default_ruby() {
+  echo "BOXBUILDER - boxbuilder:  Setting RVM default ruby: $boxbuilder_default_ruby"
+  set +e
+  rvm --default use $boxbuilder_default_ruby
+  echo "RC=$?"
+  set -e
+  echo "BOXBUILDER - boxbuilder:  Finished setting RVM default ruby: $boxbuilder_default_ruby"
+}
+
+setup_rvm() {
+  echo "BOXBUILDER - boxbuilder:  Setting up RVM..."
+  install_rvm
+  for init_file in ~/.bashrc ~/.bash_profile
+  do
+    if [[ -e $init_file ]]; then
+      set +e  # turn off return code checking for now, failing with output 'tput: unknown terminal "unknown"'
+      enable_rvm
+      set -e
+    fi
+  done
+  install_rvm_rubies
+  set_rvm_default_ruby
+  echo "BOXBUILDER - boxbuilder:  Finished setting up RVM..."
+}
+
 
 run() {
   echo "BOXBUILDER - boxbuilder: Starting ..."
   setup
+  setup_boxbuilderrc
+  setup_rvm
 }
 
 run
