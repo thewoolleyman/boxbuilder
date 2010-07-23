@@ -13,7 +13,7 @@ setup() {
   if [ -e $HOME/.boxbuilderrc ]; then
     . $HOME/.boxbuilderrc
   fi
-  boxbuilder_config=${boxbuilder_config:-"export boxbuilder_config_placeholder=boxbuilder_config_placeholder"}
+  boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder=boxbuilder_config_placeholder_from_boxbuilder'}
   boxbuilderrc_url=${boxbuilderrc_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_default"}
   boxbuilder_chef_repos=${boxbuilder_chef_repos:-"git://github.com/thewoolleyman/boxbuilder_example1_chef_repo.git,git://github.com/thewoolleyman/boxbuilder_example2_chef_repo.git"}
   boxbuilder_chef_config_path=${boxbuilder_chef_config_path:-"$HOME/.chef/boxbuilder_example1_chef_repo/config/solo.rb"}

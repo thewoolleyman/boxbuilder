@@ -13,7 +13,7 @@ setup() {
   if [ -e $HOME/.boxbuilderrc ]; then
     . $HOME/.boxbuilderrc
   fi
-  boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder=boxbuilder_config_placeholder'}
+  boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder_bootstrap=boxbuilder_config_placeholder_from_boxbuilder_bootstrap'}
   boxbuilder_user=$USER
   boxbuilder_host=$HOSTNAME
   boxbuilder_repo=${boxbuilder_repo:-"git://github.com/thewoolleyman/boxbuilder.git"}
