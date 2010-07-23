@@ -9,6 +9,14 @@ set -o pipefail
 set -o nounset
 trap 'echo BOXBUILDER: boxbuilder_test: error on line $LINENO' ERR
 
+exec_remotely_quiet() {
+  local arg_array i rc
+  for arg; do
+    arg_array[i++]=$(printf %q "$arg")
+  done
+  ssh -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_host "$@"
+}
+
 setup() {
   . `dirname $0`/../boxbuilder_utils
   . `dirname $0`/test_helper

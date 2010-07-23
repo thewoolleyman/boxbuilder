@@ -1,2 +1,3 @@
 # Example/default config script for boxbuilder
 export boxbuilder_user=ubuntu
+# TODO: Source .boxbuilderrc_download from current user's directory

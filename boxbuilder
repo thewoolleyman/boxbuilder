@@ -9,9 +9,19 @@ set -o pipefail
 set -o nounset
 trap 'echo BOXBUILDER - boxbuilder: error on line $LINENO' ERR
 
+setup() {
+  if [ -e $HOME/.boxbuilderrc ]; then
+    . $HOME/.boxbuilderrc
+  fi
+  boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder=boxbuilder_config_placeholder'}
+  boxbuilderrc_url=${boxbuilderrc_url:-http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_default}
+  boxbuilder_chef_config_path=${boxbuilderrc_url:-/home/user/.chef/boxbuilder_chef_repo/config/solo.rb}
+  boxbuilder_chef_config_path=${boxbuilder_chef_config_path:-/home/user/.chef/boxbuilder_chef_repo/config/node.json}
+}
 
 run() {
   echo "BOXBUILDER - boxbuilder: Starting ..."
+  setup
 }
 
 run
