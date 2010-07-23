@@ -116,7 +116,7 @@ boxbuilder environment variables
 'boxbuilderrc\_url' is the URL to a boxbuilder config script which will be automatically
 downloaded to ~/.boxbuilderrc\_download on the box which is being built.
 
-    boxbuilder_chef_repos=git://github.com/thewoolleyman/boxbuilder_chef_repo.git[,git://github.com/user/custom_chef_repo.git[,...]]
+    boxbuilder_chef_repos=git://github.com/thewoolleyman/boxbuilder_example1_chef_repo.git[,git://github.com/thewoolleyman/boxbuilder_example2_chef_repo.git[,...]]
 
 'boxbuilder\_chef_repos' is a comma-delimited list of Chef Git repositories which will be automatically
 downloaded by boxbuilder.  They will be checked out under ~/.chef on the box which is being built.

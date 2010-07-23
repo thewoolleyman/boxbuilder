@@ -16,9 +16,9 @@ setup() {
   boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder=boxbuilder_config_placeholder'}
   boxbuilder_user=$USER
   boxbuilder_host=$HOSTNAME
-  boxbuilder_repo=${boxbuilder_repo:-git://github.com/thewoolleyman/boxbuilder.git}
-  boxbuilder_branch=${boxbuilder_host:-master}
-  boxbuilder_dir=${boxbuilder_dir:-$HOME/.boxbuilder/}
+  boxbuilder_repo=${boxbuilder_repo:-"git://github.com/thewoolleyman/boxbuilder.git"}
+  boxbuilder_branch=${boxbuilder_host:-"master"}
+  boxbuilder_dir=${boxbuilder_dir:-"$HOME/.boxbuilder/"}
 }
 
 grant_nopasswd_sudo_access() {
