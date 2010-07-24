@@ -43,6 +43,7 @@ setup_boxbuilderrc() {
 
 install_packages() {
   echo "BOXBUILDER - boxbuilder:  Installing packages..."
+  # TODO: iterate over $boxbuilder_prerequisite_packages and use dpkg to determine if they are installed.  If they all are, skip update and install
   echo "BOXBUILDER - boxbuilder:  Updating Aptitude..."
   sudo apt-get update
   echo "BOXBUILDER - boxbuilder:  Installing prerequisite packages for RVM/Ruby..."
