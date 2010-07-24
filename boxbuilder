@@ -67,13 +67,17 @@ enable_rvm() {
   # mount proc to avoid error message from sed: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=559539
   # sudo mount -t proc none /proc/  # comment for now, fails if proc already mounted
   sed -i'.bak' -e 's/^.*&& return.*$//' $init_file
+  set +u
   source $init_file
+  set -u
   echo "BOXBUILDER - boxbuilder:  Finished enabling RVM in init file $init_file"
 }
 
 install_rvm_ruby() {
   echo "BOXBUILDER - boxbuilder:  Installing RVM default ruby: $boxbuilder_default_ruby"
+  set +u
   rvm install $boxbuilder_default_ruby
+  set -u
   echo "BOXBUILDER - boxbuilder:  Finished installing RVM default ruby: $boxbuilder_default_ruby"
 }
 
@@ -97,7 +101,7 @@ setup_rvm() {
       set -e
     fi
   done
-  install_rvm_rubies
+  install_rvm_ruby
   set_rvm_default_ruby
   echo "BOXBUILDER - boxbuilder:  Finished setting up RVM..."
 }
