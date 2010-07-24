@@ -111,7 +111,7 @@ on a barebones box with a newly installed OS, it will do the following:
 boxbuilder environment variables
 --------------------------------
 
-    boxbuilderrc_url=http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_default
+    boxbuilderrc_url=http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_default
 
 'boxbuilderrc\_url' is the URL to a boxbuilder config script which will be automatically
 downloaded to ~/.boxbuilderrc\_download on the box which is being built.
