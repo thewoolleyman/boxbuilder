@@ -106,6 +106,7 @@ setup_rvm() {
 run() {
   echo "BOXBUILDER - boxbuilder: Starting ..."
   setup
+  install_packages
   setup_boxbuilderrc
   setup_rvm
 }
