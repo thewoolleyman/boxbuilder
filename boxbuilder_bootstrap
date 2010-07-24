@@ -17,7 +17,8 @@ setup() {
   boxbuilder_user=$USER
   boxbuilder_host=$HOSTNAME
   boxbuilder_repo=${boxbuilder_repo:-"git://github.com/thewoolleyman/boxbuilder.git"}
-  boxbuilder_branch=${boxbuilder_host:-"master"}
+  boxbuilder_branch=${boxbuilder_branch:-"master"}
+  boxbuilder_remote=${boxbuilder_remote:-"origin"}
   boxbuilder_dir=${boxbuilder_dir:-"$HOME/.boxbuilder/"}
 }
 
@@ -67,7 +68,10 @@ install_git() {
 
 check_out_boxbuilder() {
   if [ -d $boxbuilder_dir ]; then
-    echo "BOXBUILDER - boxbuilder_bootstrap: Directory $boxbuilder_dir already exists.  Not cloning"
+    echo "BOXBUILDER - boxbuilder_bootstrap: Directory $boxbuilder_dir already exists.  Not cloning or overwriting..."
+    echo "BOXBUILDER - boxbuilder_bootstrap: Pulling latest $boxbuilder_remote/$boxbuilder_branch into existing $boxbuilder_dir"
+    echo "cd $boxbuilder_dir && git pull $boxbuilder_remote $boxbuilder_branch"
+    cd $boxbuilder_dir && git pull $boxbuilder_remote $boxbuilder_branch
   else
     echo "BOXBUILDER - boxbuilder_bootstrap: Cloning $boxbuilder_branch branch from $boxbuilder_repo to directory $boxbuilder_dir ..."
     echo "BOXBUILDER - boxbuilder_bootstrap: git clone -b $boxbuilder_branch $boxbuilder_repo $boxbuilder_dir"
