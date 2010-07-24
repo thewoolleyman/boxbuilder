@@ -110,7 +110,6 @@ setup_rvm() {
   echo "BOXBUILDER - boxbuilder:  Finished setting up RVM..."
 }
 
-
 run() {
   echo "BOXBUILDER - boxbuilder: Starting ..."
   setup
