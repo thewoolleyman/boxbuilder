@@ -179,6 +179,17 @@ RVM default, and used to install and run chef.
 
 ----
 
+'boxbuilder\_prerequisite\_packages' is a space-separated list of packages which will be installed
+on the box being built.  By default, it is the minimal set of packages required for RVM and Ruby
+on a clean Debian install.  Other packages which will be used to other applications on the box
+should be installed via chef, as part of the application setup cookbooks.  On Debian, you can
+specify an exact version with {packagename}={packageversion}.  See the install_packages()
+function in the boxbuilder script for the latest default packages.
+
+    boxbuilder_prerequisite_packages={See the install_packages() function in the boxbuilder script for the latest default packages}
+
+----
+
 boxbuilder\_build\_ami script
 =============================
 
@@ -197,6 +208,6 @@ Testing
 =======
 
 Boxbuilder has a test suite which runs boxbuilder against a live machine, then asserts that it was
-built correctly.  It requires the same SSH variables to be set as 'boxbuilder\_remote\_bootstrap'
+built correctly.  It requires the same SSH variables to be set as does the 'boxbuilder\_remote\_bootstrap'
 ('boxbuilder\_keypair', 'boxbuilder\_user', and 'boxbuilder\_host').  It will also read these and
 any other variables set in ~/.boxbuilderrc.
