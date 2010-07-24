@@ -6,11 +6,17 @@ Boxbuilder builds boxes!  Basic Bash scripts to bootstrap barebones-OS boxes wit
 EC2 AMIs.  Currently it only supports Debian, but pull requests with support for
 new distros are welcome.
 
+----
+
 Quick Start
 ===========
 
-To build a box, run the 'boxbuilder\_bootstrap' or 'boxbuilder_remote_bootstrap' scripts.
+To build a box, download and run the 
+'[boxbuilder\_bootstrap](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap)' or 
+'[boxbuilder\_remote\_bootstrap](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_remote_bootstrap)' scripts.
 See details in the sections below.
+
+----
 
 General Usage Notes
 ===================
@@ -29,35 +35,41 @@ General Usage Notes
   the ~/.boxbuilderrc from the command line when invoking the 'boxbuilder' script
   directly.
 
+----
 
 boxbuilder\_bootstrap script
 ===========================
 
-'boxbuilder\_bootstrap' is a helper script which will download the boxbuilder
-project to ~/.boxbuilder, and run the main '~/.boxbuilder/boxbuilder' script.  It
-is intended to be easily invoked on a clean box via
-wget or curl with a bash one-liner.  For example, log in or SSH to the box you
-wish to build, and paste the following:
+'boxbuilder\_bootstrap' is a single downloadable helper script which will check out the
+boxbuilder project to ~/.boxbuilder, and run the main '~/.boxbuilder/boxbuilder' script.  It
+is intended to be easily invoked on a clean box via wget or curl with a bash one-liner.  
+For example, log in or SSH to the box being built, and paste the following:
 
     wget -O /tmp/boxbuilder_bootstrap http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap && chmod +x /tmp/boxbuilder_bootstrap && /tmp/boxbuilder_bootstrap
     # Be sure to log out or source ~/.bashrc after the first build
 
+----
+
 boxbuilder\_bootstrap environment variables
 -------------------------------------------
+
+The Git repository, branch, and directory to use when cloning and run the boxbuilder project.  If
+the ~/.boxbuilder/ directory already exists, nothing will be downloaded or overwritten.
 
     boxbuilder_repo=git://github.com/thewoolleyman/boxbuilder.git
     boxbuilder_branch=master
     boxbuilder_dir=$HOME/.boxbuilder/
 
-The Git repository, branch, and directory to use when cloning and run the boxbuilder project.  If
-the ~/.boxbuilder/ directory already exists, nothing will be downloaded or overwritten.
-
-    boxbuilder_config="export override_variable1=value; export override_variable2=value"
+----
 
 The contents of the 'boxbuilder\_config' variable should be Bash commands to export and override
 boxbuilder config variables from their default values or values which were loaded from
 ~/.boxbuilderrc.  It will be evaluated by the 'boxbuilder\_bootstrap' script, which
 means they will also be set when the 'boxbuilder' script is invoked by 'boxbuilder\_bootstrap'
+
+    boxbuilder_config="export override_variable1=value; export override_variable2=value"
+
+----
 
 boxbuilder\_remote\_bootstrap script
 ====================================
@@ -67,21 +79,21 @@ remote box without logging in to it.  It issues remote SSH commands to automatic
 download and run 'boxbuilder\_bootstrap' on the box being built.  This also makes it easy
 to hook boxbuilder into other tools or processes to automatically build/update multiple boxes.
 
+----
+
 boxbuilder\_remote\_bootstrap environment variables
 ---------------------------------------------------
-
-    boxbuilder_keypair=path_to_private_key
-    boxbuilder_user=user_for_box_to_build
-    boxbuilder_host=hostname_or_ip_of_box_to_build
 
 Set 'boxbuilder\_keypair' to the path of your private key which will allow you to log in to the
 box being built (you should already have your public key in ~/.ssh/authorized_keys).  Set 
 'boxbuilder\_user' to the user, and 'boxbuilder\_host' to the hostname or IP address of the
 box being built.
 
-'boxbuilder\_remote\_bootstrap' 
+    boxbuilder_keypair=path_to_private_key
+    boxbuilder_user=user_for_box_to_build
+    boxbuilder_host=hostname_or_ip_of_box_to_build
 
-    boxbuilder_config="export override_variable1=value; export override_variable2=value"
+----
 
 The contents of the 'boxbuilder\_config' variable should be Bash commands to export and override
 boxbuilder config variables from their default values or values which will be loaded from
@@ -89,11 +101,17 @@ boxbuilder config variables from their default values or values which will be lo
 script; but is only passed on to the 'boxbuilder\_bootstrap' script when it is invoked via SSH on
 the remote box which is being built.
 
-    boxbuilder_bootstrap_url=http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap
+    boxbuilder_config="export override_variable1=value; export override_variable2=value"
+
+----
 
 'boxbuilder\_bootstrap\_url' is the location from which the boxbuilder\_bootstrap script will be downloaded
 onto the remote box being built.  Override it to use your custom boxbuilder\_bootstrap script instead of
 the default.
+
+    boxbuilder_bootstrap_url=http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap
+
+----
 
 boxbuilder script
 =================
@@ -108,20 +126,24 @@ on a barebones box with a newly installed OS, it will do the following:
 * Download Chef repositories you specify which contain custom cookbooks, config, and JSON attributes.
 * Create and run a script which executes chef-solo with the config and JSON attributes you specify
 
+----
+
 boxbuilder environment variables
 --------------------------------
-
-    boxbuilderrc_url=http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_default
 
 'boxbuilderrc\_url' is the URL to a boxbuilder config script which will be automatically
 downloaded to ~/.boxbuilderrc\_download on the box which is being built.
 
-    boxbuilder_chef_repos=git://github.com/thewoolleyman/boxbuilder_example1_chef_repo.git[,git://github.com/thewoolleyman/boxbuilder_example2_chef_repo.git[,...]]
+    boxbuilderrc_url=http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_default
+
+----
 
 'boxbuilder\_chef_repos' is a comma-delimited list of Chef Git repositories which will be automatically
 downloaded by boxbuilder.  They will be checked out under ~/.chef on the box which is being built.
 
-    boxbuilder_chef_config_path=/home/user/.chef/boxbuilder_chef_repo/config/solo.rb
+    boxbuilder_chef_repos=git://github.com/thewoolleyman/boxbuilder_example1_chef_repo.git[,git://github.com/thewoolleyman/boxbuilder_example2_chef_repo.git[,...]]
+
+----
 
 'boxbuilder\_chef\_config\_path' is the path to the Chef config file. boxbuilder will use
 this as the '--config' parameter when it automatically creates and runs a chef-solo script on the
@@ -129,7 +151,9 @@ box which is being built.  This should be a path to a file
 in one of your 'boxbuilder\_chef\_repos' which boxbuilder automatically downloaded to
 ~/.chef/{your repo}
 
-    boxbuilder_chef_json_path=/home/user/.chef/boxbuilder_chef_repo/config/node.json
+    boxbuilder_chef_config_path=/home/user/.chef/boxbuilder_chef_repo/config/solo.rb
+
+----
 
 'boxbuilder\_chef\_json\_path' is the path to the Chef JSON attributes file. boxbuilder will use
 this as the '--json-attributes' parameter when it automatically creates and runs a chef-solo script
@@ -137,20 +161,37 @@ on the box which is being built.  This should be a path to a file
 in one of your 'boxbuilder\_chef\_repos' which boxbuilder automatically downloaded to
 ~/.chef/{your repo}
 
-    boxbuilder_default_ruby=1.8.7-p174
+    boxbuilder_chef_json_path=/home/user/.chef/boxbuilder_chef_repo/config/node.json
+
+----
 
 'boxbuilder\_default\_ruby' is the version of the Ruby interpreter which will be installed as the
 RVM default, and used to install and run chef.
+
+    boxbuilder_default_ruby=1.8.7-p174
+
+----
+
+'boxbuilder\_default\_ruby' is the version of the Ruby interpreter which will be installed as the
+RVM default, and used to install and run chef.
+
+    boxbuilder_default_ruby=1.8.7-p174
+
+----
 
 boxbuilder\_build\_ami script
 =============================
 
 TODO: docs
 
+----
+
 boxbuilder\_remote_build\_ami script
 ====================================
 
 TODO: docs
+
+----
 
 Testing
 =======
