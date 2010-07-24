@@ -22,10 +22,21 @@ setup() {
 }
 
 setup_boxbuilderrc() {
-  echo "BOXBUILDER - boxbuilder:  Setting up ~/.boxbuilderrc ..."
-  echo "BOXBUILDER - boxbuilder:  Creating ~/.boxbuilderrc to call ~/.boxbuilderrc_donwload ..."
-  echo "BOXBUILDER - boxbuilder:  Downloading ~/.boxbuilderrc_download from $boxbuilderrc_url ..."
-  echo "BOXBUILDER - boxbuilder:  Finished setting up ~/.boxbuilderrc ..."
+  echo "BOXBUILDER - boxbuilder:  Setting up ~/.boxbuilderrc and ~/.boxbuilderrc_download ..."
+
+  echo "BOXBUILDER - boxbuilder:  Creating ~/.boxbuilderrc to call ~/.boxbuilderrc_download ..."
+  if [ -e $HOME/.boxbuilderrc  ]; then
+    echo "BOXBUILDER - boxbuilder: $HOME/.boxbuilderrc already exists.  Not overwriting..."
+    # TODO: check if line to source $HOME/.boxbuilderrc_download exists, add if it doesn't
+  else
+    echo "BOXBUILDER - boxbuilder: Creating $HOME/.boxbuilderrc which will source $HOME/.boxbuilderrc_download ..."
+    echo "source $HOME/.boxbuilderrc_download" > $HOME/.boxbuilderrc
+  fi
+    
+  echo "BOXBUILDER - boxbuilder:  Downloading AND overwriting ~/.boxbuilderrc_download from $boxbuilderrc_url ..."
+  wget -O $HOME/.boxbuilderrc_download $boxbuilderrc_url
+  
+  echo "BOXBUILDER - boxbuilder:  Finished setting up ~/.boxbuilderrc and ~/.boxbuilderrc_download ..."
 }
 
 install_packages() {
@@ -35,7 +46,7 @@ install_packages() {
   echo "BOXBUILDER - boxbuilder:  Installing packages to build Ruby..."
   sudo apt-get install -y build-essential zlib1g zlib1g-dev libssl-dev openssl libreadline5-dev
   echo "BOXBUILDER - boxbuilder:  Installing packages used/recommended by RVM..."
-  sudo apt-get install -y bison libxml2-dev git-core autoconf
+  sudo apt-get install -y bison libxml2-dev git-core autoconf curl
   echo "BOXBUILDER - boxbuilder:  Finished installing packages..."
 }
 
