@@ -44,16 +44,38 @@ setup_boxbuilderrc() {
 
 install_packages() {
   echo "BOXBUILDER - boxbuilder:  Installing packages..."
-  # TODO: iterate over $boxbuilder_prerequisite_packages and use dpkg to determine if they are installed.  If they all are, skip update and install
-  echo "BOXBUILDER - boxbuilder:  Updating Aptitude..."
-  sudo apt-get update
-  echo "BOXBUILDER - boxbuilder:  Installing prerequisite packages for RVM/Ruby..."
-  for package in $boxbuilder_prerequisite_packages
+  _packages_missing=false
+  for _package in $boxbuilder_prerequisite_packages
   do
-    echo "BOXBUILDER - boxbuilder:  Installing package: $package"
-    sudo apt-get install -y $package
+    _package_name=${_package%=*}
+    if [[ -z $(echo $_package | grep '=') ]]; then
+      _package_version=''
+    else
+      _package_version=${_package#*=}
+    fi
+    set +e
+    _package_status=$(dpkg -l $_package_name | grep "ii  $_package_name" | grep "$_package_version")
+    set -e
+    if [[ -z $_package_status ]]; then
+      echo "BOXBUILDER - boxbuilder:  Package $_package is NOT already installed..."
+      _packages_missing=true
+    else
+      echo "BOXBUILDER - boxbuilder:  Package $_package is already installed..."
+    fi
   done
-  echo "BOXBUILDER - boxbuilder:  Finished installing packages..."
+  if [[ $_packages_missing = true ]]; then
+    echo "BOXBUILDER - boxbuilder:  Updating Aptitude..."
+    sudo apt-get update
+    echo "BOXBUILDER - boxbuilder:  Installing prerequisite packages for RVM/Ruby..."
+    for _package in $boxbuilder_prerequisite_packages
+    do
+      echo "BOXBUILDER - boxbuilder:  Installing package: $_package"
+      sudo apt-get install -y $_package
+    done
+    echo "BOXBUILDER - boxbuilder:  Finished installing packages..."
+  else
+    echo "BOXBUILDER - boxbuilder:  All packages are already installed, not updating Aptitude or installing packages ..."
+  fi
 }
 
 install_rvm() {
