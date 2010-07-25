@@ -16,11 +16,12 @@ setup() {
   fi
   boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder=boxbuilder_config_placeholder_from_boxbuilder'}
   boxbuilderrc_url=${boxbuilderrc_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_default"}
-  boxbuilder_chef_repos=${boxbuilder_chef_repos:-"git://github.com/thewoolleyman/boxbuilder_example1_chef_repo.git,git://github.com/thewoolleyman/boxbuilder_example2_chef_repo.git"}
-  boxbuilder_chef_config_path=${boxbuilder_chef_config_path:-"$HOME/.chef/boxbuilder_example1_chef_repo/config/solo.rb"}
-  boxbuilder_chef_json_path=${boxbuilder_chef_json_path:-"$HOME/.chef/boxbuilder_chef_example1_chef_repo/config/node.json"}
+  boxbuilder_chef_repos=${boxbuilder_chef_repos:?"Please set 'boxbuilder_chef_repos' to a space-delimited list of Chef Git repositories"}
+  boxbuilder_chef_dir=${boxbuilder_chef_dir:-"$HOME/.chef"}
+  boxbuilder_chef_config_path=${boxbuilder_chef_config_path:?"Please set 'boxbuilder_chef_config_path' to the path of the Chef config file"}
+  boxbuilder_chef_json_path=${boxbuilder_chef_json_path:?"Please set 'boxbuilder_chef_json_path' to the path of the Chef JSON attributes file"}
   boxbuilder_default_ruby=${boxbuilder_default:-"1.8.7-p174"}
-  # TODO: specify exact package versions, and keep README up to date
+  # TODO: specify exact package versions
   boxbuilder_prerequisite_packages=${boxbuilder_prerequisite_packages:-"build-essential zlib1g zlib1g-dev libssl-dev openssl libreadline5-dev bison libxml2-dev git-core autoconf curl"}
 }
 
@@ -151,12 +152,47 @@ setup_rvm() {
   echo "BOXBUILDER - boxbuilder:  Finished setting up RVM..."
 }
 
+install_chef() {
+  echo "RAILSCI: Installing Chef..."
+  gem install chef $RAILSCI_CHEF_GEM_INSTALL_OPTIONS --no-ri --no-rdoc
+  echo "RAILSCI: Finished installing Chef..."
+}
+
+download_chef_repos() {
+  echo "RAILSCI: Downloading Chef Repos..."
+
+  if [ ! -e $boxbuilder_chef_dir ]; then
+    mkdir -p $boxbuilder_chef_dir
+    git clone $RAILSCI_CHEF_REPO_URL $boxbuilder_chef_dir/railsci_chef_repo
+  fi
+  # TODO: set up iterator
+  cd $boxbuilder_chef_dir/railsci_chef_repo && git pull && git submodule update --init
+  echo "RAILSCI: Finished Downloading Chef Repos..."
+}
+
+create_chef_script() {
+  echo "RAILSCI: Creating Chef script..."
+  # TODO: ...
+  echo "RAILSCI: Finished Creating Chef Script..."
+}
+
+run_chef() {
+  echo "RAILSCI: Running Chef Solo..."
+  rvmsudo chef-solo -c $boxbuilder_chef_dir/railsci_chef_repo/config/solo.rb -j $boxbuilder_chef_dir/railsci_chef_repo/config/node.json
+  echo "RAILSCI: Finished running Chef Solo..."
+}
+
 run() {
   echo "BOXBUILDER - boxbuilder: Starting ..."
   setup
   install_packages
   setup_boxbuilderrc
   setup_rvm
+  install_chef
+  download_chef_repos
+  create_chef_script
+  run_chef
+  echo "BOXBUILDER - boxbuilder: Finished!"
 }
 
 run

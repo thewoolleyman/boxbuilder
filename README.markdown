@@ -84,7 +84,7 @@ to hook boxbuilder into other tools or processes to automatically build/update m
 boxbuilder\_remote\_bootstrap environment variables
 ---------------------------------------------------
 
-Set 'boxbuilder\_keypair' to the path of your private key which will allow you to log in to the
+**(REQUIRED)** Set 'boxbuilder\_keypair' to the path of your private key which will allow you to log in to the
 box being built (you should already have your public key in ~/.ssh/authorized_keys).  Set 
 'boxbuilder\_user' to the user, and 'boxbuilder\_host' to the hostname or IP address of the
 box being built.
@@ -100,7 +100,7 @@ boxbuilder config variables from their default values or values which will be lo
 ~/.boxbuilderrc on the box build built.  It is NOT directly evaluated by the 'boxbuilder\_remote\_bootstrap'
 script; but is only passed on to the 'boxbuilder\_bootstrap' script when it is invoked via SSH on
 the remote box which is being built.
-
+s
     boxbuilder_config="export override_variable1=value; export override_variable2=value"
 
 ----
@@ -138,37 +138,35 @@ downloaded to ~/.boxbuilderrc\_download on the box which is being built.
 
 ----
 
-'boxbuilder\_chef_repos' is a comma-delimited list of Chef Git repositories which will be automatically
-downloaded by boxbuilder.  They will be checked out under ~/.chef on the box which is being built.
+'boxbuilder\_chef\_dir' is the directory under which all chef-related files will be downloaded
+and created.
 
-    boxbuilder_chef_repos=git://github.com/thewoolleyman/boxbuilder_example1_chef_repo.git[,git://github.com/thewoolleyman/boxbuilder_example2_chef_repo.git[,...]]
+    boxbuilder_prerequisite_packages={See the install_packages() function in the boxbuilder script for the latest default packages}
 
 ----
 
-'boxbuilder\_chef\_config\_path' is the path to the Chef config file. boxbuilder will use
+**(REQUIRED)** 'boxbuilder\_chef_repos' is a space-delimited list of Chef Git repositories which will be automatically
+downloaded by boxbuilder.  They will be checked out under $boxbuilder\_chef\_dir (~/.chef) on the box which is being built.
+
+    boxbuilder_chef_repos=git://github.com/thewoolleyman/boxbuilder_example1_chef_repo.git[ git://github.com/thewoolleyman/boxbuilder_example2_chef_repo.git[ ...]]
+
+----
+
+**(REQUIRED)** 'boxbuilder\_chef\_config\_path' is the path of the Chef config file. boxbuilder will use
 this as the '--config' parameter when it automatically creates and runs a chef-solo script on the
 box which is being built.  This should be a path to a file
-in one of your 'boxbuilder\_chef\_repos' which boxbuilder automatically downloaded to
-~/.chef/{your repo}
+in one of your 'boxbuilder\_chef\_repos'.
 
-    boxbuilder_chef_config_path=/home/user/.chef/boxbuilder_chef_repo/config/solo.rb
+    boxbuilder_chef_config_path=$boxbuilder_chef_dir/boxbuilder_chef_repo/config/solo.rb
 
 ----
 
-'boxbuilder\_chef\_json\_path' is the path to the Chef JSON attributes file. boxbuilder will use
+**(REQUIRED)** 'boxbuilder\_chef\_json\_path' is the path of the Chef JSON attributes file. boxbuilder will use
 this as the '--json-attributes' parameter when it automatically creates and runs a chef-solo script
 on the box which is being built.  This should be a path to a file
-in one of your 'boxbuilder\_chef\_repos' which boxbuilder automatically downloaded to
-~/.chef/{your repo}
+in one of your 'boxbuilder\_chef\_repos'.
 
-    boxbuilder_chef_json_path=/home/user/.chef/boxbuilder_chef_repo/config/node.json
-
-----
-
-'boxbuilder\_default\_ruby' is the version of the Ruby interpreter which will be installed as the
-RVM default, and used to install and run chef.
-
-    boxbuilder_default_ruby=1.8.7-p174
+    boxbuilder_chef_json_path=$boxbuilder\_chef\_dir/boxbuilder_chef_repo/config/node.json
 
 ----
 
