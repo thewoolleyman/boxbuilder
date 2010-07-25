@@ -118,15 +118,13 @@ install_rvm_ruby() {
   set +u
   set +e
   if [[ -z $($HOME/.rvm/bin/rvm info | head -n 1 | grep $boxbuilder_default_ruby) ]] ; then
-    set +u
-    set +e
     $HOME/.rvm/bin/rvm install $boxbuilder_default_ruby
-    set -u
-    set -e
     echo "BOXBUILDER - boxbuilder:  Finished installing RVM default ruby: $boxbuilder_default_ruby"
   else
     echo "BOXBUILDER - boxbuilder:  Not installing RVM Ruby $boxbuilder_default_ruby because it is already installed ..."
   fi
+  set -u
+  set -e
 }
 
 set_rvm_default_ruby() {
