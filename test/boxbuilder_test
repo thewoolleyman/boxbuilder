@@ -38,8 +38,8 @@ test_can_download_boxbuilder_bootstrap() {
 
 test_can_install_rvm() {
   `dirname $0`/../boxbuilder_remote_bootstrap
-  rvm_info=$(exec_remotely_quiet "rvm info")
-  assert_match 'rubyqwerqwer' $rvm_info
+  rvm_info=$(exec_remotely_quiet "rvm info | head -n 1")
+  assert_match 'ruby' $rvm_info
 }
 
 suite() {
