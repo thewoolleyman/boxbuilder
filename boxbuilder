@@ -15,7 +15,6 @@ setup() {
     . $HOME/.boxbuilderrc
   fi
   boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder=boxbuilder_config_placeholder_from_boxbuilder'}
-  boxbuilderrc_url=${boxbuilderrc_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_default"}
   boxbuilder_chef_repos=${boxbuilder_chef_repos:?"Please set 'boxbuilder_chef_repos' to a space-delimited list of Chef Git repositories"}
   boxbuilder_chef_dir=${boxbuilder_chef_dir:-"$HOME/.chef"}
   boxbuilder_chef_config_path=${boxbuilder_chef_config_path:?"Please set 'boxbuilder_chef_config_path' to the path of the Chef config file"}
@@ -27,6 +26,8 @@ setup() {
 
 setup_boxbuilderrc() {
   echo "BOXBUILDER - boxbuilder:  Setting up ~/.boxbuilderrc and ~/.boxbuilderrc_download ..."
+
+  boxbuilderrc_url=${boxbuilderrc_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_default"}
 
   echo "BOXBUILDER - boxbuilder:  Creating ~/.boxbuilderrc to call ~/.boxbuilderrc_download ..."
   if [ -e $HOME/.boxbuilderrc  ]; then
@@ -184,6 +185,7 @@ run_chef() {
 
 run() {
   echo "BOXBUILDER - boxbuilder: Starting ..."
+  setup_boxbuilderrc
   setup
   install_packages
   setup_boxbuilderrc
