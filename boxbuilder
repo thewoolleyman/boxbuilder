@@ -40,6 +40,7 @@ setup_boxbuilderrc() {
     
   echo "BOXBUILDER - boxbuilder:  Downloading AND overwriting ~/.boxbuilderrc_download from $boxbuilderrc_url ..."
   wget -O $HOME/.boxbuilderrc_download $boxbuilderrc_url
+  echo "# WARNING: This file was automatically downloaded from $boxbuilderrc_url - it will be overwritten the next time boxbuilder runs.  Put any local overrides at the bottom of $HOME/.boxbuilderrc, which is created by default to source this file." >> $HOME/.boxbuilderrc_download
   
   echo "BOXBUILDER - boxbuilder:  Finished setting up ~/.boxbuilderrc and ~/.boxbuilderrc_download ..."
 }
