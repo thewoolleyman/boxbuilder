@@ -138,6 +138,24 @@ downloaded to ~/.boxbuilderrc\_download on the box which is being built.
 
 ----
 
+'boxbuilder\_prerequisite\_packages' is a space-separated list of packages which will be installed
+on the box being built.  By default, it is the minimal set of packages required for RVM and Ruby
+on a clean Debian install.  Other packages which will be used to other applications on the box
+should be installed via chef, as part of the application setup cookbooks.  On Debian, you can
+specify an exact version with {packagename}={packageversion}.  See the install_packages()
+function in the boxbuilder script for the latest default packages.
+
+    boxbuilder_prerequisite_packages={See the install_packages() function in the boxbuilder script for the latest default packages}
+
+----
+
+'boxbuilder\_default\_ruby' is the version of the Ruby interpreter which will be installed as the
+RVM default, and used to install and run chef.
+
+    boxbuilder_default_ruby=1.8.7-p174
+
+----
+
 'boxbuilder\_chef\_dir' is the directory under which all chef-related files will be downloaded
 and created.
 
@@ -170,21 +188,10 @@ in one of your 'boxbuilder\_chef\_repos'.
 
 ----
 
-'boxbuilder\_default\_ruby' is the version of the Ruby interpreter which will be installed as the
-RVM default, and used to install and run chef.
+'boxbuilder\_chef\_gem\_install\_options' allows you to pass custom options when installing the chef gem. This
+can be used to install the gem with a different version, source, etc.
 
-    boxbuilder_default_ruby=1.8.7-p174
-
-----
-
-'boxbuilder\_prerequisite\_packages' is a space-separated list of packages which will be installed
-on the box being built.  By default, it is the minimal set of packages required for RVM and Ruby
-on a clean Debian install.  Other packages which will be used to other applications on the box
-should be installed via chef, as part of the application setup cookbooks.  On Debian, you can
-specify an exact version with {packagename}={packageversion}.  See the install_packages()
-function in the boxbuilder script for the latest default packages.
-
-    boxbuilder_prerequisite_packages={See the install_packages() function in the boxbuilder script for the latest default packages}
+    boxbuilder_chef_gem_install_options="--no-ri --no-rdoc"
 
 ----
 
