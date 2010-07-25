@@ -7,6 +7,7 @@ set -o noclobber
 set -e
 set -o pipefail
 set -o nounset
+set -u
 trap 'echo BOXBUILDER - boxbuilder: error on line $LINENO' ERR
 
 setup() {
@@ -57,40 +58,59 @@ install_packages() {
 
 install_rvm() {
   echo "BOXBUILDER - boxbuilder:  Installing RVM..."
-  curl -O http://rvm.beginrescueend.com/releases/rvm-install-latest
-  chmod a+x rvm-install-latest
-  ./rvm-install-latest
-  echo "BOXBUILDER - boxbuilder:  Finished installing RVM..."
+  if [[ ! -s $HOME/.rvm/scripts/rvm ]] ; then
+    curl -O http://rvm.beginrescueend.com/releases/rvm-install-latest
+    chmod a+x rvm-install-latest
+    ./rvm-install-latest
+    echo "BOXBUILDER - boxbuilder:  Finished installing RVM..."
+  else
+    echo "BOXBUILDER - boxbuilder:  Not installing RVM because it is already installed ..."
+  fi
 }
 
 enable_rvm() {
   echo "BOXBUILDER - boxbuilder:  Enabling RVM in init file $init_file"
   rvm_init="if [[ -s $HOME/.rvm/scripts/rvm ]] ; then source $HOME/.rvm/scripts/rvm ; fi"
-  if rvm_line=$(grep '.rvm' $init_file); test -z "$rvm_line"; then
+  if [[ -z $(grep '.rvm' $init_file) ]] ; then
     echo $rvm_init >> $init_file
+    echo "BOXBUILDER - boxbuilder:  Added RVM line to $init_file"
+  else
+    echo "BOXBUILDER - boxbuilder:  Not adding RVM line to $init_file because it already exists ..."
   fi
-  # mount proc to avoid error message from sed: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=559539
-  # sudo mount -t proc none /proc/  # comment for now, fails if proc already mounted
-  sed -i'.bak' -e 's/^.*&& return.*$//' $init_file
-  set +u
-  source $init_file
-  set -u
+  if [[ ! -z $(grep -e '.*&& return.*$' $init_file) ]] ; then
+    # mount proc to avoid error message from sed: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=559539
+    # sudo mount -t proc none /proc/  # comment for now, fails if proc already mounted
+    sed -i'.bak' -e 's/^.*&& return.*$//' $init_file
+    set +u
+    source $init_file
+    set -u
+    echo "BOXBUILDER - boxbuilder:  Removed '&& return' from $init_file"
+  else
+    echo "BOXBUILDER - boxbuilder:  Not removing '&& return' from $init_file because it was not found ..."
+  fi
   echo "BOXBUILDER - boxbuilder:  Finished enabling RVM in init file $init_file"
 }
 
 install_rvm_ruby() {
   echo "BOXBUILDER - boxbuilder:  Installing RVM default ruby: $boxbuilder_default_ruby"
   set +u
-  rvm install $boxbuilder_default_ruby
-  set -u
-  echo "BOXBUILDER - boxbuilder:  Finished installing RVM default ruby: $boxbuilder_default_ruby"
+  set +e
+  if [[ -z $($HOME/.rvm/bin/rvm info | head -n 1 | grep $boxbuilder_default_ruby) ]] ; then
+    set +u
+    set +e
+    $HOME/.rvm/bin/rvm install $boxbuilder_default_ruby
+    set -u
+    set -e
+    echo "BOXBUILDER - boxbuilder:  Finished installing RVM default ruby: $boxbuilder_default_ruby"
+  else
+    echo "BOXBUILDER - boxbuilder:  Not installing RVM Ruby $boxbuilder_default_ruby because it is already installed ..."
+  fi
 }
 
 set_rvm_default_ruby() {
   echo "BOXBUILDER - boxbuilder:  Setting RVM default ruby: $boxbuilder_default_ruby"
   set +e
-  rvm --default use $boxbuilder_default_ruby
-  echo "RC=$?"
+  $HOME/.rvm/bin/rvm --default use $boxbuilder_default_ruby
   set -e
   echo "BOXBUILDER - boxbuilder:  Finished setting RVM default ruby: $boxbuilder_default_ruby"
 }
@@ -100,7 +120,7 @@ setup_rvm() {
   install_rvm
   for init_file in ~/.bashrc ~/.bash_profile
   do
-    if [[ -e $init_file ]]; then
+    if [[ -e $init_file ]] ; then
       set +e  # turn off return code checking for now, failing with output 'tput: unknown terminal "unknown"'
       enable_rvm
       set -e
