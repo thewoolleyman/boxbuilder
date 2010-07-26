@@ -6,6 +6,8 @@ Boxbuilder builds boxes!  Basic Bash scripts to bootstrap barebones-OS boxes wit
 EC2 AMIs.  Currently it only supports Debian, but pull requests with support for
 new distros are welcome.
 
+Tracker Project: [http://www.pivotaltracker.com/projects/101913](http://www.pivotaltracker.com/projects/101913)
+
 ----
 
 Quick Start
