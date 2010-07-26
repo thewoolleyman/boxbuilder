@@ -236,9 +236,9 @@ create_chef_script() {
 }
 
 run_chef() {
-  echo "BOXBUILDER - boxbuilder:  Running Chef Solo..."
+  echo "BOXBUILDER - boxbuilder:  Running Chef Solo command: rvmsudo chef-solo -c $boxbuilder_chef_config_path -j $boxbuilder_chef_json_path"
   rvmsudo chef-solo -c $boxbuilder_chef_config_path -j $boxbuilder_chef_json_path
-  echo "BOXBUILDER - boxbuilder:  Finished running Chef Solo..."
+  echo "BOXBUILDER - boxbuilder:  Finished running Chef Solo command:  rvmsudo chef-solo -c $boxbuilder_chef_config_path -j $boxbuilder_chef_json_path"
 }
 
 run() {
