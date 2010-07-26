@@ -157,8 +157,13 @@ setup_rvm() {
 
 install_chef() {
   echo "BOXBUILDER - boxbuilder:  Installing Chef..."
-  gem install chef $boxbuilder_chef_gem_install_options
-  echo "BOXBUILDER - boxbuilder:  Finished installing Chef..."
+  # TODO: Allow override if user wants to force reinstall with different boxbuilder_chef_gem_install_options
+  if [[ -z $(gem search ^chef$ | grep -e '^chef') ]]; then
+    gem install chef $boxbuilder_chef_gem_install_options
+    echo "BOXBUILDER - boxbuilder:  Finished installing Chef..."
+  else
+    echo "BOXBUILDER - boxbuilder:  'chef' gem is already installed, not reinstalling..."
+  fi
 }
 
 download_chef_repos() {
@@ -170,9 +175,7 @@ download_chef_repos() {
   for _boxbuilder_chef_repo in $boxbuilder_chef_repos
   do
     _name_dot_git=${_boxbuilder_chef_repo##*/}
-    echo $_name_dot_git
     _repo_path="$boxbuilder_chef_dir/${_name_dot_git%.*}"
-    echo $_repo_path
     if [ ! -e $_repo_path ]; then
       echo "BOXBUILDER - boxbuilder:  $_repo_path does not exist, cloning from $_boxbuilder_chef_repo ..."
       git clone --recursive -- $_boxbuilder_chef_repo $_repo_path
