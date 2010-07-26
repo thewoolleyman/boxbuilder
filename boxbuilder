@@ -203,10 +203,15 @@ download_chef_repos() {
       git clone --recursive -- $_boxbuilder_chef_repo $_repo_path
     else
       echo "BOXBUILDER - boxbuilder:  $_repo_path already exists, pulling and updating ..."
+      echo $_repo_path
+      set +u
       cd $_repo_path
+      set -u
       git pull
       git submodule update --init
+      set +u
       cd -
+      set -u
     fi
   done
   echo "BOXBUILDER - boxbuilder:  Finished downloading/updating Chef Repos..."
@@ -220,7 +225,7 @@ create_chef_script() {
 
 run_chef() {
   echo "BOXBUILDER - boxbuilder:  Running Chef Solo..."
-  rvmsudo chef-solo -c $boxbuilder_chef_dir/railsci_chef_repo/config/solo.rb -j $boxbuilder_chef_dir/railsci_chef_repo/config/node.json
+  rvmsudo chef-solo -c $boxbuilder_chef_config_path -j $boxbuilder_chef_json_path
   echo "BOXBUILDER - boxbuilder:  Finished running Chef Solo..."
 }
 
