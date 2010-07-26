@@ -170,8 +170,10 @@ setup_rvm() {
   set_rvm_default_ruby
   echo "BOXBUILDER - boxbuilder:  Sourcing $HOME/.bashrc to reload latest RVM interpreter"
   set +u
+  set +e
   source $HOME/.bashrc
   set -u
+  set -e
   echo "BOXBUILDER - boxbuilder:  Finished setting up RVM..."
 }
 
