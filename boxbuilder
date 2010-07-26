@@ -98,6 +98,14 @@ install_packages() {
 
 install_rvm() {
   echo "BOXBUILDER - boxbuilder:  Installing RVM version $boxbuilder_rvm_version ..."
+  echo "BOXBUILDER - boxbuilder:  Reloading RVM in this shell, if it is installed"
+  if [[ -s $HOME/.rvm/scripts/rvm ]]; then
+    set +u
+    set +e
+    source $HOME/.rvm/scripts/rvm
+    set -u
+    set -e
+  fi
   if [[ -s $HOME/.rvm/scripts/rvm && ! -z $(rvm --version | grep $boxbuilder_rvm_version) ]]; then
     echo "BOXBUILDER - boxbuilder:  Not reinstalling RVM version $boxbuilder_rvm_version because it is already installed ..."
   else
@@ -105,6 +113,12 @@ install_rvm() {
     rm -rf $HOME/.rvm/src/rvm/
     git clone --depth 1 git://github.com/wayneeseguin/rvm.git $HOME/.rvm/src/rvm
     $HOME/.rvm/src/rvm/install
+    echo "BOXBUILDER - boxbuilder:  Reloading newly-installed RVM version $boxbuilder_rvm_version in this shell"
+    set +u
+    set +e
+    source $HOME/.rvm/scripts/rvm
+    set -u
+    set -e
     echo "BOXBUILDER - boxbuilder:  Finished installing RVM version $boxbuilder_rvm_version ..."
   fi
 }
@@ -126,10 +140,6 @@ enable_rvm() {
   else
     echo "BOXBUILDER - boxbuilder:  Not removing '&& return' from $init_file because it was not found ..."
   fi
-  echo "BOXBUILDER - boxbuilder:  Sourcing $init_file to reload latest RVM"
-  set +u
-  source $init_file
-  set -u
   echo "BOXBUILDER - boxbuilder:  Finished enabling RVM in init file $init_file"
 }
 
@@ -168,12 +178,14 @@ setup_rvm() {
   done
   install_rvm_ruby
   set_rvm_default_ruby
-  echo "BOXBUILDER - boxbuilder:  Sourcing $HOME/.bashrc to reload latest RVM interpreter"
-  set +u
-  set +e
-  source $HOME/.bashrc
-  set -u
-  set -e
+  echo "BOXBUILDER - boxbuilder:  Reloading RVM in this shell"
+  if [[ -s $HOME/.rvm/scripts/rvm ]]; then
+    set +u
+    set +e
+    source $HOME/.rvm/scripts/rvm
+    set -u
+    set -e
+  fi
   echo "BOXBUILDER - boxbuilder:  Finished setting up RVM..."
 }
 
