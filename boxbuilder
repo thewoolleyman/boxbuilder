@@ -40,11 +40,11 @@ setup() {
 }
 
 setup_boxbuilderrc() {
-  echo "BOXBUILDER - boxbuilder:  Setting up ~/.boxbuilderrc and ~/.boxbuilderrc_download ..."
+  echo "BOXBUILDER - boxbuilder:  Setting up $HOME/.boxbuilderrc and $HOME/.boxbuilderrc_download ..."
 
   boxbuilderrc_url=${boxbuilderrc_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_default"}
 
-  echo "BOXBUILDER - boxbuilder:  Creating ~/.boxbuilderrc to call ~/.boxbuilderrc_download ..."
+  echo "BOXBUILDER - boxbuilder:  Creating $HOME/.boxbuilderrc to call $HOME/.boxbuilderrc_download ..."
   if [ -e $HOME/.boxbuilderrc  ]; then
     echo "BOXBUILDER - boxbuilder: $HOME/.boxbuilderrc already exists.  Not overwriting..."
     # TODO: check if line to source $HOME/.boxbuilderrc_download exists, add if it doesn't
@@ -53,11 +53,11 @@ setup_boxbuilderrc() {
     echo "source $HOME/.boxbuilderrc_download" > $HOME/.boxbuilderrc
   fi
     
-  echo "BOXBUILDER - boxbuilder:  Downloading AND overwriting ~/.boxbuilderrc_download from $boxbuilderrc_url ..."
+  echo "BOXBUILDER - boxbuilder:  Downloading AND overwriting $HOME/.boxbuilderrc_download from $boxbuilderrc_url ..."
   wget -O $HOME/.boxbuilderrc_download $boxbuilderrc_url
   echo "# WARNING: This file was automatically downloaded from $boxbuilderrc_url - it will be overwritten the next time boxbuilder runs.  Put any local overrides at the bottom of $HOME/.boxbuilderrc, which is created by default to source this file." >> $HOME/.boxbuilderrc_download
   
-  echo "BOXBUILDER - boxbuilder:  Finished setting up ~/.boxbuilderrc and ~/.boxbuilderrc_download ..."
+  echo "BOXBUILDER - boxbuilder:  Finished setting up $HOME/.boxbuilderrc and $HOME/.boxbuilderrc_download ..."
 }
 
 install_packages() {
@@ -158,7 +158,7 @@ set_rvm_default_ruby() {
 setup_rvm() {
   echo "BOXBUILDER - boxbuilder:  Setting up RVM..."
   install_rvm
-  for init_file in ~/.bashrc ~/.bash_profile
+  for init_file in $HOME/.bashrc $HOME/.bash_profile
   do
     if [[ -e $init_file ]] ; then
       set +e  # turn off return code checking for now, failing with output 'tput: unknown terminal "unknown"'
@@ -168,6 +168,10 @@ setup_rvm() {
   done
   install_rvm_ruby
   set_rvm_default_ruby
+  echo "BOXBUILDER - boxbuilder:  Sourcing $HOME/.bashrc to reload latest RVM interpreter"
+  set +u
+  source $HOME/.bashrc
+  set -u
   echo "BOXBUILDER - boxbuilder:  Finished setting up RVM..."
 }
 
