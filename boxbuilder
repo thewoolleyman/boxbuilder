@@ -156,42 +156,47 @@ setup_rvm() {
 }
 
 install_chef() {
-  echo "RAILSCI: Installing Chef..."
+  echo "BOXBUILDER - boxbuilder:  Installing Chef..."
   gem install chef $boxbuilder_chef_gem_install_options
-  echo "RAILSCI: Finished installing Chef..."
+  echo "BOXBUILDER - boxbuilder:  Finished installing Chef..."
 }
 
 download_chef_repos() {
-  echo "RAILSCI: Downloading Chef Repos..."
-
+  echo "BOXBUILDER - boxbuilder:  Downloading/updating Chef Repos..."
   if [ ! -e $boxbuilder_chef_dir ]; then
     mkdir -p $boxbuilder_chef_dir
   fi
-  for boxbuilder_chef_repo in $boxbuilder_chef_repos
+  # TODO: handle branches, probably optionally comma delimited after repo URL
+  for _boxbuilder_chef_repo in $boxbuilder_chef_repos
   do
-    if [ ! -e $boxbuilder_chef_dir/placeholder_name_repo ]; then
-      cd $boxbuilder_chef_dir
-      git clone $boxbuilder_chef_repo --recursive
+    _name_dot_git=${_boxbuilder_chef_repo##*/}
+    echo $_name_dot_git
+    _repo_path="$boxbuilder_chef_dir/${_name_dot_git%.*}"
+    echo $_repo_path
+    if [ ! -e $_repo_path ]; then
+      echo "BOXBUILDER - boxbuilder:  $_repo_path does not exist, cloning from $_boxbuilder_chef_repo ..."
+      git clone --recursive -- $_boxbuilder_chef_repo $_repo_path
+    else
+      echo "BOXBUILDER - boxbuilder:  $_repo_path already exists, pulling and updating ..."
+      cd $_repo_path
+      git pull
+      git submodule update --init
       cd -
     fi
-    cd $boxbuilder_chef_dir/placeholder_name_repo
-    git pull
-    git submodule update --init
-    cd -
   done
-  echo "RAILSCI: Finished Downloading Chef Repos..."
+  echo "BOXBUILDER - boxbuilder:  Finished downloading/updating Chef Repos..."
 }
 
 create_chef_script() {
-  echo "RAILSCI: Creating Chef script..."
+  echo "BOXBUILDER - boxbuilder:  Creating Chef script..."
   # TODO: ...
-  echo "RAILSCI: Finished Creating Chef Script..."
+  echo "BOXBUILDER - boxbuilder:  Finished Creating Chef Script..."
 }
 
 run_chef() {
-  echo "RAILSCI: Running Chef Solo..."
+  echo "BOXBUILDER - boxbuilder:  Running Chef Solo..."
   rvmsudo chef-solo -c $boxbuilder_chef_dir/railsci_chef_repo/config/solo.rb -j $boxbuilder_chef_dir/railsci_chef_repo/config/node.json
-  echo "RAILSCI: Finished running Chef Solo..."
+  echo "BOXBUILDER - boxbuilder:  Finished running Chef Solo..."
 }
 
 run() {
