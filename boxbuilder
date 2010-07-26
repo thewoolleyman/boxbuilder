@@ -15,14 +15,28 @@ setup() {
     . $HOME/.boxbuilderrc
   fi
   boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder=boxbuilder_config_placeholder_from_boxbuilder'}
+  eval $boxbuilder_config
   # TODO: specify exact package versions
   boxbuilder_prerequisite_packages=${boxbuilder_prerequisite_packages:-"build-essential zlib1g zlib1g-dev libssl-dev openssl libreadline5-dev bison libxml2-dev git-core autoconf curl"}
+  boxbuilder_rvm_version=${boxbuilder_rvm_version:-$(curl -s http://rvm.beginrescueend.com/releases/stable-version.txt)}
   boxbuilder_default_ruby=${boxbuilder_default:-"1.8.7-p174"}
   boxbuilder_chef_repos=${boxbuilder_chef_repos:?"Please set 'boxbuilder_chef_repos' to a space-delimited list of Chef Git repositories"}
   boxbuilder_chef_dir=${boxbuilder_chef_dir:-"$HOME/.chef"}
   boxbuilder_chef_config_path=${boxbuilder_chef_config_path:?"Please set 'boxbuilder_chef_config_path' to the path of the Chef config file"}
   boxbuilder_chef_json_path=${boxbuilder_chef_json_path:?"Please set 'boxbuilder_chef_json_path' to the path of the Chef JSON attributes file"}
   boxbuilder_chef_gem_install_options=${boxbuilder_chef_gem_install_options:-"--no-ri --no-rdoc"}
+  
+  echo "BOXBUILDER - boxbuilder:  Environment variables:"
+  echo "boxbuilder_config                    = $boxbuilder_config"
+  echo "boxbuilder_prerequisite_packages     = $boxbuilder_prerequisite_packages"
+  echo "boxbuilder_rvm_version               = $boxbuilder_rvm_version"
+  echo "boxbuilder_default_ruby              = $boxbuilder_default_ruby"
+  echo "boxbuilder_chef_repos                = $boxbuilder_chef_repos"
+  echo "boxbuilder_chef_dir                  = $boxbuilder_chef_dir"
+  echo "boxbuilder_chef_config_path          = $boxbuilder_chef_config_path"
+  echo "boxbuilder_chef_json_path            = $boxbuilder_chef_json_path"
+  echo "boxbuilder_chef_gem_install_options  = $boxbuilder_chef_gem_install_options"
+  
 }
 
 setup_boxbuilderrc() {
@@ -83,14 +97,15 @@ install_packages() {
 }
 
 install_rvm() {
-  echo "BOXBUILDER - boxbuilder:  Installing RVM..."
-  if [[ ! -s $HOME/.rvm/scripts/rvm ]] ; then
-    curl -O http://rvm.beginrescueend.com/releases/rvm-install-latest
-    chmod a+x rvm-install-latest
-    ./rvm-install-latest
-    echo "BOXBUILDER - boxbuilder:  Finished installing RVM..."
+  echo "BOXBUILDER - boxbuilder:  Installing RVM version $boxbuilder_rvm_version ..."
+  if [[ -s $HOME/.rvm/scripts/rvm && ! -z $(rvm --version | grep $boxbuilder_rvm_version) ]]; then
+    echo "BOXBUILDER - boxbuilder:  Not reinstalling RVM version $boxbuilder_rvm_version because it is already installed ..."
   else
-    echo "BOXBUILDER - boxbuilder:  Not installing RVM because it is already installed ..."
+    mkdir -p $HOME/.rvm/src/
+    rm -rf $HOME/.rvm/src/rvm/
+    git clone --depth 1 git://github.com/wayneeseguin/rvm.git $HOME/.rvm/src/rvm
+    $HOME/.rvm/src/rvm/install
+    echo "BOXBUILDER - boxbuilder:  Finished installing RVM version $boxbuilder_rvm_version ..."
   fi
 }
 
@@ -107,13 +122,14 @@ enable_rvm() {
     # mount proc to avoid error message from sed: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=559539
     # sudo mount -t proc none /proc/  # comment for now, fails if proc already mounted
     sed -i'.bak' -e 's/^.*&& return.*$//' $init_file
-    set +u
-    source $init_file
-    set -u
     echo "BOXBUILDER - boxbuilder:  Removed '&& return' from $init_file"
   else
     echo "BOXBUILDER - boxbuilder:  Not removing '&& return' from $init_file because it was not found ..."
   fi
+  echo "BOXBUILDER - boxbuilder:  Sourcing $init_file to reload latest RVM"
+  set +u
+  source $init_file
+  set -u
   echo "BOXBUILDER - boxbuilder:  Finished enabling RVM in init file $init_file"
 }
 

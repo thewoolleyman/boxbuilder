@@ -14,6 +14,7 @@ setup() {
     . $HOME/.boxbuilderrc
   fi
   boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder_bootstrap=boxbuilder_config_placeholder_from_boxbuilder_bootstrap'}
+  eval $boxbuilder_config
   boxbuilder_user=$USER
   boxbuilder_host=$HOSTNAME
   boxbuilder_repo=${boxbuilder_repo:-"git://github.com/thewoolleyman/boxbuilder.git"}

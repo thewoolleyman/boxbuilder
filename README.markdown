@@ -149,10 +149,17 @@ function in the boxbuilder script for the latest default packages.
 
 ----
 
+'boxbuilder\_rvm\_version' is the version of RVM to use.  By default, it will be the latest stable
+version, listed at [http://rvm.beginrescueend.com/releases/stable-version.txt](http://rvm.beginrescueend.com/releases/stable-version.txt).
+
+    boxbuilder_rvm_version=
+
+----
+
 'boxbuilder\_default\_ruby' is the version of the Ruby interpreter which will be installed as the
 RVM default, and used to install and run chef.
 
-    boxbuilder_default_ruby=1.8.7-p174
+    boxbuilder_default_ruby=$(curl -s http://rvm.beginrescueend.com/releases/stable-version.txt)
 
 ----
 
