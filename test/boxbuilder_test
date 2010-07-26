@@ -23,6 +23,7 @@ setup() {
   boxbuilder_keypair=${boxbuilder_keypair:?Please set 'boxbuilder_keypair' to the path of your ssh private key file}
   boxbuilder_user=${boxbuilder_user:?Please set 'boxbuilder_user' to the ssh user on the box you are using to test}
   boxbuilder_host=${boxbuilder_host:?Please set 'boxbuilder_host' to the hostname or IP of the box you are using to test}
+  `dirname $0`/../boxbuilder_remote_bootstrap
 }
 
 test_can_log_in_as_user() {
@@ -31,15 +32,20 @@ test_can_log_in_as_user() {
 }
 
 test_can_download_boxbuilder_bootstrap() {
-  `dirname $0`/../boxbuilder_remote_bootstrap
   expected_path=$(exec_remotely_quiet "which /tmp/boxbuilder_bootstrap")
   assert_equal '/tmp/boxbuilder_bootstrap' $expected_path
 }
 
 test_can_install_rvm() {
-  `dirname $0`/../boxbuilder_remote_bootstrap
   rvm_info=$(exec_remotely_quiet "rvm info | head -n 1")
   assert_match 'ruby' $rvm_info
+}
+
+test_can_set_up_and_run_chef() {
+  example1_touchfile_contents=$(exec_remotely_quiet 'cat $HOME/.tmp_boxbuilder_example1_chef_cookbook.touchfile')
+  assert_equal 'boxbuilder_example1_chef_config_value' $example1_touchfile_contents
+  example2_touchfile_contents=$(exec_remotely_quiet 'cat $HOME/.tmp_boxbuilder_example2_chef_cookbook.touchfile')
+  assert_match 'boxbuilder_example2_chef_config_value' $example2_touchfile_contents
 }
 
 suite() {
@@ -47,6 +53,7 @@ suite() {
   test_can_log_in_as_user
   test_can_download_boxbuilder_bootstrap
   test_can_install_rvm
+  test_can_set_up_and_run_chef
   echo "All tests completed"
 }
 
