@@ -71,7 +71,8 @@ For example, log in or SSH to the box being built, and paste the following:
 boxbuilder\_bootstrap environment variables
 -------------------------------------------
 
-The Git repository, branch, and directory to use when cloning and run the boxbuilder project.  If
+'boxbuilder\_repo', 'boxbuilder\_branch', and 'boxbuilder\_dir' specify
+the Git repository, branch, and directory to use when cloning and running the boxbuilder project.  If
 the ~/.boxbuilder/ directory already exists, nothing will be downloaded or overwritten.
 
     boxbuilder_repo=git://github.com/thewoolleyman/boxbuilder.git
@@ -234,9 +235,36 @@ boxbuilder\_build\_ami script
 boxbuilder\_build_ami environment variables
 -------------------------------------------
 
+The contents of the 'boxbuilder\_config' variable should be Bash commands to export and override
+boxbuilder config variables from their default values or values which will be loaded from
+~/.boxbuilderrc when 'boxbuilder\_bootstrap' is run in the chroot jail.
+It IS directly evaluated by the 'boxbuilder\_remote\_bootstrap'
+script; and is also passed on to the 'boxbuilder\_bootstrap' script when it is invoked via SSH on
+the remote box which is being built.
+
+    boxbuilder_config="export override_variable1=value; export override_variable2=value"
+
+----
+
 **(REQUIRED)** 'boxbuilder\_xxx\_yyy' zzz.
 
     boxbuilder_xxx=yyy
+
+----
+
+TODO: document these boxbuilder\_build\_ami variables:
+
+    # EC2 Credentials
+    boxbuilder_ec2_privatekey=${boxbuilder_privatekey:?"Please set 'boxbuilder_ec2_privatekey' to the path of your private key (See X.509 Certificates at https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key#access_credentials)"}
+    boxbuilder_ec2_cert=${boxbuilder_ec2_cert:?"Please set 'boxbuilder_ec2_cert' to the path of your cert (See X.509 Certificates at https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key#access_credentials)"}
+    boxbuilder_ec2_keypair=${boxbuilder_ec2_keypair:?"Please set 'boxbuilder_ec2_keypair' to the path of your keypair private key (https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs)"}
+    boxbuilder_ec2_keypairname=${boxbuilder_ec2_keypairname:?"Please set "boxbuilder_ec2_keypairname" to the name of your keypair (https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs)"}
+
+    # AMI Builder Settings
+    boxbuilder_ami_instancetype=${boxbuilder_ami_instancetype:?"Please set 'boxbuilder_ami_instancetype' to the type of instance you want, e.g. m1.small for 32 bit and m1.large for 64 bit (See http://aws.amazon.com/ec2/instance-types/)"}
+    boxbuilder_ami_prefix=${boxbuilder_ami_prefix:?"Please set 'boxbuilder_ami_prefix' to a string with no spaces.  This string will be prepended to the name of your new AMI"}
+
+
 
 ----
 
@@ -248,7 +276,7 @@ on a remote box without logging in to it.  It issues remote SSH commands to do t
 
 * Automatically start an EC2 instance using your EC2 account and credentials
 * Upload your credentials to the instance
-* Run 'boxbuilder\_remote\_build\_ami' on the instance
+* Download and run 'boxbuilder\_remote\_build\_ami' on the instance
 
 ----
 
