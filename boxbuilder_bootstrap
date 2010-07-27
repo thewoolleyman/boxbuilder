@@ -11,7 +11,7 @@ trap 'echo BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO' ERR
 
 setup() {
   if [ -e $HOME/.boxbuilderrc ]; then
-    . $HOME/.boxbuilderrc
+    source $HOME/.boxbuilderrc
   fi
   boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder_bootstrap=boxbuilder_config_placeholder_from_boxbuilder_bootstrap'}
   eval $boxbuilder_config
