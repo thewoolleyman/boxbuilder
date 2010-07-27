@@ -8,14 +8,30 @@ new distros are welcome.
 
 Tracker Project: [http://www.pivotaltracker.com/projects/101913](http://www.pivotaltracker.com/projects/101913)
 
+AMI-building code is based on Eric Hammond's tutorial at http://alestic.com/2010/01/ec2-ebs-boot-ubuntu
+
+WARNING!  The 'build\_ami' scripts will automatically create EC2 resources for which you will be charged!
+They automatically start and stop instances, but if the scripts fail or are killed
+the instances may be left running.  Learn how to delete any unwanted resources via the the EC2 console
+before using the 'build\_ami' scripts: [https://console.aws.amazon.com/ec2/home](https://console.aws.amazon.com/ec2/home)
+
 ----
 
 Quick Start
 ===========
 
-To build a box, download and run the 
-'[boxbuilder\_bootstrap](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap)' or 
-'[boxbuilder\_remote\_bootstrap](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_remote_bootstrap)' scripts.
+To build a box, download and run
+'[boxbuilder\_bootstrap](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap)'
+on a clean Debian box, or download and run
+'[boxbuilder\_remote\_bootstrap](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_remote_bootstrap)'
+from your local shell.
+
+To build an AMI image, download and run
+'[boxbuilder\_build\_ami](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_build_ami)' on a running AMI
+instance, or download and run
+'[boxbuilder\_remote_build\_ami](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_remote_build_ami)'
+from your local shell.
+
 See details in the sections below.
 
 ----
@@ -76,8 +92,8 @@ means they will also be set when the 'boxbuilder' script is invoked by 'boxbuild
 boxbuilder\_remote\_bootstrap script
 ====================================
 
-'boxbuilder\_remote\_bootstrap' allows you to run 'boxbuilder\_bootstrap' on a
-remote box without logging in to it.  It issues remote SSH commands to automatically
+'boxbuilder\_remote\_bootstrap' is run on your local box.  It allows you to run 'boxbuilder\_bootstrap'
+on a remote box without logging in to it.  It issues remote SSH commands to automatically
 download and run 'boxbuilder\_bootstrap' on the box being built.  This also makes it easy
 to hook boxbuilder into other tools or processes to automatically build/update multiple boxes.
 
@@ -102,7 +118,7 @@ boxbuilder config variables from their default values or values which will be lo
 ~/.boxbuilderrc on the box build built.  It is NOT directly evaluated by the 'boxbuilder\_remote\_bootstrap'
 script; but is only passed on to the 'boxbuilder\_bootstrap' script when it is invoked via SSH on
 the remote box which is being built.
-s
+
     boxbuilder_config="export override_variable1=value; export override_variable2=value"
 
 ----
@@ -193,7 +209,7 @@ this as the '--json-attributes' parameter when it automatically creates and runs
 on the box which is being built.  This should be a path to a file
 in one of your 'boxbuilder\_chef\_repos'.
 
-    boxbuilder_chef_json_path=$boxbuilder\_chef\_dir/boxbuilder_chef_repo/config/node.json
+    boxbuilder_chef_json_path=$boxbuilder_chef_dir/boxbuilder_chef_repo/config/node.json
 
 ----
 
@@ -207,14 +223,41 @@ can be used to install the gem with a different version, source, etc.
 boxbuilder\_build\_ami script
 =============================
 
-TODO: docs
+'boxbuilder\_build\_ami' creates an EC2 EBS-backed AMI when run from an EC2 instance.  It does the following:
+
+* Creates a chroot jail
+* Executes the 'boxbuilder\_bootstrap' script while re-rooted within the chroot jail
+* Creates and publishes an EBS-backed AMI from the chroot jail
 
 ----
 
-boxbuilder\_remote_build\_ami script
-====================================
+boxbuilder\_build_ami environment variables
+-------------------------------------------
 
-TODO: docs
+**(REQUIRED)** 'boxbuilder\_xxx\_yyy' zzz.
+
+    boxbuilder_xxx=yyy
+
+----
+
+boxbuilder\_remote\_build\_ami script
+=====================================
+
+'boxbuilder\_remote\_build\_ami' is run from your local box.  It allows you to run 'boxbuilder\_build\_ami'
+on a remote box without logging in to it.  It issues remote SSH commands to do the following:
+
+* Automatically start an EC2 instance using your EC2 account and credentials
+* Upload your credentials to the instance
+* Run 'boxbuilder\_remote\_build\_ami' on the instance
+
+----
+
+boxbuilder\_remote\_build\_ami environment variables
+----------------------------------------------------
+
+**(REQUIRED)** 'boxbuilder\_xxx\_yyy' zzz.
+
+    boxbuilder_xxx=yyy
 
 ----
 
