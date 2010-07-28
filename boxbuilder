@@ -186,6 +186,18 @@ setup_rvm() {
     set -u
     set -e
   fi
+  
+  # DEBUGGING
+  which gem
+  if [[ ! $? = 0 ]]; then
+    echo "Cannot find 'gem' command.  Debugging info:"
+    echo $PATH
+    env
+    $HOME/.rvm/bin/rvm info
+    gem env
+  fi
+  # DEBUGGING
+  
   echo "BOXBUILDER - boxbuilder:  Finished setting up RVM..."
 }
 
