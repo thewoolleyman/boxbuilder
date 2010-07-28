@@ -24,12 +24,6 @@ setup() {
   
   # Keypairname only used when starting instance, commented for use in boxbuilder_remote_build_ami
   # boxbuilder_ec2_keypairname=${boxbuilder_ec2_keypairname:?"Please set "boxbuilder_ec2_keypairname" to the name of your keypair which matches $HOME/.ec2/keypair-ec2-boxbuilder.pem (https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs)"}
-
-  # EC2 Credentials
-  # TODO: check for existence, print nice error if not set
-  _ec2_privatekey=$HOME/.ec2/pk-ec2-boxbuilder.pem
-  _ec2_cert=$HOME/.ec2/cert-ec2-boxbuilder.pem
-  _ec2_keypair=$HOME/.ec2/keypair-ec2-boxbuilder.pem
   
   _codename=lucid
   _release=10.04
@@ -109,8 +103,9 @@ copy_image_to_ami() {
   _now=$(date +%Y%m%d-%H%M)
   _prefix="$boxbuilder_ami_prefix-ubuntu-$_release-$_codename-$_tag-$_arch-$_now"
   _description="Ubuntu $_release $_codename $_tag $_arch $_now"
-  export EC2_CERT=$(echo /mnt/cert-*.pem)
-  export EC2_PRIVATE_KEY=$(echo /mnt/pk-*.pem)
+  export EC2_CERT=$(echo $HOME/.ec2/cert-*.pem)
+  export EC2_PRIVATE_KEY=$(echo $HOME/.ec2/pk-*.pem)
+  # TODO: check for existence, print nice error if not set
   _volumeid=$(ec2-create-volume --size $_size --availability-zone us-east-1a | cut -f2)
   _instanceid=$(wget --progress=dot -qO- http://instance-data/latest/meta-data/instance-id)
   ec2-attach-volume --device /dev/sdi --instance "$_instanceid" "$_volumeid"
