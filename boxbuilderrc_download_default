@@ -5,7 +5,6 @@ export boxbuilder_chef_config_path="$HOME/.chef/boxbuilder_example1_chef_repo/co
 export boxbuilder_chef_json_path="$HOME/.chef/boxbuilder_example1_chef_repo/config/node.json"
 
 # Default values for building AMIs
-boxbuilder_ami_instancetype=m1.large
-
-
+export boxbuilder_ami_instancetype=m1.large
+export boxbuilder_ami_prefix="boxbuilder_test_$(date +%Y%m%d-%H%M)"
 

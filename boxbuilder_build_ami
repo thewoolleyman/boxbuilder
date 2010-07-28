@@ -21,7 +21,9 @@ setup() {
   # AMI Builder Settings
   boxbuilder_ami_instancetype=${boxbuilder_ami_instancetype:?"Please set 'boxbuilder_ami_instancetype' to the type of instance you want, e.g. m1.small for 32 bit and m1.large for 64 bit (See http://aws.amazon.com/ec2/instance-types/)"}
   boxbuilder_ami_prefix=${boxbuilder_ami_prefix:?"Please set 'boxbuilder_ami_prefix' to a string with no spaces.  This string will be prepended to the name of your new AMI"}
-  boxbuilder_ec2_keypairname=${boxbuilder_ec2_keypairname:?"Please set "boxbuilder_ec2_keypairname" to the name of your keypair which matches $HOME/.ec2/keypair-ec2-boxbuilder.pem (https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs)"}
+  
+  # Keypairname only used when starting instance, commented for use in boxbuilder_remote_build_ami
+  # boxbuilder_ec2_keypairname=${boxbuilder_ec2_keypairname:?"Please set "boxbuilder_ec2_keypairname" to the name of your keypair which matches $HOME/.ec2/keypair-ec2-boxbuilder.pem (https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs)"}
 
   # EC2 Credentials
   # TODO: check for existence, print nice error if not set
