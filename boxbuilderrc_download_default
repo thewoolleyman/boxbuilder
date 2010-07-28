@@ -3,3 +3,8 @@ export boxbuilder_user=ubuntu
 export boxbuilder_chef_repos="git://github.com/thewoolleyman/boxbuilder_example1_chef_repo.git git://github.com/thewoolleyman/boxbuilder_example2_chef_repo.git"
 export boxbuilder_chef_config_path="$HOME/.chef/boxbuilder_example1_chef_repo/config/solo.rb"
 export boxbuilder_chef_json_path="$HOME/.chef/boxbuilder_example1_chef_repo/config/node.json"
+
+# Default values for building AMIs
+export boxbuilder_ami_instancetype=m1.large
+export boxbuilder_ami_prefix="boxbuilder_test_$(date +%Y%m%d-%H%M)"
+

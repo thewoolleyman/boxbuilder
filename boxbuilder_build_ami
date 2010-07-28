@@ -21,20 +21,16 @@ setup() {
   # AMI Builder Settings
   boxbuilder_ami_instancetype=${boxbuilder_ami_instancetype:?"Please set 'boxbuilder_ami_instancetype' to the type of instance you want, e.g. m1.small for 32 bit and m1.large for 64 bit (See http://aws.amazon.com/ec2/instance-types/)"}
   boxbuilder_ami_prefix=${boxbuilder_ami_prefix:?"Please set 'boxbuilder_ami_prefix' to a string with no spaces.  This string will be prepended to the name of your new AMI"}
-  boxbuilder_ec2_keypairname=${boxbuilder_ec2_keypairname:?"Please set "boxbuilder_ec2_keypairname" to the name of your keypair which matches $HOME/.ec2/keypair-ec2-boxbuilder.pem (https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs)"}
-
-  # EC2 Credentials
-  # TODO: check for existence, print nice error if not set
-  _ec2_privatekey=$HOME/.ec2/pk-ec2-boxbuilder.pem
-  _ec2_cert=$HOME/.ec2/cert-ec2-boxbuilder.pem
-  _ec2_keypair=$HOME/.ec2/keypair-ec2-boxbuilder.pem
+  
+  # Keypairname only used when starting instance, commented for use in boxbuilder_remote_build_ami
+  # boxbuilder_ec2_keypairname=${boxbuilder_ec2_keypairname:?"Please set "boxbuilder_ec2_keypairname" to the name of your keypair which matches $HOME/.ec2/keypair-ec2-boxbuilder.pem (https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs)"}
   
   _codename=lucid
   _release=10.04
   _tag=server
 
   # TODO: Make sure these kernel and ramdisk values are correct for lucid
-  if [[ $(run 'uname -m') = "x86_64" ]] ; then
+  if [[ $(uname -m) = "x86_64" ]] ; then
     _arch=x86_64
     _arch2=amd64
     _ebsopts="--kernel=aki-0b4aa462 --ramdisk=ari-c515f6ac --block-device-mapping /dev/sdb=ephemeral0"
@@ -45,8 +41,8 @@ setup() {
   fi
 
   _imagesource=http://uec-images.ubuntu.com/releases/$_codename/release/unpacked/ubuntu-$_release-$_tag-uec-$_arch2.img.tar.gz
-  image=/mnt/$_codename-$_tag-uec-$_arch2.img
-  imagedir=/mnt/$_codename-uec-$_arch2
+  _image=/mnt/$_codename-$_tag-uec-$_arch2.img
+  _imagedir=/mnt/$_codename-uec-$_arch2
 
   echo "BOXBUILDER - boxbuilder_build_ami:  Environment variables:"
   echo "boxbuilder_config                    = $boxbuilder_config"
@@ -66,23 +62,30 @@ install_ec2_tools() {
 
 create_chroot_jail_from_base_image() {
   echo "BOXBUILDER - boxbuilder_build_ami: Creating chroot jail from base image $_imagesource ..."
-  wget --progress=dot:mega -O- $imagesource | sudo tar xzf - -C /mnt
-  sudo mkdir -p $imagedir
+  if [[ -e $_image ]]; then
+    echo "BOXBUILDER - boxbuilder_build_ami: Unzipped image $_image already exists.  Not downloading again ..."
+  else
+    echo "BOXBUILDER - boxbuilder_build_ami: Downloading image and unzipping to $_image ..."
+    wget --progress=dot:mega -O- $_imagesource | sudo tar xzf - -C /mnt
+  fi
+  sudo mkdir -p $_imagedir
   # Resize image so we have enough space to install in chroot
   # Not sure if one or both of uec-resize-image and resize2fs are needed
-  sudo uec-resize-image $image 5G
-  sudo mount -o loop=/dev/loop4 $image $imagedir
+  sudo uec-resize-image $_image 5G
+  # Ensure existing loop device is unmounted (allows script to be run multiple times)
+  sudo umount /dev/loop4
+  sudo mount -o loop=/dev/loop4 $_image $_imagedir
   # Sometimes this is needed even though image was resized before mount with uec-resize-image?
   sudo resize2fs /dev/loop4 5G
 
   # Allow network access from chroot environment
-  sudo cp /etc/resolv.conf $imagedir/etc/
+  sudo cp /etc/resolv.conf $_imagedir/etc/
   # Remove hostname
-  sudo rm -f $imagedir/etc/hostname
-  sudo chroot $imagedir su - ubuntu -c "touch /home/ubuntu/.bash_history"
-  sudo chroot $imagedir apt-key adv --keyserver keyserver.ubuntu.com --recv-keys BE09C571
-  sudo chroot $imagedir mount -t proc none /proc
-  sudo chroot $imagedir mount -t devpts none /dev/pts
+  sudo rm -f $_imagedir/etc/hostname
+  sudo chroot $_imagedir su - ubuntu -c "touch /home/ubuntu/.bash_history"
+  sudo chroot $_imagedir apt-key adv --keyserver keyserver.ubuntu.com --recv-keys BE09C571
+  sudo chroot $_imagedir mount -t proc none /proc
+  sudo chroot $_imagedir mount -t devpts none /dev/pts
   echo "BOXBUILDER - boxbuilder_build_ami: Finished creating chroot jail from base image $_imagesource ..."
 }
 
@@ -94,37 +97,38 @@ run_boxbuilder_in_chroot_jail_to_build_image() {
 
 copy_image_to_ami() {
   echo "BOXBUILDER - boxbuilder_build_ami: Copying image to AMI ..."
-  sudo chroot $imagedir umount /proc
-  sudo chroot $imagedir umount /dev/pts
-  sudo rm -f $imagedir/usr/sbin/policy-rc.d
+  sudo chroot $_imagedir umount /proc
+  sudo chroot $_imagedir umount /dev/pts
+  sudo rm -f $_imagedir/usr/sbin/policy-rc.d
   _size=15 # root disk in GB
   _now=$(date +%Y%m%d-%H%M)
-  _prefix="$_newamiprefix-ubuntu-$_release-$_codename-$_tag-$_arch-$now"
-  _description="Ubuntu $_release $_codename $_tag $_arch $now"
-  export EC2_CERT=$(echo /mnt/cert-*.pem)
-  export EC2_PRIVATE_KEY=$(echo /mnt/pk-*.pem)
-  volumeid=$(ec2-create-volume --size $size --availability-zone us-east-1a | cut -f2)
-  instanceid=$(wget --progress=dot -qO- http://instance-data/latest/meta-data/instance-id)
-  ec2-attach-volume --device /dev/sdi --instance "$instanceid" "$volumeid"
+  _prefix="$boxbuilder_ami_prefix-ubuntu-$_release-$_codename-$_tag-$_arch-$_now"
+  _description="Ubuntu $_release $_codename $_tag $_arch $_now"
+  export EC2_CERT=$(echo $HOME/.ec2/cert-*.pem)
+  export EC2_PRIVATE_KEY=$(echo $HOME/.ec2/pk-*.pem)
+  # TODO: check for existence, print nice error if not set
+  _volumeid=$(ec2-create-volume --size $_size --availability-zone us-east-1a | cut -f2)
+  _instanceid=$(wget --progress=dot -qO- http://instance-data/latest/meta-data/instance-id)
+  ec2-attach-volume --device /dev/sdi --instance "$_instanceid" "$_volumeid"
   while [ ! -e /dev/sdi ]; do echo -n .; sleep 1; done
   sudo mkfs.ext3 -F /dev/sdi
-  ebsimage=$imagedir-ebs
-  sudo mkdir $ebsimage
-  sudo mount /dev/sdi $ebsimage
-  sudo tar -cSf - -C $imagedir . | sudo tar xvf - -C $ebsimage
-  sudo umount $ebsimage
-  ec2-detach-volume "$volumeid"
-  snapshotid=$(ec2-create-snapshot "$volumeid" | cut -f2)
-  ec2-delete-volume "$volumeid"
+  _ebsimage=$_imagedir-ebs
+  sudo mkdir $_ebsimage
+  sudo mount /dev/sdi $_ebsimage
+  sudo tar -cSf - -C $_imagedir . | sudo tar xvf - -C $_ebsimage
+  sudo umount $_ebsimage
+  ec2-detach-volume "$_volumeid"
+  snapshotid=$(ec2-create-snapshot "$_volumeid" | cut -f2)
+  ec2-delete-volume "$_volumeid"
   while ec2-describe-snapshots "$snapshotid" | grep -q pending
     do echo -n .; sleep 1; done
-  newami=$(ec2-register \
+  _newami=$(ec2-register \
     --architecture $_arch \
-    --name "$prefix" \
-    --description "$description" \
+    --name "$_prefix" \
+    --description "$_description" \
     $_ebsopts \
     --snapshot "$snapshotid")
-  echo "AMIBUILDER: NEW AMI REGISTERED: AMI ID=$newami, EBS ID=$volumeid, EBS SNAPSHOT ID=$snapshotid, PREFIX=$prefix, DESCRIPTION=$description"
+  echo "AMIBUILDER: NEW AMI REGISTERED: AMI ID=$_newami, EBS ID=$_volumeid, EBS SNAPSHOT ID=$snapshotid, PREFIX=$_prefix, DESCRIPTION=$_description"
   echo "BOXBUILDER - boxbuilder_build_ami: Finished copying image to AMI ..."
 }
 
