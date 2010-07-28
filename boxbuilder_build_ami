@@ -35,7 +35,7 @@ setup() {
   _release=10.04
   _tag=server
 
-  if [[ $(run 'uname -m') = "x86_64" ]] ; then
+  if [[ $(uname -m) = "x86_64" ]] ; then
     _arch=x86_64
     _arch2=amd64
     _ebsopts="--kernel=aki-0b4aa462 --ramdisk=ari-c515f6ac --block-device-mapping /dev/sdb=ephemeral0"
