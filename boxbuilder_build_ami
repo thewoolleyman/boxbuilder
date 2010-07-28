@@ -67,16 +67,18 @@ install_ec2_tools() {
 
 create_chroot_jail_from_base_image() {
   echo "BOXBUILDER - boxbuilder_build_ami: Creating chroot jail from base image $_imagesource ..."
-  if [[ -e $_imagesource ]]; then
-    echo "BOXBUILDER - boxbuilder_build_ami: Image file $_imagesource already exists.  Not downloading ..."
+  if [[ -e $_image ]]; then
+    echo "BOXBUILDER - boxbuilder_build_ami: Unzipped image $_image already exists.  Not downloading again ..."
   else
-    echo "BOXBUILDER - boxbuilder_build_ami: Downloading image file $_imagesource ..."
+    echo "BOXBUILDER - boxbuilder_build_ami: Downloading image and unzipping to $_image ..."
     wget --progress=dot:mega -O- $_imagesource | sudo tar xzf - -C /mnt
   fi
   sudo mkdir -p $_imagedir
   # Resize image so we have enough space to install in chroot
   # Not sure if one or both of uec-resize-image and resize2fs are needed
   sudo uec-resize-image $_image 5G
+  # Ensure existing loop device is unmounted (allows script to be run multiple times)
+  sudo umount /dev/loop4
   sudo mount -o loop=/dev/loop4 $_image $_imagedir
   # Sometimes this is needed even though image was resized before mount with uec-resize-image?
   sudo resize2fs /dev/loop4 5G
