@@ -33,6 +33,7 @@ setup() {
   _release=10.04
   _tag=server
 
+  # TODO: Make sure these kernel and ramdisk values are correct for lucid
   if [[ $(run 'uname -m') = "x86_64" ]] ; then
     _arch=x86_64
     _arch2=amd64
@@ -53,7 +54,7 @@ setup() {
 
 install_ec2_tools() {
   echo "BOXBUILDER - boxbuilder_build_ami: Installing ec2 tools ..."
-  # TODO: When will there be a lucid release?  How do you get tools like ec2-attach-volume on lucid?
+  # TODO: This supposedly is not required anymore - see mailing list
   export DEBIAN_FRONTEND=noninteractive
   echo "deb http://ppa.launchpad.net/ubuntu-on-ec2/ec2-tools/ubuntu karmic main" | sudo tee /etc/apt/sources.list.d/ubuntu-on-ec2-ec2-tools.list
   sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 9EE6D873
