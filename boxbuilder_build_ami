@@ -46,8 +46,8 @@ setup() {
   fi
 
   _imagesource=http://uec-images.ubuntu.com/releases/$_codename/release/unpacked/ubuntu-$_release-$_tag-uec-$_arch2.img.tar.gz
-  image=/mnt/$_codename-$_tag-uec-$_arch2.img
-  imagedir=/mnt/$_codename-uec-$_arch2
+  _image=/mnt/$_codename-$_tag-uec-$_arch2.img
+  _imagedir=/mnt/$_codename-uec-$_arch2
 
   echo "BOXBUILDER - boxbuilder_build_ami:  Environment variables:"
   echo "boxbuilder_config                    = $boxbuilder_config"
@@ -67,23 +67,23 @@ install_ec2_tools() {
 
 create_chroot_jail_from_base_image() {
   echo "BOXBUILDER - boxbuilder_build_ami: Creating chroot jail from base image $_imagesource ..."
-  wget --progress=dot:mega -O- $imagesource | sudo tar xzf - -C /mnt
-  sudo mkdir -p $imagedir
+  wget --progress=dot:mega -O- $_imagesource | sudo tar xzf - -C /mnt
+  sudo mkdir -p $_imagedir
   # Resize image so we have enough space to install in chroot
   # Not sure if one or both of uec-resize-image and resize2fs are needed
-  sudo uec-resize-image $image 5G
-  sudo mount -o loop=/dev/loop4 $image $imagedir
+  sudo uec-resize-image $_image 5G
+  sudo mount -o loop=/dev/loop4 $_image $_imagedir
   # Sometimes this is needed even though image was resized before mount with uec-resize-image?
   sudo resize2fs /dev/loop4 5G
 
   # Allow network access from chroot environment
-  sudo cp /etc/resolv.conf $imagedir/etc/
+  sudo cp /etc/resolv.conf $_imagedir/etc/
   # Remove hostname
-  sudo rm -f $imagedir/etc/hostname
-  sudo chroot $imagedir su - ubuntu -c "touch /home/ubuntu/.bash_history"
-  sudo chroot $imagedir apt-key adv --keyserver keyserver.ubuntu.com --recv-keys BE09C571
-  sudo chroot $imagedir mount -t proc none /proc
-  sudo chroot $imagedir mount -t devpts none /dev/pts
+  sudo rm -f $_imagedir/etc/hostname
+  sudo chroot $_imagedir su - ubuntu -c "touch /home/ubuntu/.bash_history"
+  sudo chroot $_imagedir apt-key adv --keyserver keyserver.ubuntu.com --recv-keys BE09C571
+  sudo chroot $_imagedir mount -t proc none /proc
+  sudo chroot $_imagedir mount -t devpts none /dev/pts
   echo "BOXBUILDER - boxbuilder_build_ami: Finished creating chroot jail from base image $_imagesource ..."
 }
 
@@ -95,37 +95,37 @@ run_boxbuilder_in_chroot_jail_to_build_image() {
 
 copy_image_to_ami() {
   echo "BOXBUILDER - boxbuilder_build_ami: Copying image to AMI ..."
-  sudo chroot $imagedir umount /proc
-  sudo chroot $imagedir umount /dev/pts
-  sudo rm -f $imagedir/usr/sbin/policy-rc.d
+  sudo chroot $_imagedir umount /proc
+  sudo chroot $_imagedir umount /dev/pts
+  sudo rm -f $_imagedir/usr/sbin/policy-rc.d
   _size=15 # root disk in GB
   _now=$(date +%Y%m%d-%H%M)
   _prefix="$_newamiprefix-ubuntu-$_release-$_codename-$_tag-$_arch-$now"
   _description="Ubuntu $_release $_codename $_tag $_arch $now"
   export EC2_CERT=$(echo /mnt/cert-*.pem)
   export EC2_PRIVATE_KEY=$(echo /mnt/pk-*.pem)
-  volumeid=$(ec2-create-volume --size $size --availability-zone us-east-1a | cut -f2)
-  instanceid=$(wget --progress=dot -qO- http://instance-data/latest/meta-data/instance-id)
-  ec2-attach-volume --device /dev/sdi --instance "$instanceid" "$volumeid"
+  _volumeid=$(ec2-create-volume --size $size --availability-zone us-east-1a | cut -f2)
+  _instanceid=$(wget --progress=dot -qO- http://instance-data/latest/meta-data/instance-id)
+  ec2-attach-volume --device /dev/sdi --instance "$_instanceid" "$_volumeid"
   while [ ! -e /dev/sdi ]; do echo -n .; sleep 1; done
   sudo mkfs.ext3 -F /dev/sdi
-  ebsimage=$imagedir-ebs
-  sudo mkdir $ebsimage
-  sudo mount /dev/sdi $ebsimage
-  sudo tar -cSf - -C $imagedir . | sudo tar xvf - -C $ebsimage
-  sudo umount $ebsimage
-  ec2-detach-volume "$volumeid"
-  snapshotid=$(ec2-create-snapshot "$volumeid" | cut -f2)
-  ec2-delete-volume "$volumeid"
+  _ebsimage=$_imagedir-ebs
+  sudo mkdir $_ebsimage
+  sudo mount /dev/sdi $_ebsimage
+  sudo tar -cSf - -C $_imagedir . | sudo tar xvf - -C $_ebsimage
+  sudo umount $_ebsimage
+  ec2-detach-volume "$_volumeid"
+  snapshotid=$(ec2-create-snapshot "$_volumeid" | cut -f2)
+  ec2-delete-volume "$_volumeid"
   while ec2-describe-snapshots "$snapshotid" | grep -q pending
     do echo -n .; sleep 1; done
   newami=$(ec2-register \
     --architecture $_arch \
-    --name "$prefix" \
-    --description "$description" \
+    --name "$_prefix" \
+    --description "$_description" \
     $_ebsopts \
     --snapshot "$snapshotid")
-  echo "AMIBUILDER: NEW AMI REGISTERED: AMI ID=$newami, EBS ID=$volumeid, EBS SNAPSHOT ID=$snapshotid, PREFIX=$prefix, DESCRIPTION=$description"
+  echo "AMIBUILDER: NEW AMI REGISTERED: AMI ID=$newami, EBS ID=$_volumeid, EBS SNAPSHOT ID=$snapshotid, PREFIX=$_prefix, DESCRIPTION=$_description"
   echo "BOXBUILDER - boxbuilder_build_ami: Finished copying image to AMI ..."
 }
 
