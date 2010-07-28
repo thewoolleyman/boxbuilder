@@ -107,8 +107,8 @@ copy_image_to_ami() {
   sudo rm -f $_imagedir/usr/sbin/policy-rc.d
   _size=15 # root disk in GB
   _now=$(date +%Y%m%d-%H%M)
-  _prefix="$boxbuilder_ami_prefix-ubuntu-$_release-$_codename-$_tag-$_arch-$now"
-  _description="Ubuntu $_release $_codename $_tag $_arch $now"
+  _prefix="$boxbuilder_ami_prefix-ubuntu-$_release-$_codename-$_tag-$_arch-$_now"
+  _description="Ubuntu $_release $_codename $_tag $_arch $_now"
   export EC2_CERT=$(echo /mnt/cert-*.pem)
   export EC2_PRIVATE_KEY=$(echo /mnt/pk-*.pem)
   _volumeid=$(ec2-create-volume --size $size --availability-zone us-east-1a | cut -f2)
