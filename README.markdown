@@ -254,12 +254,6 @@ the remote box which is being built.
 
 TODO: document these boxbuilder\_build\_ami variables:
 
-    # EC2 Credentials
-    boxbuilder_ec2_privatekey=${boxbuilder_privatekey:?"Please set 'boxbuilder_ec2_privatekey' to the path of your private key (See X.509 Certificates at https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key#access_credentials)"}
-    boxbuilder_ec2_cert=${boxbuilder_ec2_cert:?"Please set 'boxbuilder_ec2_cert' to the path of your cert (See X.509 Certificates at https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key#access_credentials)"}
-    boxbuilder_ec2_keypair=${boxbuilder_ec2_keypair:?"Please set 'boxbuilder_ec2_keypair' to the path of your keypair private key (https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs)"}
-    boxbuilder_ec2_keypairname=${boxbuilder_ec2_keypairname:?"Please set "boxbuilder_ec2_keypairname" to the name of your keypair (https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs)"}
-
     # AMI Builder Settings
     boxbuilder_ami_instancetype=${boxbuilder_ami_instancetype:?"Please set 'boxbuilder_ami_instancetype' to the type of instance you want, e.g. m1.small for 32 bit and m1.large for 64 bit (See http://aws.amazon.com/ec2/instance-types/)"}
     boxbuilder_ami_prefix=${boxbuilder_ami_prefix:?"Please set 'boxbuilder_ami_prefix' to a string with no spaces.  This string will be prepended to the name of your new AMI"}
@@ -286,6 +280,20 @@ boxbuilder\_remote\_build\_ami environment variables
 **(REQUIRED)** 'boxbuilder\_xxx\_yyy' zzz.
 
     boxbuilder_xxx=yyy
+
+----
+
+TODO: document these boxbuilder\_remote\_build\_ami variables:
+
+    # EC2 Credentials
+    boxbuilder_ec2_privatekey=${boxbuilder_privatekey:?"Please set 'boxbuilder_ec2_privatekey' to the path of your private key (See X.509 Certificates at https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key#access_credentials)"}
+    boxbuilder_ec2_cert=${boxbuilder_ec2_cert:?"Please set 'boxbuilder_ec2_cert' to the path of your cert (See X.509 Certificates at https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key#access_credentials)"}
+    boxbuilder_ec2_keypair=${boxbuilder_ec2_keypair:?"Please set 'boxbuilder_ec2_keypair' to the path of your keypair private key (https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs)"}
+    boxbuilder_ec2_keypairname=${boxbuilder_ec2_keypairname:?"Please set "boxbuilder_ec2_keypairname" to the name of your keypair (https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs)"}
+
+    # AMI Builder Settings
+    boxbuilder_ami_instancetype=${boxbuilder_ami_instancetype:?"Please set 'boxbuilder_ami_instancetype' to the type of instance you want, e.g. m1.small for 32 bit and m1.large for 64 bit (See http://aws.amazon.com/ec2/instance-types/)"}
+    boxbuilder_ami_prefix=${boxbuilder_ami_prefix:?"Please set 'boxbuilder_ami_prefix' to a string with no spaces.  This string will be prepended to the name of your new AMI"}
 
 ----
 
