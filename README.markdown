@@ -295,7 +295,7 @@ EC2 Info
 * Current Base AMI: ami-4b4ba522 - Ubuntu 10.04 LTS (Lucid Lynx) (us-east-1)
 
 * Alestic AMI list: http://alestic.com/
-* Ubuntu AMI list: 
+* Ubuntu AMI list: http://uec-images.ubuntu.com/releases/lucid/release/
 
 
 
