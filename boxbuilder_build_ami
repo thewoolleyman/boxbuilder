@@ -133,7 +133,7 @@ copy_image_to_ami() {
   set -e
   if [[ ! -z $_existing_volumeid ]]; then
     echo "BOXBUILDER - boxbuilder_build_ami: Volume $_existing_volumeid is already attached at /dev/sdi (probably from a previous failed run of boxbuilder_build_ami).  Detaching and deleting ..."
-    ec2-detach-volume $_existing_volumeid
+    ec2-detach-volume -f $_existing_volumeid
     ec2-delete-volume $_existing_volumeid
   fi
   
@@ -156,7 +156,7 @@ copy_image_to_ami() {
   sudo mkdir -p $_imagedir_ebs
   sudo mount /dev/sdi $_imagedir_ebs
   echo "BOXBUILDER - boxbuilder_build_ami: Copying built image from chroot jail at $_imagedir to EBS volume $_volumeid attached to device /dev/sdi mounted at $_imagedir_ebs ..."
-  sudo tar -cSf - -C $_imagedir . | sudo tar xvf - -C $_imagedir_ebs
+  sudo tar -cSf - -C $_imagedir . | sudo tar xf - -C $_imagedir_ebs
 
   echo "BOXBUILDER - boxbuilder_build_ami: Unmounting $_imagedir_ebs ..."
   sudo umount $_imagedir_ebs
