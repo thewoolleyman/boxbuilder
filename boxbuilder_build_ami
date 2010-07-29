@@ -70,7 +70,9 @@ create_chroot_jail_from_base_image() {
   # Not sure if one or both of uec-resize-image and resize2fs are needed
   sudo uec-resize-image $_image 5G
   # Ensure existing loop device is unmounted (allows script to be run multiple times)
-  sudo umount /dev/loop4
+  if [[ -z $(mount | grep '/dev/loop4') ]]; then
+    sudo umount -d /dev/loop4
+  end
   sudo mount -o loop=/dev/loop4 $_image $_imagedir
   # Sometimes this is needed even though image was resized before mount with uec-resize-image?
   sudo resize2fs /dev/loop4 5G
