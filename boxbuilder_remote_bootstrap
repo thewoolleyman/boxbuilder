@@ -52,19 +52,19 @@ setup() {
 
 remote_bootstrap() {
   echo "BOXBUILDER - boxbuilder_remote_bootstrap: Performing custom setup on $boxbuilder_host using script at $boxbuilder_bootstrap_url ..."
-  boxbuilder_bootstrap_script=/tmp/${boxbuilder_bootstrap_url##*/} # grabs last path component of url to use as script name
-  echo "BOXBUILDER - boxbuilder_remote_bootstrap: Downloading custom setup script $boxbuilder_bootstrap_script from $boxbuilder_bootstrap_url ..."
-  exec_remotely "wget -O $boxbuilder_bootstrap_script $boxbuilder_bootstrap_url"
-  while exists=$(exec_remotely_quiet "if [[ -e $boxbuilder_bootstrap_script ]] ; then echo exists; fi"); test "$exists" != "exists" ; do
-    echo "BOXBUILDER - boxbuilder_remote_bootstrap: Waiting for curl to finish downloading $boxbuilder_bootstrap_script from $boxbuilder_bootstrap_url ..."
+  _boxbuilder_bootstrap_script=/tmp/${boxbuilder_bootstrap_url##*/} # grabs last path component of url to use as script name
+  echo "BOXBUILDER - boxbuilder_remote_bootstrap: Downloading custom setup script $_boxbuilder_bootstrap_script from $boxbuilder_bootstrap_url ..."
+  exec_remotely "wget -O $_boxbuilder_bootstrap_script $boxbuilder_bootstrap_url"
+  while exists=$(exec_remotely_quiet "if [[ -e $_boxbuilder_bootstrap_script ]] ; then echo exists; fi"); test "$exists" != "exists" ; do
+    echo "BOXBUILDER - boxbuilder_remote_bootstrap: Waiting for curl to finish downloading $_boxbuilder_bootstrap_script from $boxbuilder_bootstrap_url ..."
     sleep 3
   done
-  echo "BOXBUILDER - boxbuilder_remote_bootstrap: $boxbuilder_bootstrap_url successfully downloaded to $boxbuilder_bootstrap_script ..."
+  echo "BOXBUILDER - boxbuilder_remote_bootstrap: $boxbuilder_bootstrap_url successfully downloaded to $_boxbuilder_bootstrap_script ..."
 
-  echo "BOXBUILDER - boxbuilder_remote_bootstrap: Changing permissions on $boxbuilder_bootstrap_script ..."
-  exec_remotely "chmod a+x $boxbuilder_bootstrap_script"
-  echo "BOXBUILDER - boxbuilder_remote_bootstrap: Running $boxbuilder_bootstrap_script ..."
-  exec_remotely_pseudo_tty "$boxbuilder_config && $boxbuilder_bootstrap_script"
+  echo "BOXBUILDER - boxbuilder_remote_bootstrap: Changing permissions on $_boxbuilder_bootstrap_script ..."
+  exec_remotely "chmod a+x $_boxbuilder_bootstrap_script"
+  echo "BOXBUILDER - boxbuilder_remote_bootstrap: Running $_boxbuilder_bootstrap_script ..."
+  exec_remotely_pseudo_tty "$boxbuilder_config && $_boxbuilder_bootstrap_script"
 }
 
 run() {
