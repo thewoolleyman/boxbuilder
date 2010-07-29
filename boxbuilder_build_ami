@@ -17,6 +17,7 @@ setup() {
   
   boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder_build_ami=boxbuilder_config_placeholder_from_boxbuilder'}
   eval $boxbuilder_config
+  boxbuilder_bootstrap_url=${boxbuilder_bootstrap_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap"}
 
   # AMI Builder Settings
   boxbuilder_ami_instancetype=${boxbuilder_ami_instancetype:?"Please set 'boxbuilder_ami_instancetype' to the type of instance you want, e.g. m1.small for 32 bit and m1.large for 64 bit (See http://aws.amazon.com/ec2/instance-types/)"}
@@ -89,10 +90,23 @@ create_chroot_jail_from_base_image() {
   echo "BOXBUILDER - boxbuilder_build_ami: Finished creating chroot jail from base image $_imagesource ..."
 }
 
-run_boxbuilder_in_chroot_jail_to_build_image() {
-  echo "BOXBUILDER - boxbuilder_build_ami: Running boxbuilder in chroot jail to build image ..."
-  # TODO
-  echo "BOXBUILDER - boxbuilder_build_ami: Finished running boxbuilder in chroot jail to build image ..."
+run_boxbuilder_bootstrap_in_chroot_jail_to_build_image() {
+  echo "BOXBUILDER - boxbuilder_build_ami: Running boxbuilder_bootstrap in chroot jail to build image ..."
+  echo "BOXBUILDER - boxbuilder_build_ami: Performing custom setup on $_imagedir using script at $boxbuilder_bootstrap_url ..."
+  _boxbuilder_bootstrap_script=/tmp/${boxbuilder_bootstrap_url##*/} # grabs last path component of url to use as script name
+  echo "BOXBUILDER - boxbuilder_build_ami: Downloading custom setup script $_boxbuilder_bootstrap_script from $boxbuilder_bootstrap_url ..."
+  wget -O $_boxbuilder_bootstrap_script $boxbuilder_bootstrap_url
+  while exists=$(if [[ -e $_boxbuilder_bootstrap_script ]] ; then echo exists; fi); test "$exists" != "exists" ; do
+    echo "BOXBUILDER - boxbuilder_build_ami: Waiting for curl to finish downloading $_boxbuilder_bootstrap_script from $boxbuilder_bootstrap_url ..."
+    sleep 3
+  done
+  echo "BOXBUILDER - boxbuilder_build_ami: $boxbuilder_bootstrap_url successfully downloaded to $_boxbuilder_bootstrap_script ..."
+
+  echo "BOXBUILDER - boxbuilder_build_ami: Changing permissions on $_boxbuilder_bootstrap_script ..."
+  chmod a+x $_boxbuilder_bootstrap_script
+  echo "BOXBUILDER - boxbuilder_build_ami: Running $_boxbuilder_bootstrap_script ..."
+  $_boxbuilder_bootstrap_script
+  echo "BOXBUILDER - boxbuilder_build_ami: Finished running boxbuilder_bootstrap in chroot jail to build image ..."
 }
 
 copy_image_to_ami() {
@@ -137,7 +151,7 @@ run() {
   setup
   install_ec2_tools
   create_chroot_jail_from_base_image
-  run_boxbuilder_in_chroot_jail_to_build_image
+  run_boxbuilder_bootstrap_in_chroot_jail_to_build_image
   copy_image_to_ami
   echo "BOXBUILDER - boxbuilder_build_ami: Finished!"
 }
