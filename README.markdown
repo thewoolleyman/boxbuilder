@@ -320,3 +320,4 @@ Boxbuilder has a test suite which runs boxbuilder against a live machine, then a
 built correctly.  It requires the same SSH variables to be set as does the 'boxbuilder\_remote\_bootstrap'
 ('boxbuilder\_keypair', 'boxbuilder\_user', and 'boxbuilder\_host').  It will also read these and
 any other variables set in ~/.boxbuilderrc.
+
