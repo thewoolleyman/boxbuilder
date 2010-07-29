@@ -128,7 +128,9 @@ copy_image_to_ami() {
   echo "BOXBUILDER - boxbuilder_build_ami: Using EC2_CERT=$EC2_CERT and EC2_PRIVATE_KEY=$EC2_PRIVATE_KEY ..."
 
   echo "BOXBUILDER - boxbuilder_build_ami: Ensuring no existing volume is already attached at /dev/sdi ..."
+  set +e
   _existing_volumeid=$(ec2-describe-volumes | grep -e '^ATTACHMENT.*/dev/sdi' | cut -f2)
+  set -e
   if [[ ! -z $_existing_volumeid ]]; then
     echo "BOXBUILDER - boxbuilder_build_ami: Volume $_existing_volumeid is already attached at /dev/sdi (probably from a previous failed run of boxbuilder_build_ami).  Detaching and deleting ..."
     ec2-detach-volume $_existing_volumeid
