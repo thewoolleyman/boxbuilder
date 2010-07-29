@@ -110,10 +110,10 @@ run_boxbuilder_bootstrap_in_chroot_jail_to_build_image() {
 copy_image_to_ami() {
   echo "BOXBUILDER - boxbuilder_build_ami: Copying image to AMI ..."
   echo "BOXBUILDER - boxbuilder_build_ami: Cleaning up mounts and policy-rc.d in chroot jail before copying image ..."
-  if [[ -z $(sudo chroot $_imagedir mount | grep '/proc') ]]; then
+  if [[ ! -z $(sudo chroot $_imagedir mount | grep '/proc') ]]; then
     sudo chroot $_imagedir umount /proc
   fi
-  if [[ -z $(sudo chroot $_imagedir mount | grep '/dev/pts') ]]; then
+  if [[ ! -z $(sudo chroot $_imagedir mount | grep '/dev/pts') ]]; then
     sudo chroot $_imagedir umount /dev/pts
   fi
   sudo rm -f $_imagedir/usr/sbin/policy-rc.d
@@ -132,9 +132,14 @@ copy_image_to_ami() {
   _existing_volumeid=$(ec2-describe-volumes | grep -e '^ATTACHMENT.*/dev/sdi' | cut -f2)
   set -e
   if [[ ! -z $_existing_volumeid ]]; then
-    echo "BOXBUILDER - boxbuilder_build_ami: Volume $_existing_volumeid is already attached at /dev/sdi (probably from a previous failed run of boxbuilder_build_ami).  Detaching and deleting ..."
+    echo "BOXBUILDER - boxbuilder_build_ami: Volume $_existing_volumeid is already attached at /dev/sdi.  Detaching and deleting ..."
     ec2-detach-volume -f $_existing_volumeid
     ec2-delete-volume $_existing_volumeid
+  fi
+  echo "BOXBUILDER - boxbuilder_build_ami: Ensuring nothing is mounted at /dev/sdi ..."
+  if [[ ! -z $(sudo mount | grep '/dev/sdi') ]]; then
+    echo "BOXBUILDER - boxbuilder_build_ami: /dev/sdi is already mounted.  Unmounting ..."
+    sudo umount /dev/sdi
   fi
   
   echo "BOXBUILDER - boxbuilder_build_ami: Creating new volume ..."
