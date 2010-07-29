@@ -117,17 +117,30 @@ copy_image_to_ami() {
   export EC2_CERT=$(echo $HOME/.ec2/cert-*.pem)
   export EC2_PRIVATE_KEY=$(echo $HOME/.ec2/pk-*.pem)
   # TODO: check for existence, print nice error if not set
+  _existing_volumeid=$(ec2-describe-volumes -K ~/.ec2/pk-ec2-rails-ci.pem -C ~/.ec2/cert-ec2-rails-ci.pem | grep -e '^ATTACHMENT.*/dev/sdi' | cut -f2)
+  if [[ ! -z $_existing_volumeid ]]; then
+    echo "BOXBUILDER - boxbuilder_build_ami: Volume $_existing_volumeid is already attached at /dev/sdi (probably from a previous failed run of boxbuilder_build_ami).  Detaching and deleting ..."
+    ec2-detach-volume $_existing_volumeid
+    ec2-delete-volume $_existing_volumeid
+  fi
+  
+  echo "BOXBUILDER - boxbuilder_build_ami: Creating new volume ..."
   _volumeid=$(ec2-create-volume --size $_size --availability-zone us-east-1a | cut -f2)
+  echo "BOXBUILDER - boxbuilder_build_ami: Retrieving current instance id ..."
   _instanceid=$(wget --progress=dot -qO- http://instance-data/latest/meta-data/instance-id)
+  echo "BOXBUILDER - boxbuilder_build_ami: Attaching new volume $_volumeid to current instance $_instanceid ..."
   ec2-attach-volume --device /dev/sdi --instance "$_instanceid" "$_volumeid"
   while [ ! -e /dev/sdi ]; do echo -n .; sleep 1; done
+  echo "BOXBUILDER - boxbuilder_build_ami: Creating filesystem on /dev/sdi ..."
   sudo mkfs.ext3 -F /dev/sdi
   _ebsimage=$_imagedir-ebs
-  sudo mkdir $_ebsimage
+  echo "BOXBUILDER - boxbuilder_build_ami: Copying built image from chroot jail at $_imagedir to EBS volume $_volumeid mounted at $_imagedir-ebs ..."
+  sudo mkdir -p $_ebsimage
   sudo mount /dev/sdi $_ebsimage
   sudo tar -cSf - -C $_imagedir . | sudo tar xvf - -C $_ebsimage
   sudo umount $_ebsimage
   ec2-detach-volume "$_volumeid"
+  echo "BOXBUILDER - boxbuilder_build_ami: Creating snapshot of volume $_volumeid ..."
   snapshotid=$(ec2-create-snapshot "$_volumeid" | cut -f2)
   ec2-delete-volume "$_volumeid"
   while ec2-describe-snapshots "$snapshotid" | grep -q pending
@@ -138,7 +151,13 @@ copy_image_to_ami() {
     --description "$_description" \
     $_ebsopts \
     --snapshot "$snapshotid")
-  echo "AMIBUILDER: NEW AMI REGISTERED: AMI ID=$_newami, EBS ID=$_volumeid, EBS SNAPSHOT ID=$snapshotid, PREFIX=$_prefix, DESCRIPTION=$_description"
+  echo "BOXBUILDER - boxbuilder_build_ami: NEW AMI CREATED AND REGISTERED:"
+  echo "BOXBUILDER - boxbuilder_build_ami:   AMI ID=$_newami"
+  echo "BOXBUILDER - boxbuilder_build_ami:   EBS ID=$_volumeid"
+  echo "BOXBUILDER - boxbuilder_build_ami:   EBS SNAPSHOT ID=$snapshotid"
+  echo "BOXBUILDER - boxbuilder_build_ami:   PREFIX=$_prefix"
+  echo "BOXBUILDER - boxbuilder_build_ami:   DESCRIPTION=$_description"
+  
   echo "BOXBUILDER - boxbuilder_build_ami: Finished copying image to AMI ..."
 }
 
