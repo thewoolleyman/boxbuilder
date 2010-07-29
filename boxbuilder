@@ -188,7 +188,18 @@ setup_rvm() {
   fi
   
   # DEBUGGING
+  set +u
+  set +e
+  echo "!!!!!!!!!! BEGIN DEBUGGING FAILURES ON INITIAL INSTALL OF RVM"
+  echo "!!!!!!!!!! which gem:"
   which gem
+  echo "!!!!!!!!!! rvm info:"
+  rvm info
+  echo "!!!!!!!!!! gem env:"
+  gem env
+  echo "!!!!!!!!!! END DEBUGGING FAILURES ON INITIAL INSTALL OF RVM"
+  set -u
+  set -e
   if [[ ! $? = 0 ]]; then
     echo "Cannot find 'gem' command.  Debugging info:"
     echo $PATH
