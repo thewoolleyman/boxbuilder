@@ -71,7 +71,7 @@ create_chroot_jail_from_base_image() {
   sudo uec-resize-image $_image 5G
   # Ensure existing loop device is unmounted (allows script to be run multiple times)
   if [[ ! -z $(mount | grep '/dev/loop4') ]]; then
-    sudo umount -d /dev/loop4
+    sudo umount -dfl /dev/loop4
   fi 
   sudo mount -o loop=/dev/loop4 $_image $_imagedir
   # Sometimes this is needed even though image was resized before mount with uec-resize-image?
@@ -110,8 +110,12 @@ run_boxbuilder_bootstrap_in_chroot_jail_to_build_image() {
 copy_image_to_ami() {
   echo "BOXBUILDER - boxbuilder_build_ami: Copying image to AMI ..."
   echo "BOXBUILDER - boxbuilder_build_ami: Cleaning up mounts and policy-rc.d in chroot jail before copying image ..."
-  sudo chroot $_imagedir "if [[ -z $(mount | grep '/proc') ]]; then umount /proc; fi"
-  sudo chroot $_imagedir "if [[ -z $(mount | grep '/dev/pts') ]]; then umount /dev/pts; fi"
+  if [[ -z $(sudo chroot $_imagedir mount | grep '/proc') ]]; then
+    sudo chroot $_imagedir umount /proc
+  fi
+  if [[ -z $(sudo chroot $_imagedir mount | grep '/dev/pts') ]]; then
+    sudo chroot $_imagedir umount /dev/pts
+  fi
   sudo rm -f $_imagedir/usr/sbin/policy-rc.d
   
   _size=15 # root disk in GB
