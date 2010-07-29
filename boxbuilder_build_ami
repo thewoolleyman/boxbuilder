@@ -92,18 +92,15 @@ run_boxbuilder_bootstrap_in_chroot_jail_to_build_image() {
   echo "BOXBUILDER - boxbuilder_build_ami: Running boxbuilder_bootstrap in chroot jail to build image ..."
   echo "BOXBUILDER - boxbuilder_build_ami: Performing custom setup on $_imagedir using script at $boxbuilder_bootstrap_url ..."
   _boxbuilder_bootstrap_script=/tmp/${boxbuilder_bootstrap_url##*/} # grabs last path component of url to use as script name
-  echo "BOXBUILDER - boxbuilder_build_ami: Downloading custom setup script $_boxbuilder_bootstrap_script from $boxbuilder_bootstrap_url ..."
-  wget -O $_boxbuilder_bootstrap_script $boxbuilder_bootstrap_url
-  while exists=$(if [[ -e $_boxbuilder_bootstrap_script ]] ; then echo exists; fi); test "$exists" != "exists" ; do
-    echo "BOXBUILDER - boxbuilder_build_ami: Waiting for curl to finish downloading $_boxbuilder_bootstrap_script from $boxbuilder_bootstrap_url ..."
-    sleep 3
-  done
+  echo "BOXBUILDER - boxbuilder_build_ami: Downloading $_boxbuilder_bootstrap_script from $boxbuilder_bootstrap_url ..."
+  sudo chroot $_imagedir wget -O $_boxbuilder_bootstrap_script $boxbuilder_bootstrap_url
   echo "BOXBUILDER - boxbuilder_build_ami: $boxbuilder_bootstrap_url successfully downloaded to $_boxbuilder_bootstrap_script ..."
 
   echo "BOXBUILDER - boxbuilder_build_ami: Changing permissions on $_boxbuilder_bootstrap_script ..."
-  chmod a+x $_boxbuilder_bootstrap_script
+  sudo chroot $_imagedir chmod a+x $_boxbuilder_bootstrap_script
   echo "BOXBUILDER - boxbuilder_build_ami: Running $_boxbuilder_bootstrap_script ..."
-  $_boxbuilder_bootstrap_script
+  # TODO: does this pass everything in environment and $boxbuilder_config, or do we need to do more?
+  sudo chroot $_imagedir $_boxbuilder_bootstrap_script
   echo "BOXBUILDER - boxbuilder_build_ami: Finished running boxbuilder_bootstrap in chroot jail to build image ..."
 }
 
