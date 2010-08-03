@@ -17,8 +17,12 @@ before using the 'build\_ami' scripts: [https://console.aws.amazon.com/ec2/home]
 
 ----
 
-Quick Start
-===========
+----
+&nbsp;
+
+
+_Quick Start_
+=============
 
 To build a box, download and run
 '[boxbuilder\_bootstrap](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap)'
@@ -32,12 +36,17 @@ instance, or download and run
 '[boxbuilder\_remote_build\_ami](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_remote_build_ami)'
 from your local shell.
 
-See details in the sections below.
+You will be prompted to enter all required variables for the script you are running, such as
+your EC2 credentials, SSH keys, locations of your Chef repositories, etc.  See details in the sections below.
 
 ----
 
-General Usage Notes
-===================
+----
+&nbsp;
+
+
+_General Usage Notes_
+=====================
 
 * All scripts are controlled via environment variables, which are documented below
 * Environment variables can also be specified in ~/.boxbuilderrc
@@ -55,8 +64,12 @@ General Usage Notes
 
 ----
 
-boxbuilder\_bootstrap script
-===========================
+----
+&nbsp;
+
+
+_boxbuilder\_bootstrap script_
+==============================
 
 'boxbuilder\_bootstrap' is a single downloadable helper script which will check out the
 boxbuilder project to ~/.boxbuilder, and run the main '~/.boxbuilder/boxbuilder' script.  It
@@ -90,8 +103,12 @@ means they will also be set when the 'boxbuilder' script is invoked by 'boxbuild
 
 ----
 
-boxbuilder\_remote\_bootstrap script
-====================================
+----
+&nbsp;
+
+
+_boxbuilder\_remote\_bootstrap script_
+======================================
 
 'boxbuilder\_remote\_bootstrap' is run on your local box.  It allows you to run 'boxbuilder\_bootstrap'
 on a remote box without logging in to it.  It issues remote SSH commands to automatically
@@ -132,8 +149,12 @@ the default.
 
 ----
 
-boxbuilder script
-=================
+----
+&nbsp;
+
+
+_boxbuilder script_
+===================
 
 'boxbuilder' is the main script which does the work of building a box - specifically,
 preparing a box to run your custom chef cookbooks, downloading and running them.  When run 
@@ -171,7 +192,7 @@ function in the boxbuilder script for the latest default packages.
 'boxbuilder\_rvm\_version' is the version of RVM to use.  By default, it will be the latest stable
 version, listed at [http://rvm.beginrescueend.com/releases/stable-version.txt](http://rvm.beginrescueend.com/releases/stable-version.txt).
 
-    boxbuilder_rvm_version=
+    boxbuilder_rvm_version=$(curl -s http://rvm.beginrescueend.com/releases/stable-version.txt)
 
 ----
 
@@ -221,8 +242,12 @@ can be used to install the gem with a different version, source, etc.
 
 ----
 
-boxbuilder\_build\_ami script
-=============================
+----
+&nbsp;
+
+
+_boxbuilder\_build\_ami script_
+===============================
 
 'boxbuilder\_build\_ami' creates an EC2 EBS-backed AMI when run from an EC2 instance.  It does the following:
 
@@ -268,8 +293,12 @@ the default.
 
 ----
 
-boxbuilder\_remote\_build\_ami script
-=====================================
+----
+&nbsp;
+
+
+_boxbuilder\_remote\_build\_ami script_
+=======================================
 
 'boxbuilder\_remote\_build\_ami' is run from your local box.  It allows you to run 'boxbuilder\_build\_ami'
 on a remote box without logging in to it.  It issues remote SSH commands to do the following:
@@ -303,21 +332,32 @@ TODO: document these boxbuilder\_remote\_build\_ami variables:
 
 ----
 
-EC2 Info
-========
+----
+&nbsp;
 
-* Current Base AMI: ami-4b4ba522 - Ubuntu 10.04 LTS (Lucid Lynx) (us-east-1)
+
+_EC2 Info_
+==========
+
+* Current Base AMI: ami-4b4ba522 - Ubuntu 10.04 LTS amd64 server (Lucid Lynx) (us-east-1)
 
 * Alestic AMI list: http://alestic.com/
 * Ubuntu AMI list: http://uec-images.ubuntu.com/releases/lucid/release/
 
+----
+
+----
+&nbsp;
 
 
-Testing
-=======
+_Testing_
+=========
 
 Boxbuilder has a test suite which runs boxbuilder against a live machine, then asserts that it was
 built correctly.  It requires the same SSH variables to be set as does the 'boxbuilder\_remote\_bootstrap'
 ('boxbuilder\_keypair', 'boxbuilder\_user', and 'boxbuilder\_host').  It will also read these and
 any other variables set in ~/.boxbuilderrc.
 
+----
+
+----
