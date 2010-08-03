@@ -182,7 +182,9 @@ setup_rvm() {
   if [[ -s $HOME/.rvm/scripts/rvm ]]; then
     set +u
     set +e
+    $HOME/.rvm/bin/rvm reload
     source $HOME/.rvm/scripts/rvm
+    $HOME/.rvm/bin/rvm reload
     set -u
     set -e
   fi
