@@ -16,8 +16,6 @@ the instances may be left running.  Learn how to delete any unwanted resources v
 before using the 'build\_ami' scripts: [https://console.aws.amazon.com/ec2/home](https://console.aws.amazon.com/ec2/home)
 
 ----
-
-----
 &nbsp;
 
 
@@ -40,8 +38,6 @@ You will be prompted to enter all required variables for the script you are runn
 your EC2 credentials, SSH keys, locations of your Chef repositories, etc.  See details in the sections below.
 
 ----
-
-----
 &nbsp;
 
 
@@ -61,8 +57,6 @@ _General Usage Notes_
   the 'remote' scripts to set up a remote box, or to easily override config in
   the ~/.boxbuilderrc from the command line when invoking the 'boxbuilder' script
   directly.
-
-----
 
 ----
 &nbsp;
@@ -100,8 +94,6 @@ boxbuilder config variables from their default values or values which were loade
 means they will also be set when the 'boxbuilder' script is invoked by 'boxbuilder\_bootstrap'
 
     boxbuilder_config="export override_variable1=value; export override_variable2=value"
-
-----
 
 ----
 &nbsp;
@@ -146,8 +138,6 @@ onto the remote box being built.  Override it to use your custom boxbuilder\_boo
 the default.
 
     boxbuilder_bootstrap_url=http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap
-
-----
 
 ----
 &nbsp;
@@ -241,8 +231,6 @@ can be used to install the gem with a different version, source, etc.
     boxbuilder_chef_gem_install_options="--no-ri --no-rdoc"
 
 ----
-
-----
 &nbsp;
 
 
@@ -292,8 +280,6 @@ the default.
     boxbuilder_bootstrap_url=http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap
 
 ----
-
-----
 &nbsp;
 
 
@@ -331,8 +317,6 @@ TODO: document these boxbuilder\_remote\_build\_ami variables:
     boxbuilder_ami_prefix=${boxbuilder_ami_prefix:?"Please set 'boxbuilder_ami_prefix' to a string with no spaces.  This string will be prepended to the name of your new AMI"}
 
 ----
-
-----
 &nbsp;
 
 
@@ -345,8 +329,6 @@ _EC2 Info_
 * Ubuntu AMI list: http://uec-images.ubuntu.com/releases/lucid/release/
 
 ----
-
-----
 &nbsp;
 
 
@@ -357,7 +339,5 @@ Boxbuilder has a test suite which runs boxbuilder against a live machine, then a
 built correctly.  It requires the same SSH variables to be set as does the 'boxbuilder\_remote\_bootstrap'
 ('boxbuilder\_keypair', 'boxbuilder\_user', and 'boxbuilder\_host').  It will also read these and
 any other variables set in ~/.boxbuilderrc.
-
-----
 
 ----
