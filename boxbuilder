@@ -106,7 +106,7 @@ install_rvm() {
     set -u
     set -e
   fi
-  if [[ -s $HOME/.rvm/scripts/rvm && ! -z $(rvm --version | grep $boxbuilder_rvm_version) ]]; then
+  if [[ -s $HOME/.rvm/scripts/rvm && ! -z $($HOME/.rvm/bin/rvm --version | grep $boxbuilder_rvm_version) ]]; then
     echo "BOXBUILDER - boxbuilder:  Not reinstalling RVM version $boxbuilder_rvm_version because it is already installed ..."
   else
     mkdir -p $HOME/.rvm/src/
