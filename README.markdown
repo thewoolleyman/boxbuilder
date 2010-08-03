@@ -67,7 +67,8 @@ _boxbuilder\_bootstrap script_
 
 'boxbuilder\_bootstrap' is a single downloadable helper script which will check out the
 boxbuilder project to ~/.boxbuilder, and run the main '~/.boxbuilder/boxbuilder' script.  It
-is intended to be easily invoked on a clean box via wget or curl with a bash one-liner.  
+is intended to be easily invoked on a clean box via wget or curl with a bash one-liner.
+
 For example, log in or SSH to the box being built, and paste the following:
 
     wget -O /tmp/boxbuilder_bootstrap http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap && chmod +x /tmp/boxbuilder_bootstrap && /tmp/boxbuilder_bootstrap
@@ -107,6 +108,12 @@ on a remote box without logging in to it.  It issues remote SSH commands to auto
 download and run 'boxbuilder\_bootstrap' on the box being built.  This also makes it easy
 to hook boxbuilder into other tools or processes to automatically build/update multiple boxes.
 
+For example, run the following from your local box.  You will be prompted to set required variables
+which you can export from your shell, or set in ~/.boxbuilderrc:
+
+    wget -O /tmp/boxbuilder_remote_bootstrap http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_remote_bootstrap && chmod +x /tmp/boxbuilder_remote_bootstrap && /tmp/boxbuilder_remote_bootstrap
+
+
 ----
 
 boxbuilder\_remote\_bootstrap environment variables
@@ -125,8 +132,8 @@ box being built.
 
 The contents of the 'boxbuilder\_config' variable should be Bash commands to export and override
 boxbuilder config variables from their default values or values which will be loaded from
-~/.boxbuilderrc on the box build built.  It is NOT directly evaluated by the 'boxbuilder\_remote\_bootstrap'
-script; but is only passed on to the 'boxbuilder\_bootstrap' script when it is invoked via SSH on
+~/.boxbuilderrc on the box build built.  It will be directly evaluated by the 'boxbuilder\_remote\_bootstrap'
+script; and also passed on to the 'boxbuilder\_bootstrap' script when it is invoked via SSH on
 the remote box which is being built.
 
     boxbuilder_config="export override_variable1=value; export override_variable2=value"
