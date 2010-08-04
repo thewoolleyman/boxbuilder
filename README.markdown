@@ -19,8 +19,8 @@ before using the 'build\_ami' scripts: [https://console.aws.amazon.com/ec2/home]
 &nbsp;
 
 
-_Quick Start_
-=============
+_Quick Start and Overview_
+=========================
 
 To build a box, download and run
 '[boxbuilder\_bootstrap](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap)'
@@ -28,7 +28,7 @@ on a clean Debian box, or download and run
 '[boxbuilder\_remote\_bootstrap](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_remote_bootstrap)'
 from your local shell.
 
-To build an AMI image, download and run
+To build an AMI image (of a 'box' built by boxbuilder in a chroot jail on an EC2 box), download and run
 '[boxbuilder\_build\_ami](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_build_ami)' on a running AMI
 instance, or download and run
 '[boxbuilder\_remote_build\_ami](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_remote_build_ami)'
@@ -37,26 +37,71 @@ from your local shell.
 You will be prompted to enter all required variables for the script you are running, such as
 your EC2 credentials, SSH keys, locations of your Chef repositories, etc.  See details in the sections below.
 
+Here's the invocation order of the scripts for the two main tasks (building a box or building an AMI).
+You can, of course, run and re-run any of these scripts directly by logging into the box being built or the
+EC2 image building the AMI.
+
+Building a Box: 
+
+1. 'boxbuilder\_remote\_bootstrap' (invoked from any Bash shell) issues SSH commands on the box being built to download and invoke...
+2. 'boxbuilder\_bootstrap' (on the box being built), which clones a boxbuilder git repo, and invokes...
+3. 'boxbuilder' (on the box being built) from the cloned repo.
+
+Building an AMI Image: 
+
+1. 'boxbuilder\_remote\_build\_ami' (invoked from any Bash shell) starts an EC2 instance, and issues SSH commands on it built to download and invoke...
+2. 'boxbuilder\_build\_ami' (on the EC2 instance), which creates a chroot jail, and runs commands in the chroot jail to download and invoke...
+3. 'boxbuilder\_bootstrap' (in the chroot jail), which clones a boxbuilder git repo, and invokes...
+4. 'boxbuilder' (in the chroot jail) to build a 'box' in the chroot jail, which exits and returns control to...
+5. 'boxbuilder\_bootstrap' (in the chroot jail), which exits and returns control to...
+6. 'boxbuilder\_build\_ami' (on the EC2 instance), which continues to create an AMI image of the chroot jail.
+
+
+
 ----
 &nbsp;
 
 
-_General Usage Notes_
-=====================
+_Flexible, Automatically Downloaded, Easily Overridable Configuration_
+======================================================================
 
-* All scripts are controlled via environment variables, which are documented below
-* Environment variables can also be specified in ~/.boxbuilderrc
-* If you set the 'boxbuilderrc\_url' environment variable to point to a remote file,
-  it will be downloaded to ~/.boxbuilderrc\_download, and a ~/.boxbuilderrc file
-  will be automatically created with a line to read it.  This allows you to have
-  a standard config always downloaded to ~/.boxbuilderrc\_download, and add
-  local overrides or customization in ~/.boxbuilderrc
-* Environment variables and other config can be made via the 'boxbuilder\_config'
-  variable.  This will be evaluated as a line of bash scripting AFTER
-  ~/.boxbuilderrc is loaded.  This is useful to pass along configuration when using
-  the 'remote' scripts to set up a remote box, or to easily override config in
-  the ~/.boxbuilderrc from the command line when invoking the 'boxbuilder' script
-  directly.
+* The boxbuilder script itself and the other scripts which invoke it locally or
+  remotely are controlled via configuration values set in environment variables.
+  Some have overridable defaults.  Others are required, and you will be prompted for
+  them if they are not set.
+* Environment variables can also be specified in the config file ~/.boxbuilderrc.  
+  If it does not already exist, ~/.boxbuilderrc will automatically be created
+  to read and source ~/.boxbuilderrc\_download.
+* ~/.boxbuilderrc\_download will automatically be downloaded from the URL specified
+  in 'boxbuilderrc\_url' environment variable.  By default, it points to
+  the '[boxbuilderrc\_download\_default](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_download_default)'
+  file at [http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_download_default](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_download_default)
+* This simple config-file-based approach allows you to have standard config files for different
+  machines stored in source control and always downloaded to ~/.boxbuilderrc\_download,
+  but still add local overrides to the bottom of ~/.boxbuilderrc after it sources
+  ~/.boxbuilderrc\_download if you want to test or debug by re-running the 'boxbuilder'
+  script locally on the box being built.  If you prefer, you can create a
+  ~/.boxbuilderrc file which which does not source ~/.boxbuilderrc\_download, and
+  instead set all variables directly in ~/.boxbuilderrc, via 'boxbuilder\_config' (see next bullet)
+  or in some other way you choose.
+* Environment variables can also be set or overridden via the 'boxbuilder\_config'
+  variable.  The contents of this variable will be evaluated as a line of bash scripting
+  AFTER the ~/.boxbuilderrc and ~/.boxbuilderrc\_download config files are sourced.
+  This provides another easy command-line-based approach to override environment variables
+  when you are using the 'remote' scripts to set up a remote box or the
+  'boxbuilder' or 'boxbuilder\_bootstrap' scripts directly.
+
+Here's an ordered summary of the process for reading configuration from various sources
+when the 'boxbuilder' script runs.  You can add/override environment variables at any point:
+
+0. Any pre-existing variables are, naturally, already set before 'boxbuilder' is invoked
+1. ~/.boxbuilderrc\_download is automatically downloaded
+2. ~/.boxbuilderrc is created by default, with one line to source ~/.boxbuilderrc\_download
+3. You can add overrides to the bottom of ~/.boxbuilderrc
+4. ~/.boxbuilderrc is sourced by the 'boxbuilder' script
+5. The contents of 'boxbuilder\_config' are evaluated.
+6. Any environment variables not set by this point will either have a default value set, or will
+   cause the script(s) to exit with a prompt if they are required.
 
 ----
 &nbsp;
@@ -79,9 +124,11 @@ For example, log in or SSH to the box being built, and paste the following:
 boxbuilder\_bootstrap environment variables
 -------------------------------------------
 
-'boxbuilder\_repo', 'boxbuilder\_branch', and 'boxbuilder\_dir' specify
+The 'boxbuilder\_repo', 'boxbuilder\_branch', and 'boxbuilder\_dir' are intended to make
+it easy to use and hack on your fork of boxbuilder.  They let you specify
 the Git repository, branch, and directory to use when cloning and running the boxbuilder project.  If
-the ~/.boxbuilder/ directory already exists, nothing will be downloaded or overwritten.
+the 'boxbuilder\_dir' directory has already been cloned, nothing will be downloaded or overwritten, but
+'git pull' will automatically be run with 'boxbuilder\_repo' and 'boxbuilder\_branch'.
 
     boxbuilder_repo=git://github.com/thewoolleyman/boxbuilder.git
     boxbuilder_branch=master
@@ -91,8 +138,8 @@ the ~/.boxbuilder/ directory already exists, nothing will be downloaded or overw
 
 The contents of the 'boxbuilder\_config' variable should be Bash commands to export and override
 boxbuilder config variables from their default values or values which were loaded from
-~/.boxbuilderrc.  It will be evaluated by the 'boxbuilder\_bootstrap' script, which
-means they will also be set when the 'boxbuilder' script is invoked by 'boxbuilder\_bootstrap'
+~/.boxbuilderrc.  They will be evaluated by the 'boxbuilder\_bootstrap' script, which
+means they are also available when the 'boxbuilder' script is sourced by 'boxbuilder\_bootstrap'
 
     boxbuilder_config="export override_variable1=value; export override_variable2=value"
 
@@ -103,12 +150,12 @@ means they will also be set when the 'boxbuilder' script is invoked by 'boxbuild
 _boxbuilder\_remote\_bootstrap script_
 ======================================
 
-'boxbuilder\_remote\_bootstrap' is run on your local box.  It allows you to run 'boxbuilder\_bootstrap'
+'boxbuilder\_remote\_bootstrap' is run from any Bash shell.  It allows you to run 'boxbuilder\_bootstrap'
 on a remote box without logging in to it.  It issues remote SSH commands to automatically
 download and run 'boxbuilder\_bootstrap' on the box being built.  This also makes it easy
 to hook boxbuilder into other tools or processes to automatically build/update multiple boxes.
 
-For example, run the following from your local box.  You will be prompted to set required variables
+For example, run the following from a Bash shell on your workstation.  You will be prompted to set required variables
 which you can export from your shell, or set in ~/.boxbuilderrc:
 
     wget -O /tmp/boxbuilder_remote_bootstrap http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_remote_bootstrap && chmod +x /tmp/boxbuilder_remote_bootstrap && /tmp/boxbuilder_remote_bootstrap
@@ -119,7 +166,8 @@ which you can export from your shell, or set in ~/.boxbuilderrc:
 boxbuilder\_remote\_bootstrap environment variables
 ---------------------------------------------------
 
-**(REQUIRED)** Set 'boxbuilder\_keypair' to the path of your private key which will allow you to log in to the
+**(REQUIRED to log into the remote box being built)** Set 'boxbuilder\_keypair' to
+the path of your private key which will allow you to log in to the
 box being built (you should already have your public key in ~/.ssh/authorized_keys).  Set 
 'boxbuilder\_user' to the user, and 'boxbuilder\_host' to the hostname or IP address of the
 box being built.
@@ -132,8 +180,8 @@ box being built.
 
 The contents of the 'boxbuilder\_config' variable should be Bash commands to export and override
 boxbuilder config variables from their default values or values which will be loaded from
-~/.boxbuilderrc on the box build built.  It will be directly evaluated by the 'boxbuilder\_remote\_bootstrap'
-script; and also passed on to the 'boxbuilder\_bootstrap' script when it is invoked via SSH on
+~/.boxbuilderrc on the box build built.  It will be evaluated by the 'boxbuilder\_remote\_bootstrap'
+script; AND also passed on to the 'boxbuilder\_bootstrap' script when it is invoked via SSH on
 the remote box which is being built.
 
     boxbuilder_config="export override_variable1=value; export override_variable2=value"
@@ -256,11 +304,9 @@ boxbuilder\_build_ami environment variables
 -------------------------------------------
 
 The contents of the 'boxbuilder\_config' variable should be Bash commands to export and override
-boxbuilder config variables from their default values or values which will be loaded from
-~/.boxbuilderrc when 'boxbuilder\_bootstrap' is run in the chroot jail.
-It IS directly evaluated by the 'boxbuilder\_remote\_bootstrap'
-script; and is also passed on to the 'boxbuilder\_bootstrap' script when it is invoked via SSH on
-the remote box which is being built.
+boxbuilder config variables.  It is directly evaluated by the 'boxbuilder\_build\_ami'
+script; and is also passed on to be evaluated before 'boxbuilder\_bootstrap' is run in the chroot jail.
+See the documentation of the other scripts for more details on 'boxbuilder\_config'.
 
     boxbuilder_config="export override_variable1=value; export override_variable2=value"
 
@@ -293,7 +339,7 @@ the default.
 _boxbuilder\_remote\_build\_ami script_
 =======================================
 
-'boxbuilder\_remote\_build\_ami' is run from your local box.  It allows you to run 'boxbuilder\_build\_ami'
+'boxbuilder\_remote\_build\_ami' is run from any bash shell.  It allows you to run 'boxbuilder\_build\_ami'
 on a remote box without logging in to it.  It issues remote SSH commands to do the following:
 
 * Automatically start an EC2 instance using your EC2 account and credentials
