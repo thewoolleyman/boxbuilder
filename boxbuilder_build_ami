@@ -51,8 +51,11 @@ setup() {
 
 install_ec2_tools() {
   echo "BOXBUILDER - boxbuilder_build_ami: Installing ec2 tools ..."
+  echo "BOXBUILDER - boxbuilder_build_ami: Ensuring that multiverse is added to /etc/apt/sources.list so ec2 packages can be installed ..."
+  sudo sed -i".bak-$(date +%Y%m%d-%H%M)" -e 's/universe$/universe multiverse/' /etc/apt/sources.list
+  echo "BOXBUILDER - boxbuilder_build_ami: Updating apt and installing EC2 tools ..."
   sudo apt-get update
-  sudo -E apt-get dist-upgrade -y
+  # sudo -E apt-get dist-upgrade -y    # TODO: Why do we need this?  Left over from ESH's original AMI builder article.  Delete if unnecessary
   sudo -E apt-get install -y ec2-api-tools ec2-ami-tools
   echo "BOXBUILDER - boxbuilder_build_ami: Finished installing ec2 tools ..."
 }

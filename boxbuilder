@@ -62,6 +62,7 @@ setup_boxbuilderrc() {
 
 install_packages() {
   echo "BOXBUILDER - boxbuilder:  Installing packages..."
+  export DEBIAN_FRONTEND=noninteractive  # Make Debian never prompt for user input on packages ...
   _packages_missing=false
   for _package in $boxbuilder_prerequisite_packages
   do
