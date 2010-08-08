@@ -306,23 +306,27 @@ boxbuilder\_build_ami environment variables
 The contents of the 'boxbuilder\_config' variable should be Bash commands to export and override
 boxbuilder config variables.  It is directly evaluated by the 'boxbuilder\_build\_ami'
 script; and is also passed on to be evaluated before 'boxbuilder\_bootstrap' is run in the chroot jail.
-See the documentation of the other scripts for more details on 'boxbuilder\_config'.
+See the documentation of the config options and the other scripts for more details on 'boxbuilder\_config'.
 
     boxbuilder_config="export override_variable1=value; export override_variable2=value"
 
 ----
 
-**(REQUIRED)** 'EC2\_CERT' is the path to your EC2 cert file.  It is directly required by the EC2 tools
-executables (which is why it is not named 'boxbuilder\_...).  If it is not set, it will default 
-to the first file matching $HOME/.ec2/cert-*.pem.  TODO: More details and links to EC2 docs.
+**(REQUIRED by EC2 tools)** 'EC2\_CERT' is the path to your EC2 X509 certificate file.  It is directly required by the EC2 tools
+executables (which is why it is not named 'boxbuilder\_...) to create and manage EC2 resources.  If it is not set, it will default 
+to the first file matching $HOME/.ec2/cert-*.pem.
+See [http://docs.amazonwebservices.com/AWSSecurityCredentials/1.0/AboutAWSCredentials.html#X509Credentials](http://docs.amazonwebservices.com/AWSSecurityCredentials/1.0/AboutAWSCredentials.html#X509Credentials) for documentation,
+and [https://aws-portal.amazon.com/gp/aws/developer/account/index.html?ie=UTF8&action=access-key#access_credentials](https://aws-portal.amazon.com/gp/aws/developer/account/index.html?ie=UTF8&action=access-key#access_credentials) to create a cert and private key.
 
     EC2_CERT=$HOME/.ec2/cert-*.pem
 
 ----
 
-**(REQUIRED)** 'EC2\_PRIVATE\_KEY' is the path to your EC2 private key file.  It is directly required by the EC2 tools
-executables (which is why it is not named 'boxbuilder\_...).  If it is not set, it will default
-to the first file matching $HOME/.ec2/pk-*.pem.  TODO: More details and links to EC2 docs.
+**(REQUIRED by EC2 tools)** 'EC2\_PRIVATE\_KEY' is the path to your EC2 X509 private key file.  It is directly required by the EC2 tools
+executables (which is why it is not named 'boxbuilder\_...) to create and manage EC2 resources.  If it is not set, it will default
+to the first file matching $HOME/.ec2/pk-*.pem.
+See [http://docs.amazonwebservices.com/AWSSecurityCredentials/1.0/AboutAWSCredentials.html#X509Credentials](http://docs.amazonwebservices.com/AWSSecurityCredentials/1.0/AboutAWSCredentials.html#X509Credentials) for documentation,
+and [https://aws-portal.amazon.com/gp/aws/developer/account/index.html?ie=UTF8&action=access-key#access_credentials](https://aws-portal.amazon.com/gp/aws/developer/account/index.html?ie=UTF8&action=access-key#access_credentials) to create a cert and private key.
 
     EC2_PRIVATE_KEY=$HOME/.ec2/pk-*.pem
 
@@ -365,19 +369,53 @@ boxbuilder\_remote\_build\_ami environment variables
 
 ----
 
-**(REQUIRED)** 'EC2\_CERT' is the path to your EC2 cert file.  It is directly required by the EC2 tools
-executables (which is why it is not named 'boxbuilder\_...).  If it is not set, it will default 
-to the first file matching $HOME/.ec2/cert-*.pem.  TODO: More details and links to EC2 docs.
+The contents of the 'boxbuilder\_config' variable should be Bash commands to export and override
+boxbuilder config variables.  It is directly evaluated by the 'boxbuilder\_remote\_build\_ami'
+script; and is also passed on to be evaluated before 'boxbuilder\_build\_ami' is run in on the
+remote EC2 utility instance.  See the documentation of the config options and other scripts for more details on 'boxbuilder\_config'.
+
+    boxbuilder_config="export override_variable1=value; export override_variable2=value"
+
+----
+
+**(REQUIRED by EC2 tools)** 'EC2\_CERT' is the path to your EC2 X509 certificate file.  It is directly required by the EC2 tools
+executables (which is why it is not named 'boxbuilder\_...) to create and manage EC2 resources.  If it is not set, it will default 
+to the first file matching $HOME/.ec2/cert-*.pem.
+See [http://docs.amazonwebservices.com/AWSSecurityCredentials/1.0/AboutAWSCredentials.html#X509Credentials](http://docs.amazonwebservices.com/AWSSecurityCredentials/1.0/AboutAWSCredentials.html#X509Credentials) for documentation,
+and [https://aws-portal.amazon.com/gp/aws/developer/account/index.html?ie=UTF8&action=access-key#access_credentials](https://aws-portal.amazon.com/gp/aws/developer/account/index.html?ie=UTF8&action=access-key#access_credentials) to create a cert and private key.
 
     EC2_CERT=$HOME/.ec2/cert-*.pem
 
 ----
 
-**(REQUIRED)** 'EC2\_PRIVATE\_KEY' is the path to your EC2 private key file.  It is directly required by the EC2 tools
-executables (which is why it is not named 'boxbuilder\_...).  If it is not set, it will default
-to the first file matching $HOME/.ec2/pk-*.pem.  TODO: More details and links to EC2 docs.
+**(REQUIRED by EC2 tools)** 'EC2\_PRIVATE\_KEY' is the path to your EC2 X509 private key file.  It is directly required by the EC2 tools
+executables (which is why it is not named 'boxbuilder\_...) to create and manage EC2 resources.  If it is not set, it will default
+to the first file matching $HOME/.ec2/pk-*.pem.
+See [http://docs.amazonwebservices.com/AWSSecurityCredentials/1.0/AboutAWSCredentials.html#X509Credentials](http://docs.amazonwebservices.com/AWSSecurityCredentials/1.0/AboutAWSCredentials.html#X509Credentials) for documentation,
+and [https://aws-portal.amazon.com/gp/aws/developer/account/index.html?ie=UTF8&action=access-key#access_credentials](https://aws-portal.amazon.com/gp/aws/developer/account/index.html?ie=UTF8&action=access-key#access_credentials) to create a cert and private key.
 
     EC2_PRIVATE_KEY=$HOME/.ec2/pk-*.pem
+
+----
+
+**(REQUIRED by EC2 tools)** 'EC2\_KEYPAIR' is the path to your EC2 'keypair' file.  Amazon refers to this as a 'keypair', but it is
+actually just the private key.  You don't ever need to directly use the public key; Amazon manages it for you - but you can always
+generate it using the '-y' option of 'ssh-keygen'.  'EC2\_KEYPAIR' is used by
+'boxbuilder\_remote\_build\_ami' for SSH access to the EC2 utility instance it creates to run 'boxbuilder\_build\_ami'.
+If it is not set, it will default to the first file matching $HOME/.ec2/keypair-*.pem.
+See [http://docs.amazonwebservices.com/AWSSecurityCredentials/1.0/AboutAWSCredentials.html#EC2KeyPairs](http://docs.amazonwebservices.com/AWSSecurityCredentials/1.0/AboutAWSCredentials.html#EC2KeyPairs) for documentation,
+and [https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs](https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs) to create a keypair.
+
+    EC2_KEYPAIR=$HOME/.ec2/keypair-*.pem
+
+----
+
+**(REQUIRED by EC2 tools)** 'EC2\_KEYPAIR\_NAME' is the name of your EC2 'keypair'.  It is used by 'boxbuilder\_remote\_build\_ami'
+when starting the EC2 utility instance it creates to run 'boxbuilder\_build\_ami'. You must set this to the name which matches the keypair file specified in 'EC2\_KEYPAIR'.
+See [http://docs.amazonwebservices.com/AWSSecurityCredentials/1.0/AboutAWSCredentials.html#EC2KeyPairs](http://docs.amazonwebservices.com/AWSSecurityCredentials/1.0/AboutAWSCredentials.html#EC2KeyPairs) for documentation,
+and [https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs](https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs) to create a keypair.
+
+    EC2_KEYPAIR=$HOME/.ec2/keypair-*.pem
 
 ----
 
