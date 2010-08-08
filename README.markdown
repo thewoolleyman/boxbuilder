@@ -354,18 +354,10 @@ _boxbuilder\_remote\_build\_ami script_
 'boxbuilder\_remote\_build\_ami' is run from any bash shell.  It allows you to run 'boxbuilder\_build\_ami'
 on a remote box without logging in to it.  It issues remote SSH commands to do the following:
 
-* Automatically start an EC2 instance using your EC2 account and credentials
+* Download the Amazon EC2 API and AMI tools to your local filesystem
+* Automatically start an EC2 instance using your EC2 account and credentials (which you are required to obtain and specify)
 * Upload your credentials to the instance
 * Download and run 'boxbuilder\_remote\_build\_ami' on the instance
-
-----
-
-boxbuilder\_remote\_build\_ami environment variables
-----------------------------------------------------
-
-**(REQUIRED)** 'boxbuilder\_xxx\_yyy' zzz.
-
-    boxbuilder_xxx=yyy
 
 ----
 
@@ -398,11 +390,13 @@ and [https://aws-portal.amazon.com/gp/aws/developer/account/index.html?ie=UTF8&a
 
 ----
 
-**(REQUIRED by EC2 tools)** 'EC2\_KEYPAIR' is the path to your EC2 'keypair' file.  Amazon refers to this as a 'keypair', but it is
+**(REQUIRED for EC2 tools)** 'EC2\_KEYPAIR' is the path to your EC2 'keypair' file.  Amazon refers to this as a 'keypair', but it is
 actually just the private key.  You don't ever need to directly use the public key; Amazon manages it for you - but you can always
 generate it using the '-y' option of 'ssh-keygen'.  'EC2\_KEYPAIR' is used by
 'boxbuilder\_remote\_build\_ami' for SSH access to the EC2 utility instance it creates to run 'boxbuilder\_build\_ami'.
 If it is not set, it will default to the first file matching $HOME/.ec2/keypair-*.pem.
+NOTE: I don't think this variable is ever used directly by the EC2 tools, but it is named like the
+other EC2-required credential variables for consistency.
 See [http://docs.amazonwebservices.com/AWSSecurityCredentials/1.0/AboutAWSCredentials.html#EC2KeyPairs](http://docs.amazonwebservices.com/AWSSecurityCredentials/1.0/AboutAWSCredentials.html#EC2KeyPairs) for documentation,
 and [https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs](https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs) to create a keypair.
 
@@ -410,8 +404,11 @@ and [https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs](https://console.a
 
 ----
 
-**(REQUIRED by EC2 tools)** 'EC2\_KEYPAIR\_NAME' is the name of your EC2 'keypair'.  It is used by 'boxbuilder\_remote\_build\_ami'
-when starting the EC2 utility instance it creates to run 'boxbuilder\_build\_ami'. You must set this to the name which matches the keypair file specified in 'EC2\_KEYPAIR'.
+**(REQUIRED for EC2 tools)** 'EC2\_KEYPAIR\_NAME' is the name of your EC2 'keypair'.  It is used by 'boxbuilder\_remote\_build\_ami'
+when starting the EC2 utility instance it creates to run 'boxbuilder\_build\_ami'. You must set this to the
+name which matches the keypair file specified in 'EC2\_KEYPAIR'.
+NOTE: I don't think this variable is ever used directly by the EC2 tools, but it is named like the
+other EC2-required credential variables for consistency.
 See [http://docs.amazonwebservices.com/AWSSecurityCredentials/1.0/AboutAWSCredentials.html#EC2KeyPairs](http://docs.amazonwebservices.com/AWSSecurityCredentials/1.0/AboutAWSCredentials.html#EC2KeyPairs) for documentation,
 and [https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs](https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs) to create a keypair.
 
@@ -419,15 +416,12 @@ and [https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs](https://console.a
 
 ----
 
-TODO: document these boxbuilder\_remote\_build\_ami variables (or use EC2 default names):
+'boxbuilder\_ami\_instancetype' is the type of EC2 utility instance you wish to start, which must match the
+type of AMI you wish to build (32-bit or 64-bit).  Use 'm1.small' if you are building a 32-bit AMI, and 
+'m1.large' if you are building a 64-bit AMI.  The default value is 'm1.large' (64-bit).
+See [http://aws.amazon.com/ec2/instance-types](http://aws.amazon.com/ec2/instance-types)
 
-    # EC2 Credentials
-    boxbuilder_ec2_keypair=${boxbuilder_ec2_keypair:?"Please set 'boxbuilder_ec2_keypair' to the path of your keypair private key (https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs)"}
-    boxbuilder_ec2_keypairname=${boxbuilder_ec2_keypairname:?"Please set "boxbuilder_ec2_keypairname" to the name of your keypair (https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs)"}
-
-    # AMI Builder Settings
-    boxbuilder_ami_instancetype=${boxbuilder_ami_instancetype:?"Please set 'boxbuilder_ami_instancetype' to the type of instance you want, e.g. m1.small for 32 bit and m1.large for 64 bit (See http://aws.amazon.com/ec2/instance-types/)"}
-    boxbuilder_ami_prefix=${boxbuilder_ami_prefix:?"Please set 'boxbuilder_ami_prefix' to a string with no spaces.  This string will be prepended to the name of your new AMI"}
+    boxbuilder_ami_prefix=m1.large
 
 ----
 &nbsp;
