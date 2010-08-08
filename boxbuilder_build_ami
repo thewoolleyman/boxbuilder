@@ -198,12 +198,13 @@ copy_image_to_ami() {
   ec2-delete-volume "$_volumeid"
   while ec2-describe-snapshots "$_snapshotid" | grep -q pending
     do echo -n .; sleep 1; done
-  _newami=$(ec2-register \
+  _ec2_register_output=$(ec2-register \
     --architecture $_arch \
     --name "$_prefix" \
     --description "$_description" \
     $_ebsopts \
     --snapshot "$_snapshotid")
+  _newami=${_ec2_register_output##*[[:blank:]]}
 
   echo "BOXBUILDER - boxbuilder_build_ami: NEW AMI SUCCESSFULLY CREATED AND REGISTERED:"
   echo "BOXBUILDER - boxbuilder_build_ami: grep and following output lines and evaluate them to retrieve and set local variables describing the new AMI"
