@@ -12,13 +12,21 @@ trap 'echo BOXBUILDER - boxbuilder_build_ami: error on line $LINENO' ERR
 
 set_ec2_credentials() {
   echo "BOXBUILDER - boxbuilder_build_ami: Setting EC2 credentials ..."
-  if [[ ! -e $HOME/.ec2 ]]; then
+  if [[ ( ! -e $HOME/.ec2 ) && ( -z $EC2_CERT || -z $EC2_PRIVATE_KEY ) ]]; then
     echo "BOXBUILDER - boxbuilder_build_ami: ERROR: $HOME/.ec2 directory does not exist ..."
     return 1
-  else
-    export EC2_CERT=$(echo $HOME/.ec2/cert-*.pem)
-    export EC2_PRIVATE_KEY=$(echo $HOME/.ec2/pk-*.pem)
+  end
+  
+  if [[ -z $EC2_CERT ]]; then
+    _default_cert=( $HOME/.ec2/cert-*.pem ) # grab first file using bash array
+    EC2_CERT=${EC2_CERT:-"$_default_cert"}
   fi
+
+  if [[ -z $EC2_PRIVATE_KEY ]]; then
+    _default_pk=( $HOME/.ec2/pk-*.pem ) # grab first file using bash array
+    EC2_PRIVATE_KEY=${EC2_PRIVATE_KEY:-"$_default_pk"}
+  fi
+
   if [[ ! -e $EC2_CERT ]]; then
     echo "BOXBUILDER - boxbuilder_build_ami: ERROR: EC2_CERT was not found at $EC2_CERT, exiting ..."
     return 1
@@ -27,6 +35,8 @@ set_ec2_credentials() {
     echo "BOXBUILDER - boxbuilder_build_ami: ERROR: EC2_PRIVATE_KEY was not found at $EC2_PRIVATE_KEY, exiting ..."
     return 1
   fi
+  export EC2_CERT
+  export EC2_PRIVATE_KEY
   echo "BOXBUILDER - boxbuilder_build_ami: Finished setting EC2 credentials.  Using EC2_CERT=$EC2_CERT and EC2_PRIVATE_KEY=$EC2_PRIVATE_KEY ..."
 }
 
@@ -40,7 +50,6 @@ setup() {
   boxbuilder_bootstrap_url=${boxbuilder_bootstrap_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap"}
 
   # AMI Builder Settings
-  boxbuilder_ami_instancetype=${boxbuilder_ami_instancetype:?"Please set 'boxbuilder_ami_instancetype' to the type of instance you want, e.g. m1.small for 32 bit and m1.large for 64 bit (See http://aws.amazon.com/ec2/instance-types/)"}
   boxbuilder_ami_prefix=${boxbuilder_ami_prefix:?"Please set 'boxbuilder_ami_prefix' to a string with no spaces.  This string will be prepended to the name of your new AMI"}
   
   # Keypairname only used when starting instance, commented for use in boxbuilder_remote_build_ami
@@ -122,7 +131,7 @@ create_chroot_jail_from_base_image() {
 
 run_boxbuilder_bootstrap_in_chroot_jail_to_build_image() {
   echo "BOXBUILDER - boxbuilder_build_ami: Running boxbuilder_bootstrap in chroot jail to build image ..."
-  echo "BOXBUILDER - boxbuilder_build_ami: Performing custom setup on $_imagedir using script at $boxbuilder_bootstrap_url ..."
+  echo "BOXBUILDER - boxbuilder_build_ami: Performing custom setup in $_imagedir using script at $boxbuilder_bootstrap_url ..."
   _boxbuilder_bootstrap_script=/tmp/${boxbuilder_bootstrap_url##*/} # grabs last path component of url to use as script name
   echo "BOXBUILDER - boxbuilder_build_ami: Downloading $_boxbuilder_bootstrap_script from $boxbuilder_bootstrap_url ..."
   sudo chroot $_imagedir wget -O $_boxbuilder_bootstrap_script $boxbuilder_bootstrap_url

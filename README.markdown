@@ -312,17 +312,25 @@ See the documentation of the other scripts for more details on 'boxbuilder\_conf
 
 ----
 
-**(REQUIRED)** 'boxbuilder\_xxx\_yyy' zzz.
+**(REQUIRED)** 'EC2\_CERT' is the path to your EC2 cert file.  It is directly required by the EC2 tools
+executables (which is why it is not named 'boxbuilder\_...).  If it is not set, it will default 
+to the first file matching $HOME/.ec2/cert-*.pem.  TODO: More details and links to EC2 docs.
 
-    boxbuilder_xxx=yyy
+    EC2_CERT=$HOME/.ec2/cert-*.pem
 
 ----
 
-TODO: document these boxbuilder\_build\_ami variables:
+**(REQUIRED)** 'EC2\_PRIVATE\_KEY' is the path to your EC2 private key file.  It is directly required by the EC2 tools
+executables (which is why it is not named 'boxbuilder\_...).  If it is not set, it will default
+to the first file matching $HOME/.ec2/pk-*.pem.  TODO: More details and links to EC2 docs.
 
-    # AMI Builder Settings
-    boxbuilder_ami_instancetype=${boxbuilder_ami_instancetype:?"Please set 'boxbuilder_ami_instancetype' to the type of instance you want, e.g. m1.small for 32 bit and m1.large for 64 bit (See http://aws.amazon.com/ec2/instance-types/)"}
-    boxbuilder_ami_prefix=${boxbuilder_ami_prefix:?"Please set 'boxbuilder_ami_prefix' to a string with no spaces.  This string will be prepended to the name of your new AMI"}
+    EC2_PRIVATE_KEY=$HOME/.ec2/pk-*.pem
+
+----
+
+**(REQUIRED)** 'boxbuilder\_ami\_prefix' is a string which will be prepended to the name of the AMI being created.
+
+    boxbuilder_ami_prefix="boxbuilder_test_$(date +%Y%m%d-%H%M)"
 
 ----
 
@@ -357,11 +365,25 @@ boxbuilder\_remote\_build\_ami environment variables
 
 ----
 
-TODO: document these boxbuilder\_remote\_build\_ami variables:
+**(REQUIRED)** 'EC2\_CERT' is the path to your EC2 cert file.  It is directly required by the EC2 tools
+executables (which is why it is not named 'boxbuilder\_...).  If it is not set, it will default 
+to the first file matching $HOME/.ec2/cert-*.pem.  TODO: More details and links to EC2 docs.
+
+    EC2_CERT=$HOME/.ec2/cert-*.pem
+
+----
+
+**(REQUIRED)** 'EC2\_PRIVATE\_KEY' is the path to your EC2 private key file.  It is directly required by the EC2 tools
+executables (which is why it is not named 'boxbuilder\_...).  If it is not set, it will default
+to the first file matching $HOME/.ec2/pk-*.pem.  TODO: More details and links to EC2 docs.
+
+    EC2_PRIVATE_KEY=$HOME/.ec2/pk-*.pem
+
+----
+
+TODO: document these boxbuilder\_remote\_build\_ami variables (or use EC2 default names):
 
     # EC2 Credentials
-    boxbuilder_ec2_privatekey=${boxbuilder_privatekey:?"Please set 'boxbuilder_ec2_privatekey' to the path of your private key (See X.509 Certificates at https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key#access_credentials)"}
-    boxbuilder_ec2_cert=${boxbuilder_ec2_cert:?"Please set 'boxbuilder_ec2_cert' to the path of your cert (See X.509 Certificates at https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key#access_credentials)"}
     boxbuilder_ec2_keypair=${boxbuilder_ec2_keypair:?"Please set 'boxbuilder_ec2_keypair' to the path of your keypair private key (https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs)"}
     boxbuilder_ec2_keypairname=${boxbuilder_ec2_keypairname:?"Please set "boxbuilder_ec2_keypairname" to the name of your keypair (https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs)"}
 
