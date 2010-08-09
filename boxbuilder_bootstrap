@@ -5,9 +5,11 @@
 
 set -o noclobber
 set -e
+set -o errexit
 set -o pipefail
 set -o nounset
-trap 'echo BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO' ERR
+set -u
+trap 'echo BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO' ERR EXIT INT TERM
 
 setup() {
   if [ -e $HOME/.boxbuilderrc ]; then

@@ -5,40 +5,11 @@
 
 set -o noclobber
 set -e
+set -o errexit
 set -o pipefail
 set -o nounset
 set -u
-trap 'echo BOXBUILDER - boxbuilder_build_ami: error on line $LINENO' ERR
-
-set_ec2_credentials() {
-  echo "BOXBUILDER - boxbuilder_build_ami: Setting EC2 credentials ..."
-  if [[ ( ! -e $HOME/.ec2 ) && ( -z $EC2_CERT || -z $EC2_PRIVATE_KEY ) ]]; then
-    echo "BOXBUILDER - boxbuilder_build_ami: ERROR: $HOME/.ec2 directory does not exist ..."
-    return 1
-  end
-  
-  if [[ -z $EC2_CERT ]]; then
-    _default_cert=( $HOME/.ec2/cert-*.pem ) # grab first file using bash array
-    EC2_CERT=${EC2_CERT:-"$_default_cert"}
-  fi
-
-  if [[ -z $EC2_PRIVATE_KEY ]]; then
-    _default_pk=( $HOME/.ec2/pk-*.pem ) # grab first file using bash array
-    EC2_PRIVATE_KEY=${EC2_PRIVATE_KEY:-"$_default_pk"}
-  fi
-
-  if [[ ! -e $EC2_CERT ]]; then
-    echo "BOXBUILDER - boxbuilder_build_ami: ERROR: EC2_CERT was not found at $EC2_CERT, exiting ..."
-    return 1
-  fi
-  if [[ ! -e $EC2_PRIVATE_KEY ]]; then
-    echo "BOXBUILDER - boxbuilder_build_ami: ERROR: EC2_PRIVATE_KEY was not found at $EC2_PRIVATE_KEY, exiting ..."
-    return 1
-  fi
-  export EC2_CERT
-  export EC2_PRIVATE_KEY
-  echo "BOXBUILDER - boxbuilder_build_ami: Finished setting EC2 credentials.  Using EC2_CERT=$EC2_CERT and EC2_PRIVATE_KEY=$EC2_PRIVATE_KEY ..."
-}
+trap 'echo BOXBUILDER - boxbuilder_build_ami: error on line $LINENO' ERR EXIT INT TERM
 
 setup() {
   if [ -e $HOME/.boxbuilderrc ]; then
@@ -52,8 +23,8 @@ setup() {
   # AMI Builder Settings
   boxbuilder_ami_prefix=${boxbuilder_ami_prefix:?"Please set 'boxbuilder_ami_prefix' to a string with no spaces.  This string will be prepended to the name of your new AMI"}
   
-  # Keypairname only used when starting instance, commented for use in boxbuilder_remote_build_ami
-  # boxbuilder_ec2_keypairname=${boxbuilder_ec2_keypairname:?"Please set "boxbuilder_ec2_keypairname" to the name of your keypair which matches $HOME/.ec2/keypair-ec2-boxbuilder.pem (https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs)"}
+  EC2_CERT=${EC2_CERT:-""}
+  EC2_PRIVATE_KEY=${EC2_PRIVATE_KEY:-""}
   
   _codename=lucid
   _release=10.04
@@ -76,6 +47,35 @@ setup() {
 
   echo "BOXBUILDER - boxbuilder_build_ami:  Environment variables:"
   echo "boxbuilder_config                    = $boxbuilder_config"
+}
+
+set_ec2_credentials() {
+  echo "BOXBUILDER - boxbuilder_build_ami: Setting EC2 credentials ..."
+  
+  if [[ -z $EC2_CERT ]]; then
+    EC2_CERT=( $HOME/.ec2/cert-*.pem ) # grab first file using bash array
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: EC2_CERT is not set, loading from $HOME/.ec2/cert-*.pem ..."
+  fi
+
+  if [[ ! -e $EC2_CERT ]]; then
+    echo "BOXBUILDER - boxbuilder_build_ami: ERROR: EC2_CERT was not found at $EC2_CERT, exiting ..."
+    return 1
+  fi
+
+  if [[ -z $EC2_PRIVATE_KEY ]]; then
+    EC2_PRIVATE_KEY=( $HOME/.ec2/pk-*.pem ) # grab first file using bash array
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: EC2_PRIVATE_KEY is not set, loading from $HOME/.ec2/pk-*.pem ..."
+  fi
+
+  if [[ ! -e $EC2_PRIVATE_KEY ]]; then
+    echo "BOXBUILDER - boxbuilder_build_ami: ERROR: EC2_PRIVATE_KEY was not found at $EC2_PRIVATE_KEY, exiting ..."
+    return 1
+  fi
+
+  export EC2_CERT
+  export EC2_PRIVATE_KEY
+
+  echo "BOXBUILDER - boxbuilder_build_ami: Finished setting EC2 credentials.  Using EC2_CERT=$EC2_CERT and EC2_PRIVATE_KEY=$EC2_PRIVATE_KEY ..."
 }
 
 install_ec2_tools() {
@@ -180,10 +180,10 @@ copy_image_to_ami() {
   _volumeid=$(ec2-create-volume --size $_size --availability-zone us-east-1a | cut -f2)
   
   echo "BOXBUILDER - boxbuilder_build_ami: Retrieving current instance id ..."
-  _instanceid=$(wget --progress=dot -qO- http://instance-data/latest/meta-data/instance-id)
+  _instance_id=$(wget --progress=dot -qO- http://instance-data/latest/meta-data/instance-id)
   
-  echo "BOXBUILDER - boxbuilder_build_ami: Attaching new volume $_volumeid to current instance $_instanceid at device /dev/sdi ..."
-  ec2-attach-volume --device /dev/sdi --instance "$_instanceid" "$_volumeid"
+  echo "BOXBUILDER - boxbuilder_build_ami: Attaching new volume $_volumeid to current instance $_instance_id at device /dev/sdi ..."
+  ec2-attach-volume --device /dev/sdi --instance "$_instance_id" "$_volumeid"
   while [ ! -e /dev/sdi ]; do echo -n .; sleep 1; done
   
   echo "BOXBUILDER - boxbuilder_build_ami: Creating filesystem on /dev/sdi ..."
@@ -213,7 +213,7 @@ copy_image_to_ami() {
     --description "$_description" \
     $_ebsopts \
     --snapshot "$_snapshotid")
-  _newami=${_ec2_register_output##*[[:blank:]]}
+  _newami=$(echo $_ec2_register_output | cut -f2)
 
   echo "BOXBUILDER - boxbuilder_build_ami: NEW AMI SUCCESSFULLY CREATED AND REGISTERED:"
   echo "BOXBUILDER - boxbuilder_build_ami: grep and following output lines and evaluate them to retrieve and set local variables describing the new AMI"
@@ -229,8 +229,8 @@ copy_image_to_ami() {
 
 run() {
   echo "BOXBUILDER - boxbuilder_build_ami: Starting ..."
-  set_ec2_credentials
   setup
+  set_ec2_credentials
   install_ec2_tools
   create_chroot_jail_from_base_image
   run_boxbuilder_bootstrap_in_chroot_jail_to_build_image

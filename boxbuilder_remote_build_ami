@@ -1,0 +1,230 @@
+#!/usr/bin/env bash
+
+#  http://github.com/thewoolleyman/boxbuilder
+#  Copyright (c) 2010 Chad Woolley - The MIT License
+
+set -o noclobber
+set -e
+set -o errexit
+set -o pipefail
+set -o nounset
+set -u
+trap 'echo BOXBUILDER - boxbuilder_remote_build_ami: error on line $LINENO' ERR EXIT INT TERM
+
+exec_remotely() {
+  local arg_array i rc
+  for arg; do
+    arg_array[i++]=$(printf %q "$arg")
+  done
+  echo "ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host \"$@\""
+  ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "$@"
+}
+
+exec_remotely_quiet() {
+  local arg_array i rc
+  for arg; do
+    arg_array[i++]=$(printf %q "$arg")
+  done
+  # echo "ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host \"$@\""
+  ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "$@"
+}
+
+exec_remotely_pseudo_tty() {
+  local arg_array i rc
+  for arg; do
+    arg_array[i++]=$(printf %q "$arg")
+  done
+  echo "ssh -t -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host \"$@\""
+  ssh -t -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "$@"
+}
+
+setup() {
+  if [ -e $HOME/.boxbuilderrc ]; then
+    . $HOME/.boxbuilderrc
+  fi
+  boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder_remote_build_ami=boxbuilder_config_placeholder_from_boxbuilder_remote_build_ami'}
+  eval $boxbuilder_config
+  boxbuilder_build_ami_url=${boxbuilder_build_ami_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_build_ami"}
+  boxbuilder_user=${boxbuilder_user:-"ubuntu"}
+  boxbuilder_builder_instance_host=${boxbuilder_builder_instance_host:-""}
+  boxbuilder_builder_instance_instance_type=${boxbuilder_builder_instance_instance_type:-"m1.large"}
+  boxbuilder_builder_instance_ami_id=${boxbuilder_builder_instance_ami_id:-"ami-4b4ba522"}
+  boxbuilder_ec2_api_tools_url=${boxbuilder_ec2_api_tools_url:-"http://s3.amazonaws.com/ec2-downloads/ec2-api-tools.zip"}
+  boxbuilder_terminate_builder_instance=${boxbuilder_terminate_builder_instance:-true}
+  
+  EC2_CERT=${EC2_CERT:-""}
+  EC2_PRIVATE_KEY=${EC2_PRIVATE_KEY:-""}
+  EC2_KEYPAIR=${EC2_KEYPAIR:-""}
+}
+
+set_ec2_credentials() {
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Setting EC2 credentials ..."
+  
+  if [[ -z $EC2_CERT ]]; then
+    EC2_CERT=( $HOME/.ec2/cert-*.pem ) # grab first file using bash array
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: EC2_CERT is not set, loading from $HOME/.ec2/cert-*.pem ..."
+  fi
+
+  if [[ ! -e $EC2_CERT ]]; then
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: ERROR: EC2_CERT was not found at $EC2_CERT, exiting ..."
+    return 1
+  fi
+
+  if [[ -z $EC2_PRIVATE_KEY ]]; then
+    EC2_PRIVATE_KEY=( $HOME/.ec2/pk-*.pem ) # grab first file using bash array
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: EC2_PRIVATE_KEY is not set, loading from $HOME/.ec2/pk-*.pem ..."
+  fi
+
+  if [[ ! -e $EC2_PRIVATE_KEY ]]; then
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: ERROR: EC2_PRIVATE_KEY was not found at $EC2_PRIVATE_KEY, exiting ..."
+    return 1
+  fi
+
+  if [[ -z $EC2_KEYPAIR ]]; then
+    EC2_KEYPAIR=( $HOME/.ec2/keypair-*.pem ) # grab first file using bash array
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: EC2_KEYPAIR is not set, loading from $HOME/.ec2/keypair-*.pem ..."
+  fi
+
+  if [[ ! -e $EC2_KEYPAIR ]]; then
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: ERROR: EC2_KEYPAIR was not found at $EC2_KEYPAIR, exiting ..."
+    return 1
+  fi
+
+  EC2_KEYPAIR_NAME=${EC2_KEYPAIR_NAME:?"Please set 'EC2_KEYPAIR_NAME' to the name of your EC2 keypair which matches the EC2_KEYPAIR at $EC2_KEYPAIR"}
+
+  export EC2_CERT
+  export EC2_PRIVATE_KEY
+  export EC2_KEYPAIR
+
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Finished setting EC2 credentials.  Using EC2_CERT=$EC2_CERT , EC2_PRIVATE_KEY=$EC2_PRIVATE_KEY , EC2_KEYPAIR=$EC2_KEYPAIR , and EC2_KEYPAIR_NAME=$EC2_KEYPAIR_NAME ..."
+}
+
+set_up_ec2_tools() {
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Setting up EC2 tools ..."
+  
+  _ec2_tools_path=$HOME/.boxbuilder_ec2_tools
+  _ec2_api_tools_path=$_ec2_tools_path/ec2-api-tools
+  if [[ -x $_ec2_api_tools_path/bin/ec2-run-instances ]]; then
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: EC2 API Tools already exist at $_ec2_api_tools_path.  Not re-downloading ..."
+  else
+    mkdir -p $_ec2_tools_path
+    if [[ ! $(which unzip) ]]; then
+      echo "BOXBUILDER - boxbuilder_remote_build_ami: ERROR: 'unzip' executable not available.  It is required to unzip auto-downloaded EC2 API Tools. Either put unzip with on your path, or manually unzip the EC2 API Tools to $_ec2_api_tools_path ..."
+      return 1
+    fi
+    _ec2_api_tools_zipfile=$_ec2_tools_path/${boxbuilder_ec2_api_tools_url##*/} # grabs last path component of url to use as zipfile name
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: EC2 API Tools do not exist at $_ec2_api_tools_path.  Downloading from $boxbuilder_ec2_api_tools_url to $_ec2_api_tools_path ..."
+    # wget -O $_ec2_api_tools_zipfile $boxbuilder_ec2_api_tools_url # TODO: uncomment after debugging
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: Reading top-level directory for $_ec2_api_tools_zipfile ..."
+    # Zipfile is structured with top-level directory containing the release date, so we must determine what it is, extract, and symlink it to _ec2_api_tools_path
+    set +e
+    _first_zipfile_listing_entry=$(unzip -l $_ec2_api_tools_zipfile | head -n4 | tail -n1) # _first_zipfile_listing_entry should be top-level zipfile dir
+    set -e
+    _top_level_zipfile_dir=${_first_zipfile_listing_entry##* } # grab just last space-delimited directory component from _first_zipfile_listing_entry
+    _top_level_zipfile_dir=${_top_level_zipfile_dir%%/} # strip trailing slash
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: Unzipping $_ec2_api_tools_zipfile to $_ec2_tools_path ..."
+    unzip -o -d $_ec2_tools_path $_ec2_api_tools_zipfile # Unzip to $HOME/.boxbuilder_ec2_tools
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: Symlinking $_ec2_tools_path/$_top_level_zipfile_dir to $_ec2_api_tools_path ..."
+    ln -sf $_ec2_tools_path/$_top_level_zipfile_dir $_ec2_api_tools_path # symlink to simple directory name without release date.
+  fi
+  export PATH=$_ec2_api_tools_path/bin:$PATH
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Finished setting up EC2 tools ..."
+}
+
+run_instance() {
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Running builder instance to perform AMI build: ami=$boxbuilder_builder_instance_ami_id, instance_type=$boxbuilder_builder_instance_instance_type ..."
+  _instance_id=$(ec2-run-instances \
+    --private-key "$EC2_PRIVATE_KEY" \
+    --cert "$EC2_CERT" \
+    --key "$EC2_KEYPAIR_NAME" \
+    --availability-zone us-east-1a \
+    --instance-type "$boxbuilder_builder_instance_instance_type" \
+    "$boxbuilder_builder_instance_ami_id" |
+    egrep ^INSTANCE | cut -f2)
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Successfully running EC2 builder instance: instance_id=$_instance_id"
+}
+
+get_builder_instance_host() {
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Finding hostname for $_instance_id ..."
+  while boxbuilder_builder_instance_host=$(ec2-describe-instances \
+    --private-key "$EC2_PRIVATE_KEY" \
+    --cert "$EC2_CERT" \
+     "$_instance_id" | \
+    egrep ^INSTANCE | cut -f4) && test -z $boxbuilder_builder_instance_host; do
+      echo -n .
+      sleep 1
+  done
+  echo
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Got hostname $boxbuilder_builder_instance_host for instance $_instance_id"
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Waiting for ssh connectivity to $boxbuilder_builder_instance_host ..."
+  while ssh_up=$(ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "echo 'ssh up'"); test "$ssh_up" != "ssh up"; do
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: SSH connect response from $boxbuilder_builder_instance_host: $ssh_up"
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: Trying to SSH to $boxbuilder_builder_instance_host again after 3 seconds..."
+    sleep 3
+  done
+  echo
+}
+
+upload_ec2_credentials() {
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Uploading EC2 credentials to $boxbuilder_builder_instance_host ..."
+  exec_remotely 'mkdir -p $HOME/.ec2'
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Uploading EC2_CERT $EC2_CERT to $boxbuilder_user@$boxbuilder_builder_instance_host:.ec2/ ..."
+  rsync \
+    --rsh="ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR" \
+    --rsync-path="rsync" \
+    $EC2_CERT \
+    $boxbuilder_user@$boxbuilder_builder_instance_host:.ec2/
+
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Uploading EC2_PRIVATE_KEY $EC2_PRIVATE_KEY to $boxbuilder_user@$boxbuilder_builder_instance_host:.ec2/ ..."
+  rsync \
+    --rsh="ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR" \
+    --rsync-path="rsync" \
+    $EC2_PRIVATE_KEY \
+    $boxbuilder_user@$boxbuilder_builder_instance_host:.ec2/
+
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Finished uploading EC2 credentials to $boxbuilder_builder_instance_host ..."
+}
+
+remote_build_ami() {
+  _boxbuilder_build_ami_script=/tmp/${boxbuilder_build_ami_url##*/} # grabs last path component of url to use as script name
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Downloading $boxbuilder_build_ami_url to $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
+  exec_remotely "wget -O $_boxbuilder_build_ami_script $boxbuilder_build_ami_url"
+  while exists=$(exec_remotely_quiet "if [[ -e $_boxbuilder_build_ami_script ]] ; then echo exists; fi"); test "$exists" != "exists" ; do
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: Waiting for wget to finish downloading  $boxbuilder_build_ami_url to $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
+    sleep 3
+  done
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: $boxbuilder_build_ami_url successfully downloaded to $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
+
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Changing permissions on $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
+  exec_remotely "chmod a+x $_boxbuilder_build_ami_script"
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Running $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
+  exec_remotely_pseudo_tty "$boxbuilder_config && $_boxbuilder_build_ami_script"
+}
+
+terminate_instance() {
+  if [[ $boxbuilder_terminate_builder_instance = true ]] && [[ -n $_instance_id ]] ; then
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: terminating host $boxbuilder_builder_instance_host on instance $_instance_id"
+    _terminate_instances_result=$(ec2-terminate-instances   \
+      --private-key "$EC2_PRIVATE_KEY" \
+      --cert "$EC2_CERT" \
+      "$_instance_id")
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: ec2-terminate-instances result: $result"
+  else
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: boxbuilder_terminate_builder_instance was not equal to true, so $boxbuilder_builder_instance_host on instance $_instance_id was NOT terminated."
+  fi
+}
+
+run() {
+  setup
+  set_ec2_credentials
+  set_up_ec2_tools
+  if [[ -z $boxbuilder_builder_instance_host ]] ; then
+    run_instance
+    get_builder_instance_host
+  fi
+  upload_ec2_credentials
+  remote_build_ami
+  terminate_instance
+}
+
+run

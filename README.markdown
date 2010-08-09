@@ -10,10 +10,14 @@ Tracker Project: [http://www.pivotaltracker.com/projects/101913](http://www.pivo
 
 AMI-building code is based on Eric Hammond's tutorial at http://alestic.com/2010/01/ec2-ebs-boot-ubuntu
 
-WARNING!  The 'build\_ami' scripts will automatically create EC2 resources for which you will be charged!
-They automatically start and stop instances, but if the scripts fail or are killed
-the instances may be left running.  Learn how to delete any unwanted resources via the the EC2 console
-before using the 'build\_ami' scripts: [https://console.aws.amazon.com/ec2/home](https://console.aws.amazon.com/ec2/home)
+**WARNING!  The 'build\_ami' scripts will automatically create EC2 resources for which you will be charged!
+They automatically start and stop instances and create EBS volumes, but if the scripts fail or are killed
+the might not be removed. It is YOUR RESPONSIBILITY to ensure that any EC2 resources which boxbuilder creates are
+automatically shut down.  If you do not YOU WILL BE CHARGED BY AMAZON UNTIL THEY ARE SHUT DOWN.
+Learn how to delete any unused resources via the the EC2 console
+before using the 'build\_ami' scripts: [https://console.aws.amazon.com/ec2/home](https://console.aws.amazon.com/ec2/home)**
+
+
 
 ----
 &nbsp;
@@ -255,14 +259,14 @@ and created.
 
 ----
 
-**(REQUIRED)** 'boxbuilder\_chef_repos' is a space-delimited list of Chef Git repositories which will be automatically
+**(REQUIRED to specify your chef repos)** 'boxbuilder\_chef_repos' is a space-delimited list of Chef Git repositories which will be automatically
 downloaded by boxbuilder.  They will be checked out under $boxbuilder\_chef\_dir (~/.chef) on the box which is being built.
 
     boxbuilder_chef_repos=git://github.com/thewoolleyman/boxbuilder_example1_chef_repo.git[ git://github.com/thewoolleyman/boxbuilder_example2_chef_repo.git[ ...]]
 
 ----
 
-**(REQUIRED)** 'boxbuilder\_chef\_config\_path' is the path of the Chef config file. boxbuilder will use
+**(REQUIRED to specify your chef config)** 'boxbuilder\_chef\_config\_path' is the path of the Chef config file. boxbuilder will use
 this as the '--config' parameter when it automatically creates and runs a chef-solo script on the
 box which is being built.  This should be a path to a file
 in one of your 'boxbuilder\_chef\_repos'.
@@ -271,7 +275,7 @@ in one of your 'boxbuilder\_chef\_repos'.
 
 ----
 
-**(REQUIRED)** 'boxbuilder\_chef\_json\_path' is the path of the Chef JSON attributes file. boxbuilder will use
+**(REQUIRED to specify your chef config)** 'boxbuilder\_chef\_json\_path' is the path of the Chef JSON attributes file. boxbuilder will use
 this as the '--json-attributes' parameter when it automatically creates and runs a chef-solo script
 on the box which is being built.  This should be a path to a file
 in one of your 'boxbuilder\_chef\_repos'.
@@ -295,8 +299,8 @@ _boxbuilder\_build\_ami script_
 'boxbuilder\_build\_ami' creates an EC2 EBS-backed AMI when run from an EC2 instance.  It does the following:
 
 * Creates a chroot jail
-* Executes the 'boxbuilder\_bootstrap' script while re-rooted within the chroot jail
-* Creates and publishes an EBS-backed AMI from the chroot jail
+* Executes the 'boxbuilder\_bootstrap' script while re-rooted within the chroot jail (which builds your image, see documentation for 'boxbuilder\_bootstrap')
+* Creates and publishes an EBS-backed AMI from the image which was created in the chroot jail
 
 ----
 
@@ -351,20 +355,24 @@ the default.
 _boxbuilder\_remote\_build\_ami script_
 =======================================
 
-'boxbuilder\_remote\_build\_ami' is run from any bash shell.  It allows you to run 'boxbuilder\_build\_ami'
-on a remote box without logging in to it.  It issues remote SSH commands to do the following:
+**WARNING: It is YOUR RESPONSIBILITY to ensure that any EC2 resources which boxbuilder creates are
+automatically shut down.  If you do not YOU WILL BE CHARGED BY AMAZON UNTIL THEY ARE SHUT DOWN.  See
+the detailed warning at the top of this README.**
 
-* Download the Amazon EC2 API and AMI tools to your local filesystem
-* Automatically start an EC2 instance using your EC2 account and credentials (which you are required to obtain and specify)
-* Upload your credentials to the instance
-* Download and run 'boxbuilder\_remote\_build\_ami' on the instance
+'boxbuilder\_remote\_build\_ami' is run from any bash shell.  It allows you to run 'boxbuilder\_build\_ami'
+on a remote box without logging in to it:
+
+* Download the Amazon EC2 API tools to your local filesystem
+* Automatically start an EC2 instance (called the 'builder instance') using your EC2 account and credentials (which you are required to obtain and specify)
+* Upload your credentials to the builder instance
+* Issue remote SSH commands to download and run 'boxbuilder\_remote\_build\_ami' on the builder instance (which then builds your AMI, see documentation for 'boxbuilder\_build\_ami')
 
 ----
 
 The contents of the 'boxbuilder\_config' variable should be Bash commands to export and override
 boxbuilder config variables.  It is directly evaluated by the 'boxbuilder\_remote\_build\_ami'
 script; and is also passed on to be evaluated before 'boxbuilder\_build\_ami' is run in on the
-remote EC2 utility instance.  See the documentation of the config options and other scripts for more details on 'boxbuilder\_config'.
+remote EC2 builder instance.  See the documentation of the config options and other scripts for more details on 'boxbuilder\_config'.
 
     boxbuilder_config="export override_variable1=value; export override_variable2=value"
 
@@ -393,7 +401,7 @@ and [https://aws-portal.amazon.com/gp/aws/developer/account/index.html?ie=UTF8&a
 **(REQUIRED for EC2 tools)** 'EC2\_KEYPAIR' is the path to your EC2 'keypair' file.  Amazon refers to this as a 'keypair', but it is
 actually just the private key.  You don't ever need to directly use the public key; Amazon manages it for you - but you can always
 generate it using the '-y' option of 'ssh-keygen'.  'EC2\_KEYPAIR' is used by
-'boxbuilder\_remote\_build\_ami' for SSH access to the EC2 utility instance it creates to run 'boxbuilder\_build\_ami'.
+'boxbuilder\_remote\_build\_ami' for SSH access to the EC2 builder instance it creates to run 'boxbuilder\_build\_ami'.
 If it is not set, it will default to the first file matching $HOME/.ec2/keypair-*.pem.
 NOTE: I don't think this variable is ever used directly by the EC2 tools, but it is named like the
 other EC2-required credential variables for consistency.
@@ -405,23 +413,80 @@ and [https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs](https://console.a
 ----
 
 **(REQUIRED for EC2 tools)** 'EC2\_KEYPAIR\_NAME' is the name of your EC2 'keypair'.  It is used by 'boxbuilder\_remote\_build\_ami'
-when starting the EC2 utility instance it creates to run 'boxbuilder\_build\_ami'. You must set this to the
+when starting the EC2 builder instance it creates to run 'boxbuilder\_build\_ami'. You must set this to the
 name which matches the keypair file specified in 'EC2\_KEYPAIR'.
 NOTE: I don't think this variable is ever used directly by the EC2 tools, but it is named like the
 other EC2-required credential variables for consistency.
 See [http://docs.amazonwebservices.com/AWSSecurityCredentials/1.0/AboutAWSCredentials.html#EC2KeyPairs](http://docs.amazonwebservices.com/AWSSecurityCredentials/1.0/AboutAWSCredentials.html#EC2KeyPairs) for documentation,
 and [https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs](https://console.aws.amazon.com/ec2/home#c=EC2&s=KeyPairs) to create a keypair.
 
-    EC2_KEYPAIR=$HOME/.ec2/keypair-*.pem
+    EC2_KEYPAIR_NAME=$HOME/.ec2/keypair-*.pem
 
 ----
 
-'boxbuilder\_ami\_instancetype' is the type of EC2 utility instance you wish to start, which must match the
-type of AMI you wish to build (32-bit or 64-bit).  Use 'm1.small' if you are building a 32-bit AMI, and 
+'boxbuilder\_builder\_instance\_instance\_type' is the type of EC2 builder instance you wish to use or start.
+It must match the type of AMI you wish to build (32-bit or 64-bit).  Use 'm1.small' if you are building a 32-bit AMI, and 
 'm1.large' if you are building a 64-bit AMI.  The default value is 'm1.large' (64-bit).
 See [http://aws.amazon.com/ec2/instance-types](http://aws.amazon.com/ec2/instance-types)
 
-    boxbuilder_ami_prefix=m1.large
+    boxbuilder_builder_instance_instance_type=m1.large
+
+----
+
+'boxbuilder\_builder\_instance\_ami\_id' is the AMI which you wish to use to start the EC2 builder instance.
+It must match the type of AMI you wish to build (32-bit or 64-bit).  See the **'EC2 Info'** section below for
+current 32-bit and 64-bit AMI IDs.  The default value is 'ami-4b4ba522' (64-bit).
+
+    boxbuilder_builder_instance_ami_id=ami-4b4ba522
+
+----
+
+'boxbuilder\_user' is the username which is used to log into the EC2 builder instance via SSH.
+It will default to 'ubuntu', which is the default user on the standard Ubuntu EC2 AMIs used to
+start a builder instance.
+
+    boxbuilder_user=ubuntu
+
+----
+
+'boxbuilder\_builder\_instance\_host' is the hostname of the EC2 builder instance.  If it is not set,
+an instance will automatically be created for you.  Boxbuilder will ATTEMPT to terminate the instance after
+the AMI is built, but this is not guaranteed.
+
+**WARNING: If you set 'boxbuilder\_builder\_instance\_host' to one of your own preexisting EC2 instances
+and do NOT set 'boxbuilder\_terminate\_builder\_instance' to false, the instance 
+WILL BE TERMINATED and you will LOSE ANY DATA WHICH IS NOT BACKED UP!**
+
+    boxbuilder_builder_instance_host=ubuntu
+
+----
+
+'boxbuilder\_build\_ami\_url' is the location from which the 'boxbuilder\_remote\_build\_ami' script will be downloaded
+onto the EC2 builder instance.  Override it to use your custom 'boxbuilder\_build\_ami' script instead of
+the default.
+
+    boxbuilder_build_ami_url=http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_build_ami
+
+----
+
+'boxbuilder\_ec2\_api\_tools\_url' is the location from which the Amazon EC2 API Tools will be downloaded and extracted
+to $HOME/.boxbuilder_ec2_tools/ec2-api-tools on your local filesystem .  Override it to use a custom location to download
+the Amazon EC2 API Tools.
+
+    boxbuilder_ec2_api_tools=http://s3.amazonaws.com/ec2-downloads/ec2-api-tools.zip
+
+----
+
+'boxbuilder\_terminate\_builder\_instance' is a boolean flag indicating whether a NON-GUARANTEED ATTEMPT should be
+made to automatically terminated the EC2 builder instance when the script exits.  It is true by default.  Set it to
+false if you want to rerun or debug boxbuilder on the build instance, or if you are using your own
+'boxbuilder\_builder\_instance\_host'.
+
+**WARNING: If you set 'boxbuilder\_builder\_instance\_host' to one of your own preexisting EC2 instances
+and do NOT set 'boxbuilder\_terminate\_builder\_instance' to false, the instance 
+WILL BE TERMINATED and you will LOSE ANY DATA WHICH IS NOT BACKED UP!**
+
+    boxbuilder_terminate_builder_instance=true
 
 ----
 &nbsp;
