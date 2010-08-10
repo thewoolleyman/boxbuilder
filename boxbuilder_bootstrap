@@ -12,6 +12,7 @@ set -u
 trap 'echo BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO' ERR EXIT INT TERM
 
 setup() {
+  echo "BOXBUILDER - boxbuilder_bootstrap:  Environment variable setup ..."
   if [ -e $HOME/.boxbuilderrc ]; then
     source $HOME/.boxbuilderrc
   fi
@@ -23,6 +24,10 @@ setup() {
   boxbuilder_branch=${boxbuilder_branch:-"master"}
   boxbuilder_remote=${boxbuilder_remote:-"origin"}
   boxbuilder_dir=${boxbuilder_dir:-"$HOME/.boxbuilder/"}
+
+  echo "BOXBUILDER - boxbuilder_bootstrap:  Finished environment variable setup:"
+  echo "boxbuilder_config=$boxbuilder_config"
+  # TODO: Add all env vars which are directly used by this script
 }
 
 grant_nopasswd_sudo_access() {

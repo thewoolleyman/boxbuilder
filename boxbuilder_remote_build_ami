@@ -39,6 +39,8 @@ exec_remotely_pseudo_tty() {
 }
 
 setup() {
+  echo "BOXBUILDER - boxbuilder_remote_build_ami:  Environment variable setup ..."
+
   if [ -e $HOME/.boxbuilderrc ]; then
     . $HOME/.boxbuilderrc
   fi
@@ -55,6 +57,10 @@ setup() {
   EC2_CERT=${EC2_CERT:-""}
   EC2_PRIVATE_KEY=${EC2_PRIVATE_KEY:-""}
   EC2_KEYPAIR=${EC2_KEYPAIR:-""}
+
+  echo "BOXBUILDER - boxbuilder_remote_build_ami:  Finished environment variable setup:"
+  echo "boxbuilder_config=$boxbuilder_config"
+  # TODO: Add all env vars which are directly used by this script
 }
 
 set_ec2_credentials() {

@@ -39,6 +39,7 @@ exec_remotely_pseudo_tty() {
 }
 
 setup() {
+  echo "BOXBUILDER - boxbuilder_remote_bootstrap:  Environment variable setup ..."
   if [ -e $HOME/.boxbuilderrc ]; then
     . $HOME/.boxbuilderrc
   fi
@@ -48,6 +49,10 @@ setup() {
   boxbuilder_user=${boxbuilder_user:?"Please set 'boxbuilder_user' to the ssh user on the box being built"}
   boxbuilder_host=${boxbuilder_host:?"Please set 'boxbuilder_host' to the hostname or IP of the box being built"}
   boxbuilder_bootstrap_url=${boxbuilder_bootstrap_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap"}
+
+  echo "BOXBUILDER - boxbuilder_remote_bootstrap:  Finished environment variable setup:"
+  echo "boxbuilder_config=$boxbuilder_config"
+  # TODO: Add all env vars which are directly used by this script
 }
 
 remote_bootstrap() {

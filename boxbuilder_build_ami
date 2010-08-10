@@ -12,6 +12,7 @@ set -u
 trap 'echo BOXBUILDER - boxbuilder_build_ami: error on line $LINENO' ERR EXIT INT TERM
 
 setup() {
+  echo "BOXBUILDER - boxbuilder_build_ami:  Environment variable setup ..."
   if [ -e $HOME/.boxbuilderrc ]; then
     source $HOME/.boxbuilderrc
   fi
@@ -45,8 +46,9 @@ setup() {
   _image=/mnt/$_codename-$_tag-uec-$_arch2.img
   _imagedir=/mnt/$_codename-uec-$_arch2
 
-  echo "BOXBUILDER - boxbuilder_build_ami:  Environment variables:"
-  echo "boxbuilder_config                    = $boxbuilder_config"
+  echo "BOXBUILDER - boxbuilder_build_ami:  Finished environment variable setup:"
+  echo "boxbuilder_config=$boxbuilder_config"
+  # TODO: Add all env vars which are directly used by this script
 }
 
 set_ec2_credentials() {
