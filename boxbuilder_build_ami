@@ -163,8 +163,10 @@ copy_image_to_ami() {
   _description="Ubuntu $_release $_codename $_tag $_arch $_now"
 
   echo "BOXBUILDER - boxbuilder_build_ami: Ensuring no existing volume is already attached at /dev/sdi ..."
+  # TODO: Why must -K and -C be passed?  Why can't it find exported vars in subshell?
+  # TODO: and why do we need set +e?
   set +e
-  _existing_volumeid=$(ec2-describe-volumes | grep -e '^ATTACHMENT.*/dev/sdi' | cut -f2)
+  _existing_volumeid=$(ec2-describe-volumes -K $EC2_PRIVATE_KEY -C $EC2_CERT | grep -e '^ATTACHMENT.*/dev/sdi' | cut -f2)
   set -e
   if [[ ! -z $_existing_volumeid ]]; then
     echo "BOXBUILDER - boxbuilder_build_ami: Volume $_existing_volumeid is already attached at /dev/sdi.  Detaching and deleting ..."
@@ -178,13 +180,15 @@ copy_image_to_ami() {
   fi
   
   echo "BOXBUILDER - boxbuilder_build_ami: Creating new volume ..."
-  _volumeid=$(ec2-create-volume --size $_size --availability-zone us-east-1a | cut -f2)
+  # TODO: Why must -K and -C be passed?  Why can't it find exported vars in subshell?
+  _volumeid=$(ec2-create-volume -K $EC2_PRIVATE_KEY -C $EC2_CERT --size $_size --availability-zone us-east-1a | cut -f2)
   
   echo "BOXBUILDER - boxbuilder_build_ami: Retrieving current instance id ..."
   _instance_id=$(wget --progress=dot -qO- http://instance-data/latest/meta-data/instance-id)
   
   echo "BOXBUILDER - boxbuilder_build_ami: Attaching new volume $_volumeid to current instance $_instance_id at device /dev/sdi ..."
-  ec2-attach-volume --device /dev/sdi --instance "$_instance_id" "$_volumeid"
+  # TODO: Why must -K and -C be passed?  Why can't it find exported vars in THIS shell?
+  ec2-attach-volume -K $EC2_PRIVATE_KEY -C $EC2_CERT --device /dev/sdi --instance "$_instance_id" "$_volumeid"
   while [ ! -e /dev/sdi ]; do echo -n .; sleep 1; done
   
   echo "BOXBUILDER - boxbuilder_build_ami: Creating filesystem on /dev/sdi ..."
