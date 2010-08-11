@@ -214,7 +214,7 @@ terminate_instance() {
       --private-key "$EC2_PRIVATE_KEY" \
       --cert "$EC2_CERT" \
       "$_instance_id")
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: ec2-terminate-instances result: $result"
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: ec2-terminate-instances result: $_terminate_instances_result"
   else
     echo "BOXBUILDER - boxbuilder_remote_build_ami: boxbuilder_terminate_builder_instance was not equal to true, so $boxbuilder_builder_instance_host on instance $_instance_id was NOT terminated."
   fi

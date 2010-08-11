@@ -336,9 +336,11 @@ and [https://aws-portal.amazon.com/gp/aws/developer/account/index.html?ie=UTF8&a
 
 ----
 
-**(REQUIRED)** 'boxbuilder\_ami\_prefix' is a string which will be prepended to the name of the AMI being created.
+**(NOT REQUIRED but you probably want to set it)** 'boxbuilder\_ami\_prefix' is a string which will be prepended to the name of the AMI
+being created.  This should be some string which describes the purpose of the AMI.  It will be prepended to the following
+info to create the complete AMI name: "-ubuntu-{release}-{codename}-{tag}-{arch}-{timestamp}"
 
-    boxbuilder_ami_prefix="boxbuilder_test_$(date +%Y%m%d-%H%M)"
+    boxbuilder_ami_prefix="built-by-boxbuilder"
 
 ----
 

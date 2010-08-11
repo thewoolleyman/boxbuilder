@@ -21,8 +21,7 @@ setup() {
   eval $boxbuilder_config
   boxbuilder_bootstrap_url=${boxbuilder_bootstrap_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap"}
 
-  # AMI Builder Settings
-  boxbuilder_ami_prefix=${boxbuilder_ami_prefix:?"Please set 'boxbuilder_ami_prefix' to a string with no spaces.  This string will be prepended to the name of your new AMI"}
+  boxbuilder_ami_prefix=${boxbuilder_ami_prefix:-boxbuilder_ami_prefix=${boxbuilder_ami_prefix:-"built-by-boxbuilder"}
   
   EC2_CERT=${EC2_CERT:-""}
   EC2_PRIVATE_KEY=${EC2_PRIVATE_KEY:-""}
