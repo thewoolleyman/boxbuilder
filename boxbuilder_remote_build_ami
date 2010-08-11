@@ -137,8 +137,8 @@ set_up_ec2_tools() {
   echo "BOXBUILDER - boxbuilder_remote_build_ami: Finished setting up EC2 tools ..."
 }
 
-run_instance() {
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Running builder instance to perform AMI build: ami=$boxbuilder_builder_instance_ami_id, instance_type=$boxbuilder_builder_instance_instance_type ..."
+start_builder_instance() {
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Starting builder instance to perform AMI build: ami=$boxbuilder_builder_instance_ami_id, instance_type=$boxbuilder_builder_instance_instance_type ..."
   _instance_id=$(ec2-run-instances \
     --private-key "$EC2_PRIVATE_KEY" \
     --cert "$EC2_CERT" \
@@ -147,7 +147,7 @@ run_instance() {
     --instance-type "$boxbuilder_builder_instance_instance_type" \
     "$boxbuilder_builder_instance_ami_id" |
     egrep ^INSTANCE | cut -f2)
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Successfully running EC2 builder instance: instance_id=$_instance_id"
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Successfully started EC2 builder instance: instance_id=$_instance_id"
 }
 
 get_builder_instance_host() {
@@ -225,7 +225,7 @@ run() {
   set_ec2_credentials
   set_up_ec2_tools
   if [[ -z $boxbuilder_builder_instance_host ]] ; then
-    run_instance
+    start_builder_instance
     get_builder_instance_host
   fi
   upload_ec2_credentials
