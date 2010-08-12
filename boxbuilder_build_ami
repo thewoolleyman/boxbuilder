@@ -6,18 +6,20 @@
 export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 
 set -o errexit
+set -o errtrace
 set -o noclobber
 set -o nounset
 set -o pipefail
 set –o verbose
 set -o xtrace
 
-handle_error() {
-  echo "BOXBUILDER - boxbuilder_build_ami: error on line $LINENO"
-  exit 1 # TODO: return original error code.  how?
+function onexit() {
+  local exit_status=${1:-$?}
+  echo "BOXBUILDER - boxbuilder_build_ami: error on line $LINENO. Exiting $0 with $exit_status"
+  exit $exit_status
 }
 
-trap handle_error ERR EXIT INT TERM
+trap onexit HUP INT QUIT TERM ERR
 
 setup() {
   echo "BOXBUILDER - boxbuilder_build_ami:  Environment variable setup ..."
