@@ -3,13 +3,21 @@
 #  http://github.com/thewoolleyman/boxbuilder
 #  Copyright (c) 2010 Chad Woolley - The MIT License
 
-set -o noclobber
-set -e
+export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+
 set -o errexit
-set -o pipefail
+set -o noclobber
 set -o nounset
-set -u
-trap 'echo BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO' ERR EXIT INT TERM
+set -o pipefail
+set –o verbose
+set -o xtrace
+
+handle_error() {
+  echo "BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO"
+  exit 1 # TODO: return original error code.  how?
+}
+
+trap handle_error ERR EXIT INT TERM
 
 setup() {
   echo "BOXBUILDER - boxbuilder_bootstrap:  Environment variable setup ..."
@@ -32,19 +40,19 @@ setup() {
 
 grant_nopasswd_sudo_access() {
   echo "BOXBUILDER: Checking 'admin' group membership for user $boxbuilder_user on host $boxbuilder_host."
-  set +e
+  set +o errexit
   groups | grep -q -e "admin"
   if [ ! $? = 0 ]; then
     echo "BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO - user $boxbuilder_user is not a member of the 'admin' group on host $boxbuilder_host.  Please add..."
     return 1
   fi
-  set -e
+  set -o errexit
 
   echo "BOXBUILDER - boxbuilder_bootstrap: Checking no-password sudo access for 'admin' group on host $boxbuilder_host and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
-  set +e
+  set +o errexit
   sudo grep -e "%admin.*ALL.*=.*NOPASSWD.*:.*ALL" /etc/sudoers
   if [ ! $? = 0 ]; then
-    set -e
+    set -o errexit
     echo "BOXBUILDER - boxbuilder_bootstrap: Giving user $boxbuilder_user NO PASSWORD sudo privileges"
     sudo rm -f /tmp/sudoers.new
     sudo cp /etc/sudoers /etc/sudoers.bak
@@ -55,16 +63,16 @@ grant_nopasswd_sudo_access() {
       echo "BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO - Could not add create /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
       return 1
     fi
-    set -e
+    set -o errexit
     sudo visudo -c -s -f /tmp/sudoers.new
-    set +e
+    set +o errexit
     if [ ! $? = 0 ]; then
       echo "BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO -: Syntax error in /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
       return 1
     fi
     sudo cp /tmp/sudoers.new /etc/sudoers
   else
-    set -e
+    set -o errexit
     echo "BOXBUILDER - boxbuilder_bootstrap: admin group already appears to have NOPASSWD sudo access."
   fi  
 }

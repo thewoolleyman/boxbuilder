@@ -3,13 +3,21 @@
 #  http://github.com/thewoolleyman/boxbuilder
 #  Copyright (c) 2010 Chad Woolley - The MIT License
 
-set -o noclobber
-set -e
+export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+
 set -o errexit
-set -o pipefail
+set -o noclobber
 set -o nounset
-set -u
-trap 'echo BOXBUILDER - boxbuilder_remote_bootstrap: error on line $LINENO' ERR EXIT INT TERM
+set -o pipefail
+set –o verbose
+set -o xtrace
+
+handle_error() {
+  echo "BOXBUILDER - boxbuilder_remote_bootstrap: error on line $LINENO"
+  exit 1 # TODO: return original error code.  how?
+}
+
+trap handle_error ERR EXIT INT TERM
 
 exec_remotely() {
   local arg_array i rc

@@ -3,12 +3,21 @@
 #  http://github.com/thewoolleyman/boxbuilder
 #  Copyright (c) 2010 Chad Woolley - The MIT License
 
+export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+
+set -o errexit
 set -o noclobber
-set -e
-set -o pipefail
 set -o nounset
-set -u
-trap 'echo BOXBUILDER - boxbuilder: error on line $LINENO' ERR
+set -o pipefail
+set –o verbose
+set -o xtrace
+
+handle_error() {
+  echo "BOXBUILDER - boxbuilder: error on line $LINENO"
+  exit 1 # TODO: return original error code.  how?
+}
+
+trap handle_error ERR EXIT INT TERM
 
 setup() {
   if [ -e $HOME/.boxbuilderrc ]; then
@@ -72,9 +81,9 @@ install_packages() {
     else
       _package_version=${_package#*=}
     fi
-    set +e
+    set +o errexit
     _package_status=$(dpkg -l $_package_name | grep "ii  $_package_name" | grep "$_package_version")
-    set -e
+    set -o errexit
     if [[ -z $_package_status ]]; then
       echo "BOXBUILDER - boxbuilder:  Package $_package is NOT already installed..."
       _packages_missing=true
@@ -136,23 +145,23 @@ enable_rvm() {
 
 install_rvm_ruby() {
   echo "BOXBUILDER - boxbuilder:  Installing RVM default ruby: $boxbuilder_default_ruby"
-  set +u
-  set +e
+  set +o nounset
+  set +o errexit
   if [[ -z $($HOME/.rvm/bin/rvm info | head -n 1 | grep $boxbuilder_default_ruby) ]] ; then
     $HOME/.rvm/bin/rvm install $boxbuilder_default_ruby
     echo "BOXBUILDER - boxbuilder:  Finished installing RVM default ruby: $boxbuilder_default_ruby"
   else
     echo "BOXBUILDER - boxbuilder:  Not installing RVM Ruby $boxbuilder_default_ruby because it is already installed ..."
   fi
-  set -u
-  set -e
+  set -o nounset
+  set -o errexit
 }
 
 set_rvm_default_ruby() {
   echo "BOXBUILDER - boxbuilder:  Setting RVM default ruby: $boxbuilder_default_ruby"
-  set +e
+  set +o errexit
   $HOME/.rvm/bin/rvm --default use $boxbuilder_default_ruby
-  set -e
+  set -o errexit
   echo "BOXBUILDER - boxbuilder:  Finished setting RVM default ruby: $boxbuilder_default_ruby"
 }
 
@@ -162,9 +171,9 @@ setup_rvm() {
   for init_file in $HOME/.bashrc $HOME/.bash_profile
   do
     if [[ -e $init_file ]] ; then
-      set +e  # turn off return code checking for now, failing with output 'tput: unknown terminal "unknown"'
+      set +o errexit  # turn off return code checking for now, failing with output 'tput: unknown terminal "unknown"'
       enable_rvm
-      set -e
+      set -o errexit
     fi
   done
   install_rvm_ruby
@@ -201,14 +210,14 @@ download_chef_repos() {
     else
       echo "BOXBUILDER - boxbuilder:  $_repo_path already exists, pulling and updating ..."
       echo $_repo_path
-      set +u
+      set +o nounset
       cd $_repo_path
-      set -u
+      set -o nounset
       git pull
       git submodule update --init
-      set +u
+      set +o nounset
       cd -
-      set -u
+      set -o nounset
     fi
   done
   echo "BOXBUILDER - boxbuilder:  Finished downloading/updating Chef Repos..."
