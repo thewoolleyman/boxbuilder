@@ -252,3 +252,4 @@ run() {
 }
 
 run
+onexit

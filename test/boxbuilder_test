@@ -71,3 +71,4 @@ suite() {
 }
 
 suite
+onexit
