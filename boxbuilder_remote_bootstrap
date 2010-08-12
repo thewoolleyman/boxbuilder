@@ -80,8 +80,10 @@ remote_bootstrap() {
 }
 
 run() {
+  echo "BOXBUILDER - boxbuilder: Starting ..."
   setup
   remote_bootstrap
+  echo "BOXBUILDER - boxbuilder_remote_bootstrap: Finished and exiting successfully"
 }
 
 run

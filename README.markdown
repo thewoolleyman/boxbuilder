@@ -525,3 +525,4 @@ _Hacking Reference_
 * http://www.informit.com/articles/article.aspx?p=441605&seqNum=8
 * http://www.davidpashley.com/articles/writing-robust-shell-scripts.html#id2596016
 * http://wiki.bash-hackers.org/scripting/debuggingtips
+* http://www.gnu.org/software/bash/manual/bashref.html#Bourne-Shell-Builtins

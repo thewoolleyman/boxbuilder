@@ -59,12 +59,13 @@ test_can_set_up_and_run_chef() {
 }
 
 suite() {
+  echo "BOXBUILDER - boxbuilder_test: Starting tests ..."
   setup
   test_can_log_in_as_user
   test_can_download_boxbuilder_bootstrap
   test_can_install_rvm
   test_can_set_up_and_run_chef
-  echo "All tests completed"
+  echo "BOXBUILDER - boxbuilder_test: All tests passed successfully"
 }
 
 suite

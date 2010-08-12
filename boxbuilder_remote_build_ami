@@ -229,6 +229,7 @@ terminate_instance() {
 }
 
 run() {
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Starting ..."
   setup
   set_ec2_credentials
   set_up_ec2_tools
@@ -239,6 +240,6 @@ run() {
   upload_ec2_credentials
   remote_build_ami
   terminate_instance
-}
+echo "BOXBUILDER - boxbuilder_remote_build_ami: Finished and exiting successfully"}
 
 run

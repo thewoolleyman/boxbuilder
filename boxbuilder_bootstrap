@@ -113,6 +113,7 @@ run() {
   install_git
   check_out_boxbuilder
   run_boxbuilder
+  echo "BOXBUILDER - boxbuilder_bootstrap: Finished and exiting successfully"
 }
 
 run

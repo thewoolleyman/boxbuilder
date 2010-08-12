@@ -246,7 +246,7 @@ run() {
   download_chef_repos
   create_chef_script
   run_chef
-  echo "BOXBUILDER - boxbuilder: Finished!"
+  echo "BOXBUILDER - boxbuilder: Finished and exiting successfully"
 }
 
 run
