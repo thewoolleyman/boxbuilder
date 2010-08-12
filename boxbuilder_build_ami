@@ -248,7 +248,7 @@ run() {
   create_chroot_jail_from_base_image
   run_boxbuilder_bootstrap_in_chroot_jail_to_build_image
   copy_image_to_ami
-  echo "BOXBUILDER - boxbuilder_build_ami: Finished!"
+  echo "BOXBUILDER - boxbuilder_build_ami: Finished and exiting successfully"
 }
 
 run

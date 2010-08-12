@@ -240,6 +240,7 @@ run() {
   upload_ec2_credentials
   remote_build_ami
   terminate_instance
-echo "BOXBUILDER - boxbuilder_remote_build_ami: Finished and exiting successfully"}
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Finished and exiting successfully"
+}
 
 run
