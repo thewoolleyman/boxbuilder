@@ -18,6 +18,16 @@ function onexit() {
   exit $exit_status
 }
 
+function disable_error_checking() {
+  trap - ERR
+  set +o errexit
+}
+
+function enable_error_checking() {
+  trap onexit ERR
+  set -o errexit
+}
+
 trap onexit HUP INT QUIT TERM ERR
 
 setup() {
