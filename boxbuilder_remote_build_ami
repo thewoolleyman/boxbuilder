@@ -19,6 +19,16 @@ function onexit() {
   exit $exit_status
 }
 
+function disable_error_checking() {
+  trap - ERR
+  set +o errexit
+}
+
+function enable_error_checking() {
+  trap onexit ERR
+  set -o errexit
+}
+
 trap onexit HUP INT QUIT TERM ERR
 
 exec_remotely() {
@@ -133,9 +143,9 @@ set_up_ec2_tools() {
     # wget -O $_ec2_api_tools_zipfile $boxbuilder_ec2_api_tools_url # TODO: uncomment after debugging
     echo "BOXBUILDER - boxbuilder_remote_build_ami: Reading top-level directory for $_ec2_api_tools_zipfile ..."
     # Zipfile is structured with top-level directory containing the release date, so we must determine what it is, extract, and symlink it to _ec2_api_tools_path
-    set +o errexit
+    disable_error_checking
     _first_zipfile_listing_entry=$(unzip -l $_ec2_api_tools_zipfile | head -n4 | tail -n1) # _first_zipfile_listing_entry should be top-level zipfile dir
-    set -o errexit
+    enable_error_checking
     _top_level_zipfile_dir=${_first_zipfile_listing_entry##* } # grab just last space-delimited directory component from _first_zipfile_listing_entry
     _top_level_zipfile_dir=${_top_level_zipfile_dir%%/} # strip trailing slash
     echo "BOXBUILDER - boxbuilder_remote_build_ami: Unzipping $_ec2_api_tools_zipfile to $_ec2_tools_path ..."

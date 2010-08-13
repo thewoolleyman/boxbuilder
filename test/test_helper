@@ -19,6 +19,16 @@ function onexit() {
   exit $exit_status
 }
 
+function disable_error_checking() {
+  trap - ERR
+  set +o errexit
+}
+
+function enable_error_checking() {
+  trap onexit ERR
+  set -o errexit
+}
+
 trap onexit HUP INT QUIT TERM ERR
 
 assert_equal() {
@@ -33,8 +43,8 @@ assert_equal() {
 }
 
 assert_match() {
-  set +o errexit
   set +o nounset
+  disable_error_checking
   echo $2 | grep -e $1
   if [[ ! $? = 0 ]]; then
     echo "Expected $2 to match $1"
@@ -42,6 +52,6 @@ assert_match() {
     set -o nounset
     return 1
   fi
+  enable_error_checking
   set -o nounset
-  set -o errexit
 }

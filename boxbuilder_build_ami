@@ -19,6 +19,16 @@ function onexit() {
   exit $exit_status
 }
 
+function disable_error_checking() {
+  trap - ERR
+  set +o errexit
+}
+
+function enable_error_checking() {
+  trap onexit ERR
+  set -o errexit
+}
+
 trap onexit HUP INT QUIT TERM ERR
 
 setup() {
@@ -175,9 +185,9 @@ copy_image_to_ami() {
   echo "BOXBUILDER - boxbuilder_build_ami: Ensuring no existing volume is already attached at /dev/sdi ..."
   # TODO: Why must -K and -C be passed?  Why can't it find exported vars in subshell?
   # TODO: and why do we need set +o errexit?
-  set +o errexit
+  disable_error_checking
   _existing_volumeid=$(ec2-describe-volumes -K $EC2_PRIVATE_KEY -C $EC2_CERT | grep -e '^ATTACHMENT.*/dev/sdi' | cut -f2)
-  set -o errexit
+  enable_error_checking
   if [[ ! -z $_existing_volumeid ]]; then
     echo "BOXBUILDER - boxbuilder_build_ami: Volume $_existing_volumeid is already attached at /dev/sdi.  Detaching and deleting ..."
     ec2-detach-volume -f $_existing_volumeid

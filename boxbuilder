@@ -19,6 +19,16 @@ function onexit() {
   exit $exit_status
 }
 
+function disable_error_checking() {
+  trap - ERR
+  set +o errexit
+}
+
+function enable_error_checking() {
+  trap onexit ERR
+  set -o errexit
+}
+
 trap onexit HUP INT QUIT TERM ERR
 
 setup() {
@@ -83,9 +93,11 @@ install_packages() {
     else
       _package_version=${_package#*=}
     fi
-    set +o errexit
+
+    disable_error_checking
     _package_status=$(dpkg -l $_package_name | grep "ii  $_package_name" | grep "$_package_version")
-    set -o errexit
+    enable_error_checking
+
     if [[ -z $_package_status ]]; then
       echo "BOXBUILDER - boxbuilder:  Package $_package is NOT already installed..."
       _packages_missing=true
@@ -148,7 +160,8 @@ enable_rvm() {
 install_rvm_ruby() {
   echo "BOXBUILDER - boxbuilder:  Installing RVM default ruby: $boxbuilder_default_ruby"
   set +o nounset
-  set +o errexit
+  disable_error_checking
+  
   if [[ -z $($HOME/.rvm/bin/rvm info | head -n 1 | grep $boxbuilder_default_ruby) ]] ; then
     $HOME/.rvm/bin/rvm install $boxbuilder_default_ruby
     echo "BOXBUILDER - boxbuilder:  Finished installing RVM default ruby: $boxbuilder_default_ruby"
@@ -156,14 +169,14 @@ install_rvm_ruby() {
     echo "BOXBUILDER - boxbuilder:  Not installing RVM Ruby $boxbuilder_default_ruby because it is already installed ..."
   fi
   set -o nounset
-  set -o errexit
+  enable_error_checking
 }
 
 set_rvm_default_ruby() {
   echo "BOXBUILDER - boxbuilder:  Setting RVM default ruby: $boxbuilder_default_ruby"
-  set +o errexit
+  disable_error_checking
   $HOME/.rvm/bin/rvm --default use $boxbuilder_default_ruby
-  set -o errexit
+  enable_error_checking
   echo "BOXBUILDER - boxbuilder:  Finished setting RVM default ruby: $boxbuilder_default_ruby"
 }
 
@@ -173,9 +186,9 @@ setup_rvm() {
   for init_file in $HOME/.bashrc $HOME/.bash_profile
   do
     if [[ -e $init_file ]] ; then
-      set +o errexit  # turn off return code checking for now, failing with output 'tput: unknown terminal "unknown"'
+      disable_error_checking  # turn off return code checking for now, failing with output 'tput: unknown terminal "unknown"'
       enable_rvm
-      set -o errexit
+      enable_error_checking
     fi
   done
   install_rvm_ruby
