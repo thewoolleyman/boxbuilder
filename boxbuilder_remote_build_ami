@@ -186,7 +186,7 @@ get_builder_instance_host() {
      "$_instance_id" | \
     egrep ^INSTANCE | cut -f4) && test -z $boxbuilder_builder_instance_host; do
       echo -n .
-      sleep 1
+      sleep 3
   done
   echo
   echo "BOXBUILDER - boxbuilder_remote_build_ami: Got hostname $boxbuilder_builder_instance_host for instance $_instance_id"
