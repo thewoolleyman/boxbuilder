@@ -17,6 +17,8 @@ function onexit() {
   local exit_status=${1:-$?}
   if [[ $exit_status != 0 ]]; then
     _error_line="error on line $LINENO."
+  else
+    _error_line=''
   fi
   echo "BOXBUILDER - boxbuilder_test: $_error_line Exiting $0 with $exit_status"
   exit $exit_status
