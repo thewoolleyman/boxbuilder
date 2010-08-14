@@ -51,19 +51,13 @@ setup() {
 
 grant_nopasswd_sudo_access() {
   echo "BOXBUILDER: Checking 'admin' group membership for user $boxbuilder_user on host $boxbuilder_host."
-  disable_error_checking
-  groups | grep -q -e "admin"
-  if [ ! $? = 0 ]; then
+  if [[ $(groups | grep -q -e 'admin') ]]; then
     echo "BOXBUILDER - boxbuilder_bootstrap: error on line $LINENO - user $boxbuilder_user is not a member of the 'admin' group on host $boxbuilder_host.  Please add..."
     return 1
   fi
-  enable_error_checking
 
   echo "BOXBUILDER - boxbuilder_bootstrap: Checking no-password sudo access for 'admin' group on host $boxbuilder_host and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
-  disable_error_checking
-  sudo grep -e "%admin.*ALL.*=.*NOPASSWD.*:.*ALL" /etc/sudoers
-  if [ ! $? = 0 ]; then
-    enable_error_checking
+  if [[ ! $(sudo grep -e "%admin.*ALL.*=.*NOPASSWD.*:.*ALL" /etc/sudoers) ]]; then
     echo "BOXBUILDER - boxbuilder_bootstrap: Giving user $boxbuilder_user NO PASSWORD sudo privileges"
     sudo rm -f /tmp/sudoers.new
     sudo cp /etc/sudoers /etc/sudoers.bak
@@ -83,7 +77,6 @@ grant_nopasswd_sudo_access() {
     fi
     sudo cp /tmp/sudoers.new /etc/sudoers
   else
-    enable_error_checking
     echo "BOXBUILDER - boxbuilder_bootstrap: admin group already appears to have NOPASSWD sudo access."
   fi  
 }
