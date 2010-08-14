@@ -15,7 +15,10 @@ set -o xtrace
 
 function onexit() {
   local exit_status=${1:-$?}
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: error on line $LINENO. Exiting $0 with $exit_status"
+  if [[ $exit_status != 0 ]]; then
+    _error_line="error on line $LINENO."
+  fi
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: $_error_line Exiting $0 with $exit_status"
   exit $exit_status
 }
 
@@ -72,11 +75,18 @@ setup() {
   boxbuilder_builder_instance_instance_type=${boxbuilder_builder_instance_instance_type:-"m1.large"}
   boxbuilder_builder_instance_ami_id=${boxbuilder_builder_instance_ami_id:-"ami-4b4ba522"}
   boxbuilder_ec2_api_tools_url=${boxbuilder_ec2_api_tools_url:-"http://s3.amazonaws.com/ec2-downloads/ec2-api-tools.zip"}
-  boxbuilder_terminate_builder_instance=${boxbuilder_terminate_builder_instance:-true}
+  # default boxbuilder_terminate_builder_instance to false if boxbuilder_builder_instance_host is set, so we don't accidentally stop an existing instance
+  if [[ -z $boxbuilder_builder_instance_host]]; then
+    boxbuilder_terminate_builder_instance=${boxbuilder_terminate_builder_instance:-true}
+  else
+    boxbuilder_terminate_builder_instance=${boxbuilder_terminate_builder_instance:-false}
+  fi
   
   EC2_CERT=${EC2_CERT:-""}
   EC2_PRIVATE_KEY=${EC2_PRIVATE_KEY:-""}
   EC2_KEYPAIR=${EC2_KEYPAIR:-""}
+  
+  _instance_id='' # TODO: Find instance id even if we didn't start it, so we can terminate it if boxbuilder_builder_instance_host is true, 
 
   echo "BOXBUILDER - boxbuilder_remote_build_ami:  Finished environment variable setup:"
   echo "boxbuilder_config=$boxbuilder_config"

@@ -480,8 +480,10 @@ the Amazon EC2 API Tools.
 ----
 
 'boxbuilder\_terminate\_builder\_instance' is a boolean flag indicating whether a NON-GUARANTEED ATTEMPT should be
-made to automatically terminated the EC2 builder instance when the script exits.  It is true by default.  Set it to
-false if you want to rerun or debug boxbuilder on the build instance, or if you are using your own
+made to automatically terminated the EC2 builder instance when the script exits.  It is false by default if
+'boxbuilder\_builder\_instance\_host' *IS* set, and true by default if 'boxbuilder\_builder\_instance\_host' is *NOT*
+set (and one will be started automatically).  This is so we don't accidentally terminate an existing instance.
+Set it to false if you want to rerun or debug boxbuilder on the build instance, or if you are using your own
 'boxbuilder\_builder\_instance\_host'.
 
 **WARNING: If you set 'boxbuilder\_builder\_instance\_host' to one of your own preexisting EC2 instances

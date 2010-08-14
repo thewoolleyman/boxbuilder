@@ -15,7 +15,10 @@ set -o xtrace
 
 function onexit() {
   local exit_status=${1:-$?}
-  echo "BOXBUILDER - boxbuilder: error on line $LINENO. Exiting $0 with $exit_status"
+  if [[ $exit_status != 0 ]]; then
+    _error_line="error on line $LINENO."
+  fi
+  echo "BOXBUILDER - boxbuilder: $_error_line Exiting $0 with $exit_status"
   exit $exit_status
 }
 
