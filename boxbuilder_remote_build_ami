@@ -76,7 +76,7 @@ setup() {
   boxbuilder_builder_instance_ami_id=${boxbuilder_builder_instance_ami_id:-"ami-4b4ba522"}
   boxbuilder_ec2_api_tools_url=${boxbuilder_ec2_api_tools_url:-"http://s3.amazonaws.com/ec2-downloads/ec2-api-tools.zip"}
   # default boxbuilder_terminate_builder_instance to false if boxbuilder_builder_instance_host is set, so we don't accidentally stop an existing instance
-  if [[ -z $boxbuilder_builder_instance_host]]; then
+  if [[ -z $boxbuilder_builder_instance_host ]]; then
     boxbuilder_terminate_builder_instance=${boxbuilder_terminate_builder_instance:-true}
   else
     boxbuilder_terminate_builder_instance=${boxbuilder_terminate_builder_instance:-false}
