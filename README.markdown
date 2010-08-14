@@ -493,6 +493,25 @@ WILL BE TERMINATED and you will LOSE ANY DATA WHICH IS NOT BACKED UP!**
     boxbuilder_terminate_builder_instance=true
 
 ----
+
+'boxbuilder\_terminate\_old\_builder\_instances' is a boolean flag indicating whether a NON-GUARANTEED ATTEMPT should be
+made to automatically terminated ALL EC2 builder instances owned by your EC2 account which were previously started by 
+boxbuilder\_remote\_build\_ami.  They will be terminated when the script exits.  These instances
+are identified by the string 'boxbuilder\_temp\_builder\_instance\_safe\_to\_terminate'
+in the 'user\_data' attribute, using this command: 'ec2-describe-instance-attribute {instance id} --user-data'.
+
+It will NOT terminate the builder instance which is currently being used - that is based on the
+'boxbuilder\_terminate\_builder\_instance' variable.  
+
+It is true by default.  This is an attempt to prevent old builder instances from inadvertently persisting after
+failed boxbuilder runs and incurring charges on your EC2 account.  If for some reason you WANT old
+builder instances to not be terminated, set it to false.  This should be rare, you probably only want
+this if you need to be running and debugging more than one builder instance at once (not just the
+one you are currently working on)
+
+    boxbuilder_terminate_old_builder_instances=true
+
+----
 &nbsp;
 
 
