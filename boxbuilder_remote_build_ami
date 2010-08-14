@@ -159,9 +159,7 @@ set_up_ec2_tools() {
 
 start_builder_instance() {
   echo "BOXBUILDER - boxbuilder_remote_build_ami: Starting builder instance to perform AMI build: ami=$boxbuilder_builder_instance_ami_id, instance_type=$boxbuilder_builder_instance_instance_type ..."
-  _instance_id=$(ec2-run-instances \
-    --private-key "$EC2_PRIVATE_KEY" \
-    --cert "$EC2_CERT" \
+  _instance_id=$(ec2-run-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
     --key "$EC2_KEYPAIR_NAME" \
     --availability-zone us-east-1a \
     --instance-type "$boxbuilder_builder_instance_instance_type" \
@@ -172,9 +170,7 @@ start_builder_instance() {
 
 get_builder_instance_host() {
   echo "BOXBUILDER - boxbuilder_remote_build_ami: Finding hostname for $_instance_id ..."
-  while boxbuilder_builder_instance_host=$(ec2-describe-instances \
-    --private-key "$EC2_PRIVATE_KEY" \
-    --cert "$EC2_CERT" \
+  while boxbuilder_builder_instance_host=$(ec2-describe-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
      "$_instance_id" | \
     egrep ^INSTANCE | cut -f4) && test -z $boxbuilder_builder_instance_host; do
       echo -n .
@@ -230,10 +226,7 @@ remote_build_ami() {
 terminate_instance() {
   if [[ $boxbuilder_terminate_builder_instance = true ]] && [[ -n $_instance_id ]] ; then
     echo "BOXBUILDER - boxbuilder_remote_build_ami: terminating host $boxbuilder_builder_instance_host on instance $_instance_id"
-    _terminate_instances_result=$(ec2-terminate-instances   \
-      --private-key "$EC2_PRIVATE_KEY" \
-      --cert "$EC2_CERT" \
-      "$_instance_id")
+    _terminate_instances_result=$(ec2-terminate-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_instance_id")
     echo "BOXBUILDER - boxbuilder_remote_build_ami: ec2-terminate-instances result: $_terminate_instances_result"
   else
     echo "BOXBUILDER - boxbuilder_remote_build_ami: boxbuilder_terminate_builder_instance was not equal to true, so $boxbuilder_builder_instance_host on instance $_instance_id was NOT terminated."
