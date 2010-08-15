@@ -73,23 +73,18 @@ setup() {
   eval $boxbuilder_config
   boxbuilder_build_ami_url=${boxbuilder_build_ami_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_build_ami"}
   boxbuilder_user=${boxbuilder_user:-"ubuntu"}
-  boxbuilder_builder_instance_host=${boxbuilder_builder_instance_host:-""}
+  boxbuilder_builder_instance_id=${boxbuilder_builder_instance_id:-""}
   boxbuilder_builder_instance_instance_type=${boxbuilder_builder_instance_instance_type:-"m1.large"}
   boxbuilder_builder_instance_ami_id=${boxbuilder_builder_instance_ami_id:-"ami-4b4ba522"}
   boxbuilder_ec2_api_tools_url=${boxbuilder_ec2_api_tools_url:-"http://s3.amazonaws.com/ec2-downloads/ec2-api-tools.zip"}
-  # default boxbuilder_terminate_builder_instance to false if boxbuilder_builder_instance_host is set, so we don't accidentally stop an existing instance
-  if [[ -z $boxbuilder_builder_instance_host ]]; then
-    boxbuilder_terminate_builder_instance=${boxbuilder_terminate_builder_instance:-true}
-  else
-    boxbuilder_terminate_builder_instance=${boxbuilder_terminate_builder_instance:-false}
-  fi
+  boxbuilder_terminate_ec2_resources=${boxbuilder_terminate_ec2_resources:-true}
   
   EC2_CERT=${EC2_CERT:-""}
   EC2_PRIVATE_KEY=${EC2_PRIVATE_KEY:-""}
   EC2_KEYPAIR=${EC2_KEYPAIR:-""}
-  
-  _instance_id='' # TODO: Find instance id even if we didn't start it, so we can terminate it if boxbuilder_builder_instance_host is true, 
 
+  boxbuilder_skip_build=${boxbuilder_skip_build:-false} # Undocumented flag, for debugging boxbuilder_remote_build_ami
+  
   echo "BOXBUILDER - boxbuilder_remote_build_ami:  Finished environment variable setup:"
   echo "boxbuilder_config=$boxbuilder_config"
   # TODO: Add all env vars which are directly used by this script
@@ -171,25 +166,25 @@ set_up_ec2_tools() {
 
 start_builder_instance() {
   echo "BOXBUILDER - boxbuilder_remote_build_ami: Starting builder instance to perform AMI build: ami=$boxbuilder_builder_instance_ami_id, instance_type=$boxbuilder_builder_instance_instance_type ..."
-  _instance_id=$(ec2-run-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
+  boxbuilder_builder_instance_id=$(ec2-run-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
     --key "$EC2_KEYPAIR_NAME" \
     --availability-zone us-east-1a \
     --instance-type "$boxbuilder_builder_instance_instance_type" \
     "$boxbuilder_builder_instance_ami_id" |
     egrep ^INSTANCE | cut -f2)
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Successfully started EC2 builder instance: instance_id=$_instance_id"
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Successfully started EC2 builder instance: instance_id=$boxbuilder_builder_instance_id"
 }
 
 get_builder_instance_host() {
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Finding hostname for $_instance_id ..."
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Finding hostname for $boxbuilder_builder_instance_id ..."
   while boxbuilder_builder_instance_host=$(ec2-describe-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
-     "$_instance_id" | \
+     "$boxbuilder_builder_instance_id" | \
     egrep ^INSTANCE | cut -f4) && test -z $boxbuilder_builder_instance_host; do
       echo -n .
       sleep 3
   done
   echo
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Got hostname $boxbuilder_builder_instance_host for instance $_instance_id"
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Got hostname $boxbuilder_builder_instance_host for instance $boxbuilder_builder_instance_id"
   echo "BOXBUILDER - boxbuilder_remote_build_ami: Waiting for ssh connectivity to $boxbuilder_builder_instance_host ..."
   while ssh_up=$(ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "echo 'ssh up'"); test "$ssh_up" != "ssh up"; do
     echo "BOXBUILDER - boxbuilder_remote_build_ami: SSH connect response from $boxbuilder_builder_instance_host: $ssh_up"
@@ -235,13 +230,45 @@ remote_build_ami() {
   exec_remotely_pseudo_tty "$boxbuilder_config && $_boxbuilder_build_ami_script"
 }
 
-terminate_instance() {
-  if [[ $boxbuilder_terminate_builder_instance = true ]] && [[ -n $_instance_id ]] ; then
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: terminating host $boxbuilder_builder_instance_host on instance $_instance_id"
+boxbuilder_terminate_builder_instances() {
+  _boxbuilder_user_data_tag='boxbuilder_temp_builder_instance_safe_to_terminate'
+
+  _instances=$(ec2-describe-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT | egrep ^INSTANCE)
+  echo "$_instances" | while read line; do
+    _instance_id=$(echo "$line" | cut -f2)
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: Checking instance id $_instance_id for User Data containing '$_boxbuilder_user_data_tag'"
+
+    # Do not terminate instances which boxbuilder did not start (which do not contain $_boxbuilder_user_data_tag)
+    _user_data=$(ec2-describe-instance-attribute --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
+      $_instance_id --user-data \
+      | cut -f3)
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: Instance id $_instance_id User Data: $_user_data"
+
+    disable_error_checking
+    if [[ -z $(echo $_user_data | grep $_boxbuilder_user_data_tag) ]]; then
+      echo "BOXBUILDER - boxbuilder_remote_build_ami: NOT terminating instance $_instance_id"
+      continue
+    fi
+    enable_error_checking
+
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: terminating boxbuilder builder instance $_instance_id ..."
+    disable_error_checking
     _terminate_instances_result=$(ec2-terminate-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_instance_id")
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: ec2-terminate-instances result: $_terminate_instances_result"
+    enable_error_checking
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: ec2-terminate-instances result for instance $_instance_id: $_terminate_instances_result"
+  done    
+}
+
+boxbuilder_delete_ebs_snapshots() {
+  echo "TODO: delete ebs snapshots"
+}
+
+boxbuilder_terminate_ec2_resources() {
+  if [[ $boxbuilder_terminate_ec2_resources = true ]] ; then
+    boxbuilder_terminate_builder_instances
+    boxbuilder_delete_ebs_snapshots
   else
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: boxbuilder_terminate_builder_instance was not equal to true, so $boxbuilder_builder_instance_host on instance $_instance_id was NOT terminated."
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: boxbuilder_terminate_ec2_resources was not equal to true, so NO boxbuilder instances were terminated."
   fi
 }
 
@@ -250,13 +277,15 @@ run() {
   setup
   set_ec2_credentials
   set_up_ec2_tools
-  if [[ -z $boxbuilder_builder_instance_host ]] ; then
-    start_builder_instance
+  if [[ $boxbuilder_skip_build = false ]] ; then
+    if [[ -z $boxbuilder_builder_instance_id ]] ; then
+      start_builder_instance
+    fi
     get_builder_instance_host
+    upload_ec2_credentials
+    remote_build_ami
   fi
-  upload_ec2_credentials
-  remote_build_ami
-  terminate_instance
+  boxbuilder_terminate_ec2_resources
   echo "BOXBUILDER - boxbuilder_remote_build_ami: Finished and exiting successfully"
 }
 

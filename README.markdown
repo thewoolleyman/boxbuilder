@@ -10,14 +10,21 @@ Tracker Project: [http://www.pivotaltracker.com/projects/101913](http://www.pivo
 
 AMI-building code is based on Eric Hammond's tutorial at http://alestic.com/2010/01/ec2-ebs-boot-ubuntu
 
-**WARNING!  The 'build\_ami' scripts will automatically create EC2 resources for which you will be charged!
-They automatically start and stop instances and create EBS volumes, but if the scripts fail or are killed
-the might not be removed. It is YOUR RESPONSIBILITY to ensure that any EC2 resources which boxbuilder creates are
-automatically shut down.  If you do not YOU WILL BE CHARGED BY AMAZON UNTIL THEY ARE SHUT DOWN.
-Learn how to delete any unused resources via the the EC2 console
-before using the 'build\_ami' scripts: [https://console.aws.amazon.com/ec2/home](https://console.aws.amazon.com/ec2/home)**
-
-
+**WARNING! BOXBUILDER INCURS EC2 RESOURCE CHARGES!
+The 'build\_ami' scripts will automatically create EC2 instances, EBS volumes and EBS snapshots.
+Boxbuilder will ATTEMPT TO automatically terminate any EC2 instance it has automatically started,
+but if the scripts fail or are killed the might not be removed.
+It is YOUR RESPONSIBILITY to confirm that any EC2 resources which boxbuilder creates are
+terminated even if boxbuilder fails to terminate them automatically.
+If you do not YOU WILL BE CHARGED BY AMAZON FOR ANY RESOURCES UNTIL THEY ARE TERMINATED.
+Learn how to delete any unused resources via the the EC2 AWS Management Console
+before using the 'build\_ami' scripts: [https://console.aws.amazon.com/ec2/home](https://console.aws.amazon.com/ec2/home)
+Resources which boxbuilder automatically starts will be identified by the string
+'boxbuilder\_temp\_builder\_instance\_safe\_to\_terminate' in the resource's
+User Data instance attribute or Snapshot Description.
+The User Data instance attribute is not visible via the EC2 AWS Management Console,
+but can be seen using this command:
+'ec2-describe-instance-attribute {instance id} --user-data'.**
 
 ----
 &nbsp;
@@ -451,15 +458,11 @@ start a builder instance.
 
 ----
 
-'boxbuilder\_builder\_instance\_host' is the hostname of the EC2 builder instance.  If it is not set,
+'boxbuilder\_builder\_instance\_id' is the instance id of the EC2 builder instance.  If it is not set,
 an instance will automatically be created for you.  Boxbuilder will ATTEMPT to terminate the instance after
 the AMI is built, but this is not guaranteed.
 
-**WARNING: If you set 'boxbuilder\_builder\_instance\_host' to one of your own preexisting EC2 instances
-and do NOT set 'boxbuilder\_terminate\_builder\_instance' to false, the instance 
-WILL BE TERMINATED and you will LOSE ANY DATA WHICH IS NOT BACKED UP!**
-
-    boxbuilder_builder_instance_host=ubuntu
+    boxbuilder_builder_instance_id="i-abcdef12"
 
 ----
 
@@ -479,37 +482,23 @@ the Amazon EC2 API Tools.
 
 ----
 
-'boxbuilder\_terminate\_builder\_instance' is a boolean flag indicating whether a NON-GUARANTEED ATTEMPT should be
-made to automatically terminated the EC2 builder instance when the script exits.  It is false by default if
-'boxbuilder\_builder\_instance\_host' *IS* set, and true by default if 'boxbuilder\_builder\_instance\_host' is *NOT*
-set (and one will be started automatically).  This is so we don't accidentally terminate an existing instance.
-Set it to false if you want to rerun or debug boxbuilder on the build instance, or if you are using your own
-'boxbuilder\_builder\_instance\_host'.
+'boxbuilder\_terminate\_ec2\_resources' is a boolean flag indicating whether a
+NON-GUARANTEED ATTEMPT should be made to automatically terminate ALL EC2 builder instances
+which boxbuilder automatically started.
+Resources which boxbuilder automatically started will be identified by the string
+'boxbuilder\_temp\_builder\_instance\_safe\_to\_terminate' in the resource's
+User Data instance attribute or Snapshot Description.
+The User Data instance attribute is not visible via the EC2 AWS Management Console,
+but can be seen using this command:
+'ec2-describe-instance-attribute {instance id} --user-data'.
 
-**WARNING: If you set 'boxbuilder\_builder\_instance\_host' to one of your own preexisting EC2 instances
-and do NOT set 'boxbuilder\_terminate\_builder\_instance' to false, the instance 
-WILL BE TERMINATED and you will LOSE ANY DATA WHICH IS NOT BACKED UP!**
+It is true by default.  This is an attempt to prevent old builder instances from persisting after
+boxbuilder runs and incurring charges on your EC2 account (see the warning at the top of this README).
 
-    boxbuilder_terminate_builder_instance=true
+Set it to false if you want leave the build instance running in order to rerun or debug boxbuilder
+(you must set 'boxbuilder\_builder\_instance\_id' to prevent a build instance from automatically starting).
 
-----
-
-'boxbuilder\_terminate\_old\_builder\_instances' is a boolean flag indicating whether a NON-GUARANTEED ATTEMPT should be
-made to automatically terminated ALL EC2 builder instances owned by your EC2 account which were previously started by 
-boxbuilder\_remote\_build\_ami.  They will be terminated when the script exits.  These instances
-are identified by the string 'boxbuilder\_temp\_builder\_instance\_safe\_to\_terminate'
-in the 'user\_data' attribute, using this command: 'ec2-describe-instance-attribute {instance id} --user-data'.
-
-It will NOT terminate the builder instance which is currently being used - that is based on the
-'boxbuilder\_terminate\_builder\_instance' variable.  
-
-It is true by default.  This is an attempt to prevent old builder instances from inadvertently persisting after
-failed boxbuilder runs and incurring charges on your EC2 account.  If for some reason you WANT old
-builder instances to not be terminated, set it to false.  This should be rare, you probably only want
-this if you need to be running and debugging more than one builder instance at once (not just the
-one you are currently working on)
-
-    boxbuilder_terminate_old_builder_instances=true
+    boxbuilder_terminate_ec2_resources=true
 
 ----
 &nbsp;
