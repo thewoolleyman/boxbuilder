@@ -230,7 +230,9 @@ copy_image_to_ami() {
   ec2-detach-volume --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_volumeid"
   
   echo "BOXBUILDER - boxbuilder_build_ami: Creating snapshot of volume $_volumeid ..."
-  _snapshotid=$(ec2-create-snapshot --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_volumeid" | cut -f2)
+  _snapshotid=$(ec2-create-snapshot --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_volumeid" \
+    -d 'boxbuilder_temp_builder_instance_safe_to_terminate' \
+    | cut -f2)
   ec2-delete-volume --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_volumeid"
   while ec2-describe-snapshots --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_snapshotid" | grep -q pending
     do echo -n .; sleep 3; done

@@ -170,8 +170,9 @@ start_builder_instance() {
     --key "$EC2_KEYPAIR_NAME" \
     --availability-zone us-east-1a \
     --instance-type "$boxbuilder_builder_instance_instance_type" \
-    "$boxbuilder_builder_instance_ami_id" |
-    egrep ^INSTANCE | cut -f2)
+    "$boxbuilder_builder_instance_ami_id" \
+    -d 'boxbuilder_temp_builder_instance_safe_to_terminate' \
+    | egrep ^INSTANCE | cut -f2)
   echo "BOXBUILDER - boxbuilder_remote_build_ami: Successfully started EC2 builder instance: instance_id=$boxbuilder_builder_instance_id"
 }
 
