@@ -204,7 +204,10 @@ copy_image_to_ami() {
   fi
   
   echo "BOXBUILDER - boxbuilder_build_ami: Creating new volume ..."
-  _volumeid=$(ec2-create-volume --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT --size $_size --availability-zone us-east-1a | cut -f2)
+  _volumeid=$(ec2-create-volume --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
+    --size $_size \
+    --availability-zone us-east-1a \
+    | cut -f2)
   
   echo "BOXBUILDER - boxbuilder_build_ami: Retrieving current instance id ..."
   _instance_id=$(wget --progress=dot -qO- http://instance-data/latest/meta-data/instance-id)
