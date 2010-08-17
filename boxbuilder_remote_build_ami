@@ -228,7 +228,7 @@ remote_build_ami() {
   echo "BOXBUILDER - boxbuilder_remote_build_ami: Changing permissions on $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
   exec_remotely "chmod a+x $_boxbuilder_build_ami_script"
   echo "BOXBUILDER - boxbuilder_remote_build_ami: Running $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
-  exec_remotely_pseudo_tty "$boxbuilder_config && $_boxbuilder_build_ami_script"
+  exec_remotely_pseudo_tty "export boxbuilder_config='$boxbuilder_config' && $_boxbuilder_build_ami_script"
 }
 
 boxbuilder_terminate_builder_instances() {

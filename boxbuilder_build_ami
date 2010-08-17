@@ -167,7 +167,7 @@ run_boxbuilder_bootstrap_in_chroot_jail_to_build_image() {
   sudo chroot $_imagedir chmod a+x $_boxbuilder_bootstrap_script
   echo "BOXBUILDER - boxbuilder_build_ami: Running $_boxbuilder_bootstrap_script ..."
   # TODO: does this pass everything in environment and $boxbuilder_config, or do we need to do more?
-  sudo chroot $_imagedir sudo -u ubuntu -i bash -c "$boxbuilder_config && $_boxbuilder_bootstrap_script"
+  sudo chroot $_imagedir sudo -u ubuntu -i bash -c "export boxbuilder_config='$boxbuilder_config' && $_boxbuilder_bootstrap_script"
   echo "BOXBUILDER - boxbuilder_build_ami: Finished running boxbuilder_bootstrap in chroot jail to build image ..."
 }
 
