@@ -171,7 +171,7 @@ start_builder_instance() {
     --availability-zone us-east-1a \
     --instance-type "$boxbuilder_builder_instance_instance_type" \
     "$boxbuilder_builder_instance_ami_id" \
-    -d 'boxbuilder_temp_builder_instance_safe_to_terminate' \
+    -d 'boxbuilder_temp_resource_safe_to_terminate' \
     | egrep ^INSTANCE | cut -f2)
   echo "BOXBUILDER - boxbuilder_remote_build_ami: Successfully started EC2 builder instance: instance_id=$boxbuilder_builder_instance_id"
 }
@@ -233,20 +233,22 @@ remote_build_ami() {
 
 boxbuilder_terminate_builder_instances() {
   echo "BOXBUILDER - boxbuilder_remote_build_ami: Terminating EC2 builder instances ..."
-  _boxbuilder_user_data_tag='boxbuilder_temp_builder_instance_safe_to_terminate'
-  _instances=$(ec2-describe-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT | egrep ^INSTANCE)
+  disable_error_checking # we must disable error checking because grep will fail with nonzero if there are no running instances
+  _instances=$(ec2-describe-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
+    | egrep ^INSTANCE)
+  enable_error_checking
   echo "$_instances" | while read line; do
     _instance_id=$(echo "$line" | cut -f2)
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: Checking instance id $_instance_id for User Data containing '$_boxbuilder_user_data_tag'"
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: Checking instance id $_instance_id for User Data containing '$_boxbuilder_ec2_resource_tag'"
 
-    # Do not terminate instances which boxbuilder did not start (which do not contain $_boxbuilder_user_data_tag)
+    # Do not terminate instances which boxbuilder did not start (which do not contain $_boxbuilder_ec2_resource_tag)
     _user_data=$(ec2-describe-instance-attribute --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
       $_instance_id --user-data \
       | cut -f3)
     echo "BOXBUILDER - boxbuilder_remote_build_ami: Instance id $_instance_id User Data: $_user_data"
 
     disable_error_checking
-    if [[ -z $(echo $_user_data | grep $_boxbuilder_user_data_tag) ]]; then
+    if [[ -z $(echo $_user_data | grep $_boxbuilder_ec2_resource_tag) ]]; then
       echo "BOXBUILDER - boxbuilder_remote_build_ami: NOT terminating instance $_instance_id"
       continue
     fi
@@ -257,17 +259,30 @@ boxbuilder_terminate_builder_instances() {
     _terminate_instances_result=$(ec2-terminate-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_instance_id")
     enable_error_checking
     echo "BOXBUILDER - boxbuilder_remote_build_ami: ec2-terminate-instances result for instance $_instance_id: $_terminate_instances_result"
-  done    
+  done
   echo "BOXBUILDER - boxbuilder_remote_build_ami: Finished terminating EC2 builder instances ..."
 }
 
 boxbuilder_delete_ebs_snapshots() {
   echo "BOXBUILDER - boxbuilder_remote_build_ami: Deleting EBS snapshots ..."
-  echo "TODO: delete ebs snapshots"
+  # Do not terminate snapshots which boxbuilder did not start (which do not contain $_boxbuilder_ec2_resource_tag)
+  disable_error_checking # we must disable error checking because grep will fail with nonzero if there are no snapshots
+  _snapshots=$(ec2-describe-snapshots --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
+    | grep $_boxbuilder_ec2_resource_tag)
+  enable_error_checking
+  echo "$_snapshots" | while read line; do
+    _snapshot_id=$(echo "$line" | cut -f2)
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: terminating boxbuilder AMI snapshot $_snapshot_id ..."
+    disable_error_checking
+    _terminate_snapshot_result=$(ec2-delete-snapshot --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_snapshot_id")
+    enable_error_checking
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: ec2-delete-snapshot result for snapshot $_snapshot_id: $_terminate_snapshot_result"
+  done
   echo "BOXBUILDER - boxbuilder_remote_build_ami: Finished deleting EBS snapshots ..."
 }
 
 boxbuilder_terminate_ec2_resources() {
+  _boxbuilder_ec2_resource_tag='boxbuilder_temp_resource_safe_to_terminate'
   if [[ $boxbuilder_terminate_ec2_resources = true ]] ; then
     echo "BOXBUILDER - boxbuilder_remote_build_ami: Terminating EC2 resources, because boxbuilder_terminate_ec2_resources was equal to true ..."
     boxbuilder_terminate_builder_instances
