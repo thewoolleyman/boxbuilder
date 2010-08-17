@@ -147,7 +147,7 @@ set_up_ec2_tools() {
     fi
     _ec2_api_tools_zipfile=$_ec2_tools_path/${boxbuilder_ec2_api_tools_url##*/} # grabs last path component of url to use as zipfile name
     echo "BOXBUILDER - boxbuilder_remote_build_ami: EC2 API Tools do not exist at $_ec2_api_tools_path.  Downloading from $boxbuilder_ec2_api_tools_url to $_ec2_api_tools_path ..."
-    # wget -O $_ec2_api_tools_zipfile $boxbuilder_ec2_api_tools_url # TODO: uncomment after debugging
+    wget -O $_ec2_api_tools_zipfile $boxbuilder_ec2_api_tools_url
     echo "BOXBUILDER - boxbuilder_remote_build_ami: Reading top-level directory for $_ec2_api_tools_zipfile ..."
     # Zipfile is structured with top-level directory containing the release date, so we must determine what it is, extract, and symlink it to _ec2_api_tools_path
     disable_error_checking
