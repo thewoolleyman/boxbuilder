@@ -232,8 +232,8 @@ remote_build_ami() {
 }
 
 boxbuilder_terminate_builder_instances() {
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Terminating EC2 builder instances ..."
   _boxbuilder_user_data_tag='boxbuilder_temp_builder_instance_safe_to_terminate'
-
   _instances=$(ec2-describe-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT | egrep ^INSTANCE)
   echo "$_instances" | while read line; do
     _instance_id=$(echo "$line" | cut -f2)
@@ -258,14 +258,18 @@ boxbuilder_terminate_builder_instances() {
     enable_error_checking
     echo "BOXBUILDER - boxbuilder_remote_build_ami: ec2-terminate-instances result for instance $_instance_id: $_terminate_instances_result"
   done    
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Finished terminating EC2 builder instances ..."
 }
 
 boxbuilder_delete_ebs_snapshots() {
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Deleting EBS snapshots ..."
   echo "TODO: delete ebs snapshots"
+  echo "BOXBUILDER - boxbuilder_remote_build_ami: Finished deleting EBS snapshots ..."
 }
 
 boxbuilder_terminate_ec2_resources() {
   if [[ $boxbuilder_terminate_ec2_resources = true ]] ; then
+    echo "BOXBUILDER - boxbuilder_remote_build_ami: Terminating EC2 resources, because boxbuilder_terminate_ec2_resources was equal to true ..."
     boxbuilder_terminate_builder_instances
     boxbuilder_delete_ebs_snapshots
   else
