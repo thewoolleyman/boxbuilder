@@ -13,14 +13,16 @@ set -o pipefail
 set –o verbose
 set -o xtrace
 
+_log_prefix="BOXBUILDER - $BASH_SOURCE"
+
 function onexit() {
   local exit_status=${1:-$?}
   if [[ $exit_status != 0 ]]; then
-    _error_line="error on line $LINENO."
+    _error_line="error trapped."
   else
     _error_line=''
   fi
-  echo "BOXBUILDER - boxbuilder_remote_bootstrap: $_error_line Exiting $0 with $exit_status"
+  echo "$_log_prefix $_error_line Exiting $0 with $exit_status"
   exit $exit_status
 }
 
@@ -54,7 +56,7 @@ exec_remotely_pseudo_tty() {
 }
 
 setup() {
-  echo "BOXBUILDER - boxbuilder_remote_bootstrap:  Environment variable setup ..."
+  echo "$_log_prefix  Environment variable setup ..."
   if [ -e $HOME/.boxbuilderrc ]; then
     . $HOME/.boxbuilderrc
   fi
@@ -65,32 +67,32 @@ setup() {
   boxbuilder_host=${boxbuilder_host:?"Please set 'boxbuilder_host' to the hostname or IP of the box being built"}
   boxbuilder_bootstrap_url=${boxbuilder_bootstrap_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap"}
 
-  echo "BOXBUILDER - boxbuilder_remote_bootstrap:  Finished environment variable setup:"
+  echo "$_log_prefix  Finished environment variable setup:"
   echo "boxbuilder_config=$boxbuilder_config"
   # TODO: Add all env vars which are directly used by this script
 }
 
 remote_bootstrap() {
   _boxbuilder_bootstrap_script=/tmp/${boxbuilder_bootstrap_url##*/} # grabs last path component of url to use as script name
-  echo "BOXBUILDER - boxbuilder_remote_bootstrap: Downloading $boxbuilder_bootstrap_url to $_boxbuilder_bootstrap_script on $boxbuilder_host ..."
+  echo "$_log_prefix Downloading $boxbuilder_bootstrap_url to $_boxbuilder_bootstrap_script on $boxbuilder_host ..."
   exec_remotely "wget -O $_boxbuilder_bootstrap_script $boxbuilder_bootstrap_url"
   while exists=$(exec_remotely_quiet "if [[ -e $_boxbuilder_bootstrap_script ]] ; then echo exists; fi"); test "$exists" != "exists" ; do
-    echo "BOXBUILDER - boxbuilder_remote_bootstrap: Waiting for wget to finish downloading $boxbuilder_bootstrap_url to $_boxbuilder_bootstrap_script on $boxbuilder_host ..."
+    echo "$_log_prefix Waiting for wget to finish downloading $boxbuilder_bootstrap_url to $_boxbuilder_bootstrap_script on $boxbuilder_host ..."
     sleep 3
   done
-  echo "BOXBUILDER - boxbuilder_remote_bootstrap: $boxbuilder_bootstrap_url successfully downloaded to $_boxbuilder_bootstrap_script on $boxbuilder_host ..."
+  echo "$_log_prefix $boxbuilder_bootstrap_url successfully downloaded to $_boxbuilder_bootstrap_script on $boxbuilder_host ..."
 
-  echo "BOXBUILDER - boxbuilder_remote_bootstrap: Changing permissions on $_boxbuilder_bootstrap_script on $boxbuilder_host ..."
+  echo "$_log_prefix Changing permissions on $_boxbuilder_bootstrap_script on $boxbuilder_host ..."
   exec_remotely "chmod a+x $_boxbuilder_bootstrap_script"
-  echo "BOXBUILDER - boxbuilder_remote_bootstrap: Running $_boxbuilder_bootstrap_script on $boxbuilder_host ..."
+  echo "$_log_prefix Running $_boxbuilder_bootstrap_script on $boxbuilder_host ..."
   exec_remotely_pseudo_tty "$boxbuilder_config && $_boxbuilder_bootstrap_script"
 }
 
 run() {
-  echo "BOXBUILDER - boxbuilder: Starting ..."
+  echo "$_log_prefix Starting ..."
   setup
   remote_bootstrap
-  echo "BOXBUILDER - boxbuilder_remote_bootstrap: Finished and exiting successfully"
+  echo "$_log_prefix Finished and exiting successfully"
 }
 
 run

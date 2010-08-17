@@ -13,14 +13,16 @@ set -o pipefail
 set –o verbose
 set -o xtrace
 
+_log_prefix="BOXBUILDER - $BASH_SOURCE"
+
 function onexit() {
   local exit_status=${1:-$?}
   if [[ $exit_status != 0 ]]; then
-    _error_line="error on line $LINENO."
+    _error_line="error trapped."
   else
     _error_line=''
   fi
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: $_error_line Exiting $0 with $exit_status"
+  echo "$_log_prefix $_error_line Exiting $0 with $exit_status"
   exit $exit_status
 }
 
@@ -64,7 +66,7 @@ exec_remotely_pseudo_tty() {
 }
 
 setup() {
-  echo "BOXBUILDER - boxbuilder_remote_build_ami:  Environment variable setup ..."
+  echo "$_log_prefix  Environment variable setup ..."
 
   if [ -e $HOME/.boxbuilderrc ]; then
     . $HOME/.boxbuilderrc
@@ -85,41 +87,41 @@ setup() {
 
   boxbuilder_skip_build=${boxbuilder_skip_build:-false} # Undocumented flag, for debugging boxbuilder_remote_build_ami
   
-  echo "BOXBUILDER - boxbuilder_remote_build_ami:  Finished environment variable setup:"
+  echo "$_log_prefix  Finished environment variable setup:"
   echo "boxbuilder_config=$boxbuilder_config"
   # TODO: Add all env vars which are directly used by this script
 }
 
 set_ec2_credentials() {
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Setting EC2 credentials ..."
+  echo "$_log_prefix Setting EC2 credentials ..."
   
   if [[ -z $EC2_CERT ]]; then
     EC2_CERT=( $HOME/.ec2/cert-*.pem ) # grab first file using bash array
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: EC2_CERT is not set, loading from $HOME/.ec2/cert-*.pem ..."
+    echo "$_log_prefix EC2_CERT is not set, loading from $HOME/.ec2/cert-*.pem ..."
   fi
 
   if [[ ! -e $EC2_CERT ]]; then
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: ERROR: EC2_CERT was not found at $EC2_CERT, exiting ..."
+    echo "$_log_prefix ERROR: EC2_CERT was not found at $EC2_CERT, exiting ..."
     return 1
   fi
 
   if [[ -z $EC2_PRIVATE_KEY ]]; then
     EC2_PRIVATE_KEY=( $HOME/.ec2/pk-*.pem ) # grab first file using bash array
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: EC2_PRIVATE_KEY is not set, loading from $HOME/.ec2/pk-*.pem ..."
+    echo "$_log_prefix EC2_PRIVATE_KEY is not set, loading from $HOME/.ec2/pk-*.pem ..."
   fi
 
   if [[ ! -e $EC2_PRIVATE_KEY ]]; then
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: ERROR: EC2_PRIVATE_KEY was not found at $EC2_PRIVATE_KEY, exiting ..."
+    echo "$_log_prefix ERROR: EC2_PRIVATE_KEY was not found at $EC2_PRIVATE_KEY, exiting ..."
     return 1
   fi
 
   if [[ -z $EC2_KEYPAIR ]]; then
     EC2_KEYPAIR=( $HOME/.ec2/keypair-*.pem ) # grab first file using bash array
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: EC2_KEYPAIR is not set, loading from $HOME/.ec2/keypair-*.pem ..."
+    echo "$_log_prefix EC2_KEYPAIR is not set, loading from $HOME/.ec2/keypair-*.pem ..."
   fi
 
   if [[ ! -e $EC2_KEYPAIR ]]; then
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: ERROR: EC2_KEYPAIR was not found at $EC2_KEYPAIR, exiting ..."
+    echo "$_log_prefix ERROR: EC2_KEYPAIR was not found at $EC2_KEYPAIR, exiting ..."
     return 1
   fi
 
@@ -129,43 +131,43 @@ set_ec2_credentials() {
   export EC2_PRIVATE_KEY
   export EC2_KEYPAIR
 
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Finished setting EC2 credentials.  Using EC2_CERT=$EC2_CERT , EC2_PRIVATE_KEY=$EC2_PRIVATE_KEY , EC2_KEYPAIR=$EC2_KEYPAIR , and EC2_KEYPAIR_NAME=$EC2_KEYPAIR_NAME ..."
+  echo "$_log_prefix Finished setting EC2 credentials.  Using EC2_CERT=$EC2_CERT , EC2_PRIVATE_KEY=$EC2_PRIVATE_KEY , EC2_KEYPAIR=$EC2_KEYPAIR , and EC2_KEYPAIR_NAME=$EC2_KEYPAIR_NAME ..."
 }
 
 set_up_ec2_tools() {
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Setting up EC2 tools ..."
+  echo "$_log_prefix Setting up EC2 tools ..."
   
   _ec2_tools_path=$HOME/.boxbuilder_ec2_tools
   _ec2_api_tools_path=$_ec2_tools_path/ec2-api-tools
   if [[ -x $_ec2_api_tools_path/bin/ec2-run-instances ]]; then
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: EC2 API Tools already exist at $_ec2_api_tools_path.  Not re-downloading ..."
+    echo "$_log_prefix EC2 API Tools already exist at $_ec2_api_tools_path.  Not re-downloading ..."
   else
     mkdir -p $_ec2_tools_path
     if [[ ! $(which unzip) ]]; then
-      echo "BOXBUILDER - boxbuilder_remote_build_ami: ERROR: 'unzip' executable not available.  It is required to unzip auto-downloaded EC2 API Tools. Either put unzip with on your path, or manually unzip the EC2 API Tools to $_ec2_api_tools_path ..."
+      echo "$_log_prefix ERROR: 'unzip' executable not available.  It is required to unzip auto-downloaded EC2 API Tools. Either put unzip with on your path, or manually unzip the EC2 API Tools to $_ec2_api_tools_path ..."
       return 1
     fi
     _ec2_api_tools_zipfile=$_ec2_tools_path/${boxbuilder_ec2_api_tools_url##*/} # grabs last path component of url to use as zipfile name
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: EC2 API Tools do not exist at $_ec2_api_tools_path.  Downloading from $boxbuilder_ec2_api_tools_url to $_ec2_api_tools_path ..."
+    echo "$_log_prefix EC2 API Tools do not exist at $_ec2_api_tools_path.  Downloading from $boxbuilder_ec2_api_tools_url to $_ec2_api_tools_path ..."
     wget -O $_ec2_api_tools_zipfile $boxbuilder_ec2_api_tools_url
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: Reading top-level directory for $_ec2_api_tools_zipfile ..."
+    echo "$_log_prefix Reading top-level directory for $_ec2_api_tools_zipfile ..."
     # Zipfile is structured with top-level directory containing the release date, so we must determine what it is, extract, and symlink it to _ec2_api_tools_path
     disable_error_checking
     _first_zipfile_listing_entry=$(unzip -l $_ec2_api_tools_zipfile | head -n4 | tail -n1) # _first_zipfile_listing_entry should be top-level zipfile dir
     enable_error_checking
     _top_level_zipfile_dir=${_first_zipfile_listing_entry##* } # grab just last space-delimited directory component from _first_zipfile_listing_entry
     _top_level_zipfile_dir=${_top_level_zipfile_dir%%/} # strip trailing slash
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: Unzipping $_ec2_api_tools_zipfile to $_ec2_tools_path ..."
+    echo "$_log_prefix Unzipping $_ec2_api_tools_zipfile to $_ec2_tools_path ..."
     unzip -o -d $_ec2_tools_path $_ec2_api_tools_zipfile # Unzip to $HOME/.boxbuilder_ec2_tools
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: Symlinking $_ec2_tools_path/$_top_level_zipfile_dir to $_ec2_api_tools_path ..."
+    echo "$_log_prefix Symlinking $_ec2_tools_path/$_top_level_zipfile_dir to $_ec2_api_tools_path ..."
     ln -sf $_ec2_tools_path/$_top_level_zipfile_dir $_ec2_api_tools_path # symlink to simple directory name without release date.
   fi
   export PATH=$_ec2_api_tools_path/bin:$PATH
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Finished setting up EC2 tools ..."
+  echo "$_log_prefix Finished setting up EC2 tools ..."
 }
 
 start_builder_instance() {
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Starting builder instance to perform AMI build: ami=$boxbuilder_builder_instance_ami_id, instance_type=$boxbuilder_builder_instance_instance_type ..."
+  echo "$_log_prefix Starting builder instance to perform AMI build: ami=$boxbuilder_builder_instance_ami_id, instance_type=$boxbuilder_builder_instance_instance_type ..."
   boxbuilder_builder_instance_id=$(ec2-run-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
     --key "$EC2_KEYPAIR_NAME" \
     --availability-zone us-east-1a \
@@ -173,11 +175,11 @@ start_builder_instance() {
     "$boxbuilder_builder_instance_ami_id" \
     -d 'boxbuilder_temp_resource_safe_to_terminate' \
     | egrep ^INSTANCE | cut -f2)
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Successfully started EC2 builder instance: instance_id=$boxbuilder_builder_instance_id"
+  echo "$_log_prefix Successfully started EC2 builder instance: instance_id=$boxbuilder_builder_instance_id"
 }
 
 get_builder_instance_host() {
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Finding hostname for $boxbuilder_builder_instance_id ..."
+  echo "$_log_prefix Finding hostname for $boxbuilder_builder_instance_id ..."
   while boxbuilder_builder_instance_host=$(ec2-describe-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
      "$boxbuilder_builder_instance_id" | \
     egrep ^INSTANCE | cut -f4) && test -z $boxbuilder_builder_instance_host; do
@@ -185,86 +187,86 @@ get_builder_instance_host() {
       sleep 3
   done
   echo
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Got hostname $boxbuilder_builder_instance_host for instance $boxbuilder_builder_instance_id"
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Waiting for ssh connectivity to $boxbuilder_builder_instance_host ..."
+  echo "$_log_prefix Got hostname $boxbuilder_builder_instance_host for instance $boxbuilder_builder_instance_id"
+  echo "$_log_prefix Waiting for ssh connectivity to $boxbuilder_builder_instance_host ..."
   while ssh_up=$(ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "echo 'ssh up'"); test "$ssh_up" != "ssh up"; do
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: SSH connect response from $boxbuilder_builder_instance_host: $ssh_up"
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: Trying to SSH to $boxbuilder_builder_instance_host again after 3 seconds..."
+    echo "$_log_prefix SSH connect response from $boxbuilder_builder_instance_host: $ssh_up"
+    echo "$_log_prefix Trying to SSH to $boxbuilder_builder_instance_host again after 3 seconds..."
     sleep 3
   done
   echo
 }
 
 upload_ec2_credentials() {
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Uploading EC2 credentials to $boxbuilder_builder_instance_host ..."
+  echo "$_log_prefix Uploading EC2 credentials to $boxbuilder_builder_instance_host ..."
   exec_remotely 'mkdir -p $HOME/.ec2'
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Uploading EC2_CERT $EC2_CERT to $boxbuilder_user@$boxbuilder_builder_instance_host:.ec2/ ..."
+  echo "$_log_prefix Uploading EC2_CERT $EC2_CERT to $boxbuilder_user@$boxbuilder_builder_instance_host:.ec2/ ..."
   rsync \
     --rsh="ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR" \
     --rsync-path="rsync" \
     $EC2_CERT \
     $boxbuilder_user@$boxbuilder_builder_instance_host:.ec2/
 
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Uploading EC2_PRIVATE_KEY $EC2_PRIVATE_KEY to $boxbuilder_user@$boxbuilder_builder_instance_host:.ec2/ ..."
+  echo "$_log_prefix Uploading EC2_PRIVATE_KEY $EC2_PRIVATE_KEY to $boxbuilder_user@$boxbuilder_builder_instance_host:.ec2/ ..."
   rsync \
     --rsh="ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR" \
     --rsync-path="rsync" \
     $EC2_PRIVATE_KEY \
     $boxbuilder_user@$boxbuilder_builder_instance_host:.ec2/
 
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Finished uploading EC2 credentials to $boxbuilder_builder_instance_host ..."
+  echo "$_log_prefix Finished uploading EC2 credentials to $boxbuilder_builder_instance_host ..."
 }
 
 remote_build_ami() {
   _boxbuilder_build_ami_script=/tmp/${boxbuilder_build_ami_url##*/} # grabs last path component of url to use as script name
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Downloading $boxbuilder_build_ami_url to $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
+  echo "$_log_prefix Downloading $boxbuilder_build_ami_url to $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
   exec_remotely "wget -O $_boxbuilder_build_ami_script $boxbuilder_build_ami_url"
   while exists=$(exec_remotely_quiet "if [[ -e $_boxbuilder_build_ami_script ]] ; then echo exists; fi"); test "$exists" != "exists" ; do
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: Waiting for wget to finish downloading  $boxbuilder_build_ami_url to $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
+    echo "$_log_prefix Waiting for wget to finish downloading  $boxbuilder_build_ami_url to $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
     sleep 3
   done
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: $boxbuilder_build_ami_url successfully downloaded to $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
+  echo "$_log_prefix $boxbuilder_build_ami_url successfully downloaded to $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
 
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Changing permissions on $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
+  echo "$_log_prefix Changing permissions on $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
   exec_remotely "chmod a+x $_boxbuilder_build_ami_script"
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Running $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
+  echo "$_log_prefix Running $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
   exec_remotely_pseudo_tty "export boxbuilder_config='$boxbuilder_config' && $_boxbuilder_build_ami_script"
 }
 
 boxbuilder_terminate_builder_instances() {
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Terminating EC2 builder instances ..."
+  echo "$_log_prefix Terminating EC2 builder instances ..."
   disable_error_checking # we must disable error checking because grep will fail with nonzero if there are no running instances
   _instances=$(ec2-describe-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
     | egrep ^INSTANCE)
   enable_error_checking
   echo "$_instances" | while read line; do
     _instance_id=$(echo "$line" | cut -f2)
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: Checking instance id $_instance_id for User Data containing '$_boxbuilder_ec2_resource_tag'"
+    echo "$_log_prefix Checking instance id $_instance_id for User Data containing '$_boxbuilder_ec2_resource_tag'"
 
     # Do not terminate instances which boxbuilder did not start (which do not contain $_boxbuilder_ec2_resource_tag)
     _user_data=$(ec2-describe-instance-attribute --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
       $_instance_id --user-data \
       | cut -f3)
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: Instance id $_instance_id User Data: $_user_data"
+    echo "$_log_prefix Instance id $_instance_id User Data: $_user_data"
 
     disable_error_checking
     if [[ -z $(echo $_user_data | grep $_boxbuilder_ec2_resource_tag) ]]; then
-      echo "BOXBUILDER - boxbuilder_remote_build_ami: NOT terminating instance $_instance_id"
+      echo "$_log_prefix NOT terminating instance $_instance_id"
       continue
     fi
     enable_error_checking
 
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: terminating boxbuilder builder instance $_instance_id ..."
+    echo "$_log_prefix terminating boxbuilder builder instance $_instance_id ..."
     disable_error_checking
     _terminate_instances_result=$(ec2-terminate-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_instance_id")
     enable_error_checking
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: ec2-terminate-instances result for instance $_instance_id: $_terminate_instances_result"
+    echo "$_log_prefix ec2-terminate-instances result for instance $_instance_id: $_terminate_instances_result"
   done
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Finished terminating EC2 builder instances ..."
+  echo "$_log_prefix Finished terminating EC2 builder instances ..."
 }
 
 boxbuilder_delete_ebs_snapshots() {
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Deleting EBS snapshots ..."
+  echo "$_log_prefix Deleting EBS snapshots ..."
   # Do not terminate snapshots which boxbuilder did not start (which do not contain $_boxbuilder_ec2_resource_tag)
   disable_error_checking # we must disable error checking because grep will fail with nonzero if there are no snapshots
   _snapshots=$(ec2-describe-snapshots --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
@@ -272,28 +274,28 @@ boxbuilder_delete_ebs_snapshots() {
   enable_error_checking
   echo "$_snapshots" | while read line; do
     _snapshot_id=$(echo "$line" | cut -f2)
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: terminating boxbuilder AMI snapshot $_snapshot_id ..."
+    echo "$_log_prefix terminating boxbuilder AMI snapshot $_snapshot_id ..."
     disable_error_checking
     _terminate_snapshot_result=$(ec2-delete-snapshot --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_snapshot_id")
     enable_error_checking
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: ec2-delete-snapshot result for snapshot $_snapshot_id: $_terminate_snapshot_result"
+    echo "$_log_prefix ec2-delete-snapshot result for snapshot $_snapshot_id: $_terminate_snapshot_result"
   done
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Finished deleting EBS snapshots ..."
+  echo "$_log_prefix Finished deleting EBS snapshots ..."
 }
 
 boxbuilder_terminate_ec2_resources() {
   _boxbuilder_ec2_resource_tag='boxbuilder_temp_resource_safe_to_terminate'
   if [[ $boxbuilder_terminate_ec2_resources = true ]] ; then
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: Terminating EC2 resources, because boxbuilder_terminate_ec2_resources was equal to true ..."
+    echo "$_log_prefix Terminating EC2 resources, because boxbuilder_terminate_ec2_resources was equal to true ..."
     boxbuilder_terminate_builder_instances
     boxbuilder_delete_ebs_snapshots
   else
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: boxbuilder_terminate_ec2_resources was not equal to true, so NO boxbuilder instances were terminated."
+    echo "$_log_prefix boxbuilder_terminate_ec2_resources was not equal to true, so NO boxbuilder instances were terminated."
   fi
 }
 
 run() {
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Starting ..."
+  echo "$_log_prefix Starting ..."
   setup
   set_ec2_credentials
   set_up_ec2_tools
@@ -306,7 +308,7 @@ run() {
     remote_build_ami
   fi
   boxbuilder_terminate_ec2_resources
-  echo "BOXBUILDER - boxbuilder_remote_build_ami: Finished and exiting successfully"
+  echo "$_log_prefix Finished and exiting successfully"
 }
 
 run

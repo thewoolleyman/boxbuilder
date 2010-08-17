@@ -13,14 +13,16 @@ set -o pipefail
 set –o verbose
 set -o xtrace
 
+_log_prefix="BOXBUILDER - $BASH_SOURCE"
+
 function onexit() {
   local exit_status=${1:-$?}
   if [[ $exit_status != 0 ]]; then
-    _error_line="error on line $LINENO."
+    _error_line="error trapped."
   else
     _error_line=''
   fi
-  echo "BOXBUILDER - boxbuilder_test: $_error_line Exiting $0 with $exit_status"
+  echo "$_log_prefix $_error_line Exiting $0 with $exit_status"
   exit $exit_status
 }
 
@@ -66,13 +68,13 @@ test_can_set_up_and_run_chef() {
 }
 
 suite() {
-  echo "BOXBUILDER - boxbuilder_test: Starting tests ..."
+  echo "$_log_prefix Starting tests ..."
   setup
   test_can_log_in_as_user
   test_can_download_boxbuilder_bootstrap
   test_can_install_rvm
   test_can_set_up_and_run_chef
-  echo "BOXBUILDER - boxbuilder_test: All tests passed successfully"
+  echo "$_log_prefix All tests passed successfully"
 }
 
 suite

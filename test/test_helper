@@ -13,14 +13,16 @@ set -o pipefail
 set –o verbose
 set -o xtrace
 
+_log_prefix="BOXBUILDER - $BASH_SOURCE"
+
 function onexit() {
   local exit_status=${1:-$?}
   if [[ $exit_status != 0 ]]; then
-    _error_line="error on line $LINENO."
+    _error_line="error trapped."
   else
     _error_line=''
   fi
-  echo "BOXBUILDER - test_helper: $_error_line Exiting $0 with $exit_status"
+  echo "$_log_prefix $_error_line Exiting $0 with $exit_status"
   exit $exit_status
 }
 

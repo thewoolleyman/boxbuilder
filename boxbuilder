@@ -13,14 +13,16 @@ set -o pipefail
 set –o verbose
 set -o xtrace
 
+_log_prefix="BOXBUILDER - $BASH_SOURCE"
+
 function onexit() {
   local exit_status=${1:-$?}
   if [[ $exit_status != 0 ]]; then
-    _error_line="error on line $LINENO."
+    _error_line="error trapped."
   else
     _error_line=''
   fi
-  echo "BOXBUILDER - boxbuilder: $_error_line Exiting $0 with $exit_status"
+  echo "$_log_prefix $_error_line Exiting $0 with $exit_status"
   exit $exit_status
 }
 
@@ -52,7 +54,7 @@ setup() {
   boxbuilder_chef_json_path=${boxbuilder_chef_json_path:?"Please set 'boxbuilder_chef_json_path' to the path of the Chef JSON attributes file"}
   boxbuilder_chef_gem_install_options=${boxbuilder_chef_gem_install_options:-"--no-ri --no-rdoc"}
   
-  echo "BOXBUILDER - boxbuilder:  Environment variables:"
+  echo "$_log_prefix  Environment variables:"
   echo "boxbuilder_config                    = $boxbuilder_config"
   echo "boxbuilder_prerequisite_packages     = $boxbuilder_prerequisite_packages"
   echo "boxbuilder_rvm_version               = $boxbuilder_rvm_version"
@@ -66,28 +68,28 @@ setup() {
 }
 
 setup_boxbuilderrc() {
-  echo "BOXBUILDER - boxbuilder:  Setting up $HOME/.boxbuilderrc and $HOME/.boxbuilderrc_download ..."
+  echo "$_log_prefix  Setting up $HOME/.boxbuilderrc and $HOME/.boxbuilderrc_download ..."
 
   boxbuilderrc_url=${boxbuilderrc_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_default"}
 
-  echo "BOXBUILDER - boxbuilder:  Creating $HOME/.boxbuilderrc to call $HOME/.boxbuilderrc_download ..."
+  echo "$_log_prefix  Creating $HOME/.boxbuilderrc to call $HOME/.boxbuilderrc_download ..."
   if [ -e $HOME/.boxbuilderrc  ]; then
-    echo "BOXBUILDER - boxbuilder: $HOME/.boxbuilderrc already exists.  Not overwriting..."
+    echo "$_log_prefix $HOME/.boxbuilderrc already exists.  Not overwriting..."
     # TODO: check if line to source $HOME/.boxbuilderrc_download exists, add if it doesn't
   else
-    echo "BOXBUILDER - boxbuilder: Creating $HOME/.boxbuilderrc which will source $HOME/.boxbuilderrc_download ..."
+    echo "$_log_prefix Creating $HOME/.boxbuilderrc which will source $HOME/.boxbuilderrc_download ..."
     echo "source $HOME/.boxbuilderrc_download" > $HOME/.boxbuilderrc
   fi
     
-  echo "BOXBUILDER - boxbuilder:  Downloading AND overwriting $HOME/.boxbuilderrc_download from $boxbuilderrc_url ..."
+  echo "$_log_prefix  Downloading AND overwriting $HOME/.boxbuilderrc_download from $boxbuilderrc_url ..."
   wget -O $HOME/.boxbuilderrc_download $boxbuilderrc_url
   echo "# WARNING: This file was automatically downloaded from $boxbuilderrc_url - it will be overwritten the next time boxbuilder runs.  Put any local overrides at the bottom of $HOME/.boxbuilderrc, which is created by default to source this file." >> $HOME/.boxbuilderrc_download
   
-  echo "BOXBUILDER - boxbuilder:  Finished setting up $HOME/.boxbuilderrc and $HOME/.boxbuilderrc_download ..."
+  echo "$_log_prefix  Finished setting up $HOME/.boxbuilderrc and $HOME/.boxbuilderrc_download ..."
 }
 
 install_packages() {
-  echo "BOXBUILDER - boxbuilder:  Installing packages..."
+  echo "$_log_prefix  Installing packages..."
   export DEBIAN_FRONTEND=noninteractive  # Make Debian never prompt for user input on packages ...
   _packages_missing=false
   for _package in $boxbuilder_prerequisite_packages
@@ -104,89 +106,89 @@ install_packages() {
     enable_error_checking
 
     if [[ -z $_package_status ]]; then
-      echo "BOXBUILDER - boxbuilder:  Package $_package is NOT already installed..."
+      echo "$_log_prefix  Package $_package is NOT already installed..."
       _packages_missing=true
     else
-      echo "BOXBUILDER - boxbuilder:  Package $_package is already installed..."
+      echo "$_log_prefix  Package $_package is already installed..."
     fi
   done
   if [[ $_packages_missing = true ]]; then
-    echo "BOXBUILDER - boxbuilder:  Updating Aptitude..."
+    echo "$_log_prefix  Updating Aptitude..."
     sudo apt-get update
-    echo "BOXBUILDER - boxbuilder:  Installing prerequisite packages for RVM/Ruby..."
+    echo "$_log_prefix  Installing prerequisite packages for RVM/Ruby..."
     for _package in $boxbuilder_prerequisite_packages
     do
-      echo "BOXBUILDER - boxbuilder:  Installing package: $_package"
+      echo "$_log_prefix  Installing package: $_package"
       sudo apt-get install -y $_package
     done
-    echo "BOXBUILDER - boxbuilder:  Finished installing packages..."
+    echo "$_log_prefix  Finished installing packages..."
   else
-    echo "BOXBUILDER - boxbuilder:  All packages are already installed, not updating Aptitude or installing packages ..."
+    echo "$_log_prefix  All packages are already installed, not updating Aptitude or installing packages ..."
   fi
 }
 
 install_rvm() {
-  echo "BOXBUILDER - boxbuilder:  Installing RVM version $boxbuilder_rvm_version ..."
-  echo "BOXBUILDER - boxbuilder:  Reloading default RVM interpreter in this shell, if it is installed"
+  echo "$_log_prefix  Installing RVM version $boxbuilder_rvm_version ..."
+  echo "$_log_prefix  Reloading default RVM interpreter in this shell, if it is installed"
   if [[ -s $HOME/.rvm/environments/default ]]; then
     source $HOME/.rvm/environments/default
   fi
   if [[ -s $HOME/.rvm/scripts/rvm && ! -z $($HOME/.rvm/bin/rvm --version | grep $boxbuilder_rvm_version) ]]; then
-    echo "BOXBUILDER - boxbuilder:  Not reinstalling RVM version $boxbuilder_rvm_version because it is already installed ..."
+    echo "$_log_prefix  Not reinstalling RVM version $boxbuilder_rvm_version because it is already installed ..."
   else
     mkdir -p $HOME/.rvm/src/
     rm -rf $HOME/.rvm/src/rvm/
     git clone --depth 1 git://github.com/wayneeseguin/rvm.git $HOME/.rvm/src/rvm
     $HOME/.rvm/src/rvm/install
-    echo "BOXBUILDER - boxbuilder:  Finished installing RVM version $boxbuilder_rvm_version ..."
+    echo "$_log_prefix  Finished installing RVM version $boxbuilder_rvm_version ..."
   fi
 }
 
 enable_rvm() {
-  echo "BOXBUILDER - boxbuilder:  Enabling RVM in init file $init_file"
+  echo "$_log_prefix  Enabling RVM in init file $init_file"
   rvm_init="if [[ -s $HOME/.rvm/scripts/rvm ]] ; then source $HOME/.rvm/scripts/rvm ; fi"
   if [[ -z $(grep '.rvm' $init_file) ]] ; then
     echo $rvm_init >> $init_file
-    echo "BOXBUILDER - boxbuilder:  Added RVM line to $init_file"
+    echo "$_log_prefix  Added RVM line to $init_file"
   else
-    echo "BOXBUILDER - boxbuilder:  Not adding RVM line to $init_file because it already exists ..."
+    echo "$_log_prefix  Not adding RVM line to $init_file because it already exists ..."
   fi
   if [[ ! -z $(grep -e '.*&& return.*$' $init_file) ]] ; then
     # mount proc to avoid error message from sed: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=559539
     # sudo mount -t proc none /proc/  # comment for now, fails if proc already mounted
     sed -i'.bak' -e 's/^.*&& return.*$//' $init_file
-    echo "BOXBUILDER - boxbuilder:  Removed '&& return' from $init_file"
+    echo "$_log_prefix  Removed '&& return' from $init_file"
   else
-    echo "BOXBUILDER - boxbuilder:  Not removing '&& return' from $init_file because it was not found ..."
+    echo "$_log_prefix  Not removing '&& return' from $init_file because it was not found ..."
   fi
-  echo "BOXBUILDER - boxbuilder:  Finished enabling RVM in init file $init_file"
+  echo "$_log_prefix  Finished enabling RVM in init file $init_file"
 }
 
 install_rvm_ruby() {
-  echo "BOXBUILDER - boxbuilder:  Installing RVM default ruby: $boxbuilder_default_ruby"
+  echo "$_log_prefix  Installing RVM default ruby: $boxbuilder_default_ruby"
   set +o nounset
   disable_error_checking
   
   if [[ -z $($HOME/.rvm/bin/rvm info | head -n 1 | grep $boxbuilder_default_ruby) ]] ; then
     $HOME/.rvm/bin/rvm install $boxbuilder_default_ruby
-    echo "BOXBUILDER - boxbuilder:  Finished installing RVM default ruby: $boxbuilder_default_ruby"
+    echo "$_log_prefix  Finished installing RVM default ruby: $boxbuilder_default_ruby"
   else
-    echo "BOXBUILDER - boxbuilder:  Not installing RVM Ruby $boxbuilder_default_ruby because it is already installed ..."
+    echo "$_log_prefix  Not installing RVM Ruby $boxbuilder_default_ruby because it is already installed ..."
   fi
   set -o nounset
   enable_error_checking
 }
 
 set_rvm_default_ruby() {
-  echo "BOXBUILDER - boxbuilder:  Setting RVM default ruby: $boxbuilder_default_ruby"
+  echo "$_log_prefix  Setting RVM default ruby: $boxbuilder_default_ruby"
   disable_error_checking
   $HOME/.rvm/bin/rvm --default use $boxbuilder_default_ruby
   enable_error_checking
-  echo "BOXBUILDER - boxbuilder:  Finished setting RVM default ruby: $boxbuilder_default_ruby"
+  echo "$_log_prefix  Finished setting RVM default ruby: $boxbuilder_default_ruby"
 }
 
 setup_rvm() {
-  echo "BOXBUILDER - boxbuilder:  Setting up RVM..."
+  echo "$_log_prefix  Setting up RVM..."
   install_rvm
   for init_file in $HOME/.bashrc $HOME/.bash_profile
   do
@@ -198,24 +200,24 @@ setup_rvm() {
   done
   install_rvm_ruby
   set_rvm_default_ruby
-  echo "BOXBUILDER - boxbuilder:  Reloading default RVM interpreter in this shell"
+  echo "$_log_prefix  Reloading default RVM interpreter in this shell"
   source $HOME/.rvm/environments/default
-  echo "BOXBUILDER - boxbuilder:  Finished setting up RVM..."
+  echo "$_log_prefix  Finished setting up RVM..."
 }
 
 install_chef() {
-  echo "BOXBUILDER - boxbuilder:  Installing Chef..."
+  echo "$_log_prefix  Installing Chef..."
   # TODO: Allow override if user wants to force reinstall with different boxbuilder_chef_gem_install_options
   if [[ -z $(gem search ^chef$ | grep -e '^chef') ]]; then
     gem install chef $boxbuilder_chef_gem_install_options
-    echo "BOXBUILDER - boxbuilder:  Finished installing Chef..."
+    echo "$_log_prefix  Finished installing Chef..."
   else
-    echo "BOXBUILDER - boxbuilder:  'chef' gem is already installed, not reinstalling..."
+    echo "$_log_prefix  'chef' gem is already installed, not reinstalling..."
   fi
 }
 
 download_chef_repos() {
-  echo "BOXBUILDER - boxbuilder:  Downloading/updating Chef Repos..."
+  echo "$_log_prefix  Downloading/updating Chef Repos..."
   if [ ! -e $boxbuilder_chef_dir ]; then
     mkdir -p $boxbuilder_chef_dir
   fi
@@ -225,10 +227,10 @@ download_chef_repos() {
     _name_dot_git=${_boxbuilder_chef_repo##*/}
     _repo_path="$boxbuilder_chef_dir/${_name_dot_git%.*}"
     if [ ! -e $_repo_path ]; then
-      echo "BOXBUILDER - boxbuilder:  $_repo_path does not exist, cloning from $_boxbuilder_chef_repo ..."
+      echo "$_log_prefix  $_repo_path does not exist, cloning from $_boxbuilder_chef_repo ..."
       git clone --recursive -- $_boxbuilder_chef_repo $_repo_path
     else
-      echo "BOXBUILDER - boxbuilder:  $_repo_path already exists, pulling and updating ..."
+      echo "$_log_prefix  $_repo_path already exists, pulling and updating ..."
       echo $_repo_path
       set +o nounset
       cd $_repo_path
@@ -240,23 +242,23 @@ download_chef_repos() {
       set -o nounset
     fi
   done
-  echo "BOXBUILDER - boxbuilder:  Finished downloading/updating Chef Repos..."
+  echo "$_log_prefix  Finished downloading/updating Chef Repos..."
 }
 
 create_chef_script() {
-  echo "BOXBUILDER - boxbuilder:  Creating Chef script..."
+  echo "$_log_prefix  Creating Chef script..."
   # TODO: ...
-  echo "BOXBUILDER - boxbuilder:  Finished Creating Chef Script..."
+  echo "$_log_prefix  Finished Creating Chef Script..."
 }
 
 run_chef() {
-  echo "BOXBUILDER - boxbuilder:  Running Chef Solo command: rvmsudo chef-solo -c $boxbuilder_chef_config_path -j $boxbuilder_chef_json_path"
+  echo "$_log_prefix  Running Chef Solo command: rvmsudo chef-solo -c $boxbuilder_chef_config_path -j $boxbuilder_chef_json_path"
   rvmsudo chef-solo -c $boxbuilder_chef_config_path -j $boxbuilder_chef_json_path
-  echo "BOXBUILDER - boxbuilder:  Finished running Chef Solo command:  rvmsudo chef-solo -c $boxbuilder_chef_config_path -j $boxbuilder_chef_json_path"
+  echo "$_log_prefix  Finished running Chef Solo command:  rvmsudo chef-solo -c $boxbuilder_chef_config_path -j $boxbuilder_chef_json_path"
 }
 
 run() {
-  echo "BOXBUILDER - boxbuilder: Starting ..."
+  echo "$_log_prefix Starting ..."
   setup_boxbuilderrc
   setup
   install_packages
@@ -266,7 +268,7 @@ run() {
   download_chef_repos
   create_chef_script
   run_chef
-  echo "BOXBUILDER - boxbuilder: Finished and exiting successfully"
+  echo "$_log_prefix Finished and exiting successfully"
 }
 
 run

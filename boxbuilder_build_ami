@@ -13,14 +13,16 @@ set -o pipefail
 set –o verbose
 set -o xtrace
 
+_log_prefix="BOXBUILDER - $BASH_SOURCE"
+
 function onexit() {
   local exit_status=${1:-$?}
   if [[ $exit_status != 0 ]]; then
-    _error_line="error on line $LINENO."
+    _error_line="error trapped."
   else
     _error_line=''
   fi
-  echo "BOXBUILDER - boxbuilder_build_ami: $_error_line Exiting $0 with $exit_status"
+  echo "$_log_prefix $_error_line Exiting $0 with $exit_status"
   exit $exit_status
 }
 
@@ -37,7 +39,7 @@ function enable_error_checking() {
 trap onexit HUP INT QUIT TERM ERR
 
 setup() {
-  echo "BOXBUILDER - boxbuilder_build_ami:  Environment variable setup ..."
+  echo "$_log_prefix  Environment variable setup ..."
   if [ -e $HOME/.boxbuilderrc ]; then
     source $HOME/.boxbuilderrc
   fi
@@ -70,80 +72,80 @@ setup() {
   _image=/mnt/$_codename-$_tag-uec-$_arch2.img
   _imagedir=/mnt/$_codename-uec-$_arch2
 
-  echo "BOXBUILDER - boxbuilder_build_ami:  Finished environment variable setup:"
+  echo "$_log_prefix  Finished environment variable setup:"
   echo "boxbuilder_config=$boxbuilder_config"
   # TODO: Add all env vars which are directly used by this script
 }
 
 set_ec2_credentials() {
-  echo "BOXBUILDER - boxbuilder_build_ami: Setting EC2 credentials ..."
+  echo "$_log_prefix Setting EC2 credentials ..."
   
   if [[ -z $EC2_CERT ]]; then
     EC2_CERT=( $HOME/.ec2/cert-*.pem ) # grab first file using bash array
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: EC2_CERT is not set, loading from $HOME/.ec2/cert-*.pem ..."
+    echo "$_log_prefix EC2_CERT is not set, loading from $HOME/.ec2/cert-*.pem ..."
   fi
 
   if [[ ! -e $EC2_CERT ]]; then
-    echo "BOXBUILDER - boxbuilder_build_ami: ERROR: EC2_CERT was not found at $EC2_CERT, exiting ..."
+    echo "$_log_prefix ERROR: EC2_CERT was not found at $EC2_CERT, exiting ..."
     return 1
   fi
 
   if [[ -z $EC2_PRIVATE_KEY ]]; then
     EC2_PRIVATE_KEY=( $HOME/.ec2/pk-*.pem ) # grab first file using bash array
-    echo "BOXBUILDER - boxbuilder_remote_build_ami: EC2_PRIVATE_KEY is not set, loading from $HOME/.ec2/pk-*.pem ..."
+    echo "$_log_prefix EC2_PRIVATE_KEY is not set, loading from $HOME/.ec2/pk-*.pem ..."
   fi
 
   if [[ ! -e $EC2_PRIVATE_KEY ]]; then
-    echo "BOXBUILDER - boxbuilder_build_ami: ERROR: EC2_PRIVATE_KEY was not found at $EC2_PRIVATE_KEY, exiting ..."
+    echo "$_log_prefix ERROR: EC2_PRIVATE_KEY was not found at $EC2_PRIVATE_KEY, exiting ..."
     return 1
   fi
 
   export EC2_CERT
   export EC2_PRIVATE_KEY
 
-  echo "BOXBUILDER - boxbuilder_build_ami: Finished setting EC2 credentials.  Using EC2_CERT=$EC2_CERT and EC2_PRIVATE_KEY=$EC2_PRIVATE_KEY ..."
+  echo "$_log_prefix Finished setting EC2 credentials.  Using EC2_CERT=$EC2_CERT and EC2_PRIVATE_KEY=$EC2_PRIVATE_KEY ..."
 }
 
 install_ec2_tools() {
-  echo "BOXBUILDER - boxbuilder_build_ami: Installing ec2 tools ..."
-  echo "BOXBUILDER - boxbuilder_build_ami: Ensuring that multiverse is added to /etc/apt/sources.list so ec2 packages can be installed ..."
+  echo "$_log_prefix Installing ec2 tools ..."
+  echo "$_log_prefix Ensuring that multiverse is added to /etc/apt/sources.list so ec2 packages can be installed ..."
   sudo sed -i".bak-$(date +%Y%m%d-%H%M)" -e 's/universe$/universe multiverse/' /etc/apt/sources.list
-  echo "BOXBUILDER - boxbuilder_build_ami: Updating apt and installing EC2 tools ..."
+  echo "$_log_prefix Updating apt and installing EC2 tools ..."
   sudo apt-get update
   # sudo -E apt-get dist-upgrade -y    # TODO: Why do we need this?  Left over from ESH's original AMI builder article.  Delete if unnecessary
   sudo -E apt-get install -y ec2-api-tools ec2-ami-tools
-  echo "BOXBUILDER - boxbuilder_build_ami: Finished installing ec2 tools ..."
+  echo "$_log_prefix Finished installing ec2 tools ..."
 }
 
 create_chroot_jail_from_base_image() {
-  echo "BOXBUILDER - boxbuilder_build_ami: Creating chroot jail from base image $_imagesource ..."
+  echo "$_log_prefix Creating chroot jail from base image $_imagesource ..."
   if [[ -e $_image ]]; then
-    echo "BOXBUILDER - boxbuilder_build_ami: Unzipped image $_image already exists.  Not downloading again ..."
+    echo "$_log_prefix Unzipped image $_image already exists.  Not downloading again ..."
   else
-    echo "BOXBUILDER - boxbuilder_build_ami: Downloading image and unzipping to $_image ..."
+    echo "$_log_prefix Downloading image and unzipping to $_image ..."
     wget --progress=dot:mega -O- $_imagesource | sudo tar xzf - -C /mnt
   fi
   sudo mkdir -p $_imagedir
 
-  echo "BOXBUILDER - boxbuilder_build_ami: Resizing $_image to 5G ..."
+  echo "$_log_prefix Resizing $_image to 5G ..."
   # Resize image so we have enough space to install in chroot
   # Not sure if one or both of uec-resize-image and resize2fs are needed
   sudo uec-resize-image $_image 5G
 
-  echo "BOXBUILDER - boxbuilder_build_ami: Ensuring existing loop device at /dev/loop4 is unmounted ..."
+  echo "$_log_prefix Ensuring existing loop device at /dev/loop4 is unmounted ..."
   # Ensure existing loop device is unmounted (allows script to be run multiple times)
   if [[ ! -z $(mount | grep '/dev/loop4') ]]; then
     sudo umount -dfl /dev/loop4
   fi 
 
-  echo "BOXBUILDER - boxbuilder_build_ami: Mounting loop device at /dev/loop4 ..."
+  echo "$_log_prefix Mounting loop device at /dev/loop4 ..."
   sudo mount -o loop=/dev/loop4 $_image $_imagedir
 
-  echo "BOXBUILDER - boxbuilder_build_ami: Resizing loop device at /dev/loop4 to 5G ..."
+  echo "$_log_prefix Resizing loop device at /dev/loop4 to 5G ..."
   # Sometimes this is needed even though image was resized before mount with uec-resize-image?
   sudo resize2fs /dev/loop4 5G
 
-  echo "BOXBUILDER - boxbuilder_build_ami: Performing initial setup on chroot jail at $_imagedir ..."
+  echo "$_log_prefix Performing initial setup on chroot jail at $_imagedir ..."
   # Allow network access from chroot environment
   sudo cp /etc/resolv.conf $_imagedir/etc/
   # Remove hostname
@@ -152,28 +154,28 @@ create_chroot_jail_from_base_image() {
   sudo chroot $_imagedir apt-key adv --keyserver keyserver.ubuntu.com --recv-keys BE09C571
   sudo chroot $_imagedir mount -t proc none /proc
   sudo chroot $_imagedir mount -t devpts none /dev/pts
-  echo "BOXBUILDER - boxbuilder_build_ami: Finished creating chroot jail from base image $_imagesource ..."
+  echo "$_log_prefix Finished creating chroot jail from base image $_imagesource ..."
 }
 
 run_boxbuilder_bootstrap_in_chroot_jail_to_build_image() {
-  echo "BOXBUILDER - boxbuilder_build_ami: Running boxbuilder_bootstrap in chroot jail to build image ..."
-  echo "BOXBUILDER - boxbuilder_build_ami: Performing custom setup in $_imagedir using script at $boxbuilder_bootstrap_url ..."
+  echo "$_log_prefix Running boxbuilder_bootstrap in chroot jail to build image ..."
+  echo "$_log_prefix Performing custom setup in $_imagedir using script at $boxbuilder_bootstrap_url ..."
   _boxbuilder_bootstrap_script=/tmp/${boxbuilder_bootstrap_url##*/} # grabs last path component of url to use as script name
-  echo "BOXBUILDER - boxbuilder_build_ami: Downloading $_boxbuilder_bootstrap_script from $boxbuilder_bootstrap_url ..."
+  echo "$_log_prefix Downloading $_boxbuilder_bootstrap_script from $boxbuilder_bootstrap_url ..."
   sudo chroot $_imagedir wget -O $_boxbuilder_bootstrap_script $boxbuilder_bootstrap_url
-  echo "BOXBUILDER - boxbuilder_build_ami: $boxbuilder_bootstrap_url successfully downloaded to $_boxbuilder_bootstrap_script ..."
+  echo "$_log_prefix $boxbuilder_bootstrap_url successfully downloaded to $_boxbuilder_bootstrap_script ..."
 
-  echo "BOXBUILDER - boxbuilder_build_ami: Changing permissions on $_boxbuilder_bootstrap_script ..."
+  echo "$_log_prefix Changing permissions on $_boxbuilder_bootstrap_script ..."
   sudo chroot $_imagedir chmod a+x $_boxbuilder_bootstrap_script
-  echo "BOXBUILDER - boxbuilder_build_ami: Running $_boxbuilder_bootstrap_script ..."
+  echo "$_log_prefix Running $_boxbuilder_bootstrap_script ..."
   # TODO: does this pass everything in environment and $boxbuilder_config, or do we need to do more?
   sudo chroot $_imagedir sudo -u ubuntu -i bash -c "export boxbuilder_config='$boxbuilder_config' && $_boxbuilder_bootstrap_script"
-  echo "BOXBUILDER - boxbuilder_build_ami: Finished running boxbuilder_bootstrap in chroot jail to build image ..."
+  echo "$_log_prefix Finished running boxbuilder_bootstrap in chroot jail to build image ..."
 }
 
 copy_image_to_ami() {
-  echo "BOXBUILDER - boxbuilder_build_ami: Copying image to AMI ..."
-  echo "BOXBUILDER - boxbuilder_build_ami: Cleaning up mounts and policy-rc.d in chroot jail before copying image ..."
+  echo "$_log_prefix Copying image to AMI ..."
+  echo "$_log_prefix Cleaning up mounts and policy-rc.d in chroot jail before copying image ..."
   if [[ ! -z $(sudo chroot $_imagedir mount | grep '/proc') ]]; then
     sudo chroot $_imagedir umount /proc
   fi
@@ -187,52 +189,52 @@ copy_image_to_ami() {
   _prefix="$boxbuilder_ami_prefix-ubuntu-$_release-$_codename-$_tag-$_arch-$_now"
   _description="Ubuntu $_release $_codename $_tag $_arch $_now"
 
-  echo "BOXBUILDER - boxbuilder_build_ami: Ensuring no existing volume is already attached at /dev/sdi ..."
+  echo "$_log_prefix Ensuring no existing volume is already attached at /dev/sdi ..."
   # TODO: why do we need set +o errexit?
   disable_error_checking
   _existing_volumeid=$(ec2-describe-volumes --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT | grep -e '^ATTACHMENT.*/dev/sdi' | cut -f2)
   enable_error_checking
   if [[ ! -z $_existing_volumeid ]]; then
-    echo "BOXBUILDER - boxbuilder_build_ami: Volume $_existing_volumeid is already attached at /dev/sdi.  Detaching and deleting ..."
+    echo "$_log_prefix Volume $_existing_volumeid is already attached at /dev/sdi.  Detaching and deleting ..."
     ec2-detach-volume --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT -f $_existing_volumeid
     ec2-delete-volume --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT $_existing_volumeid
   fi
-  echo "BOXBUILDER - boxbuilder_build_ami: Ensuring nothing is mounted at /dev/sdi ..."
+  echo "$_log_prefix Ensuring nothing is mounted at /dev/sdi ..."
   if [[ ! -z $(sudo mount | grep '/dev/sdi') ]]; then
-    echo "BOXBUILDER - boxbuilder_build_ami: /dev/sdi is already mounted.  Unmounting ..."
+    echo "$_log_prefix /dev/sdi is already mounted.  Unmounting ..."
     sudo umount /dev/sdi
   fi
   
-  echo "BOXBUILDER - boxbuilder_build_ami: Creating new volume ..."
+  echo "$_log_prefix Creating new volume ..."
   _volumeid=$(ec2-create-volume --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
     --size $_size \
     --availability-zone us-east-1a \
     | cut -f2)
   
-  echo "BOXBUILDER - boxbuilder_build_ami: Retrieving current instance id ..."
+  echo "$_log_prefix Retrieving current instance id ..."
   _instance_id=$(wget --progress=dot -qO- http://instance-data/latest/meta-data/instance-id)
   
-  echo "BOXBUILDER - boxbuilder_build_ami: Attaching new volume $_volumeid to current instance $_instance_id at device /dev/sdi ..."
+  echo "$_log_prefix Attaching new volume $_volumeid to current instance $_instance_id at device /dev/sdi ..."
   ec2-attach-volume --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT --device /dev/sdi --instance "$_instance_id" "$_volumeid"
   while [ ! -e /dev/sdi ]; do echo -n .; sleep 1; done
   
-  echo "BOXBUILDER - boxbuilder_build_ami: Creating filesystem on /dev/sdi ..."
+  echo "$_log_prefix Creating filesystem on /dev/sdi ..."
   sudo mkfs.ext3 -F /dev/sdi
   _imagedir_ebs=$_imagedir-ebs
   
-  echo "BOXBUILDER - boxbuilder_build_ami: Mounting device /dev/sdi mounted at $_imagedir_ebs ..."
+  echo "$_log_prefix Mounting device /dev/sdi mounted at $_imagedir_ebs ..."
   sudo rm -rf $_imagedir_ebs
   sudo mkdir -p $_imagedir_ebs
   sudo mount /dev/sdi $_imagedir_ebs
-  echo "BOXBUILDER - boxbuilder_build_ami: Copying built image from chroot jail at $_imagedir to EBS volume $_volumeid attached to device /dev/sdi mounted at $_imagedir_ebs ..."
+  echo "$_log_prefix Copying built image from chroot jail at $_imagedir to EBS volume $_volumeid attached to device /dev/sdi mounted at $_imagedir_ebs ..."
   sudo tar -cSf - -C $_imagedir . | sudo tar xf - -C $_imagedir_ebs
 
-  echo "BOXBUILDER - boxbuilder_build_ami: Unmounting $_imagedir_ebs ..."
+  echo "$_log_prefix Unmounting $_imagedir_ebs ..."
   sudo umount $_imagedir_ebs
-  echo "BOXBUILDER - boxbuilder_build_ami: Detaching EC2 volume $_volumeid ..."
+  echo "$_log_prefix Detaching EC2 volume $_volumeid ..."
   ec2-detach-volume --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_volumeid"
   
-  echo "BOXBUILDER - boxbuilder_build_ami: Creating snapshot of volume $_volumeid ..."
+  echo "$_log_prefix Creating snapshot of volume $_volumeid ..."
   _snapshotid=$(ec2-create-snapshot --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_volumeid" \
     -d 'boxbuilder_temp_resource_safe_to_terminate' \
     | cut -f2)
@@ -247,8 +249,8 @@ copy_image_to_ami() {
     --snapshot "$_snapshotid")
   _newami=$(echo $_ec2_register_output | cut -f2)
 
-  echo "BOXBUILDER - boxbuilder_build_ami: NEW AMI SUCCESSFULLY CREATED AND REGISTERED:"
-  echo "BOXBUILDER - boxbuilder_build_ami: grep and following output lines and evaluate them to retrieve and set local variables describing the new AMI"
+  echo "$_log_prefix NEW AMI SUCCESSFULLY CREATED AND REGISTERED:"
+  echo "$_log_prefix grep and following output lines and evaluate them to retrieve and set local variables describing the new AMI"
   echo "------------------------------------"
   echo "boxbuilder_created_ami_id='$_newami'"
   echo "boxbuilder_created_ami_ebs_id='$_volumeid'"
@@ -256,18 +258,18 @@ copy_image_to_ami() {
   echo "boxbuilder_created_ami_prefix='$_prefix'"
   echo "boxbuilder_created_ami_description='$_description'"
   echo "------------------------------------"
-  echo "BOXBUILDER - boxbuilder_build_ami: Finished copying image to AMI ..."
+  echo "$_log_prefix Finished copying image to AMI ..."
 }
 
 run() {
-  echo "BOXBUILDER - boxbuilder_build_ami: Starting ..."
+  echo "$_log_prefix Starting ..."
   setup
   set_ec2_credentials
   install_ec2_tools
   create_chroot_jail_from_base_image
   run_boxbuilder_bootstrap_in_chroot_jail_to_build_image
   copy_image_to_ami
-  echo "BOXBUILDER - boxbuilder_build_ami: Finished and exiting successfully"
+  echo "$_log_prefix Finished and exiting successfully"
 }
 
 run
