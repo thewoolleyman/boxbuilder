@@ -80,7 +80,7 @@ remote_bootstrap() {
   _boxbuilder_bootstrap_script=/tmp/${boxbuilder_bootstrap_url##*/} # grabs last path component of url to use as script name
   echo "$_log_prefix Downloading $boxbuilder_bootstrap_url to $_boxbuilder_bootstrap_script on $boxbuilder_host ..."
   exec_remotely "wget -O $_boxbuilder_bootstrap_script $boxbuilder_bootstrap_url"
-  while exists=$(exec_remotely_quiet "if [[ -e $_boxbuilder_bootstrap_script ]] ; then echo exists; fi"); test "$exists" != "exists" ; do
+  while exists=$(exec_remotely_quiet "if [[ -e $_boxbuilder_bootstrap_script ]] ; then echo exists; fi"); [[ "$exists" != "exists" ]]; do
     echo "$_log_prefix Waiting for wget to finish downloading $boxbuilder_bootstrap_url to $_boxbuilder_bootstrap_script on $boxbuilder_host ..."
     sleep 3
   done
