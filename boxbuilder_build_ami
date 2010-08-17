@@ -3,15 +3,19 @@
 #  http://github.com/thewoolleyman/boxbuilder
 #  Copyright (c) 2010 Chad Woolley - The MIT License
 
-export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+boxbuilder_debug=${boxbuilder_debug:-false}
+
+if [[ $boxbuilder_debug = true ]]; then
+  export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+  set –o verbose
+  set -o xtrace
+fi
 
 set -o errexit
 set -o errtrace
 set -o noclobber
 set -o nounset
 set -o pipefail
-set –o verbose
-set -o xtrace
 
 _log_prefix="BOXBUILDER - $BASH_SOURCE"
 
@@ -169,7 +173,9 @@ run_boxbuilder_bootstrap_in_chroot_jail_to_build_image() {
   sudo chroot $_imagedir chmod a+x $_boxbuilder_bootstrap_script
   echo "$_log_prefix Running $_boxbuilder_bootstrap_script ..."
   # TODO: does this pass everything in environment and $boxbuilder_config, or do we need to do more?
-  sudo chroot $_imagedir sudo -u ubuntu -i bash -c "export boxbuilder_config='$boxbuilder_config' && $_boxbuilder_bootstrap_script"
+  sudo chroot $_imagedir sudo -u ubuntu -i bash -c "export boxbuilder_config='$boxbuilder_config' \
+    && export boxbuilder_debug=$boxbuilder_debug \
+    && $_boxbuilder_bootstrap_script"
   echo "$_log_prefix Finished running boxbuilder_bootstrap in chroot jail to build image ..."
 }
 
