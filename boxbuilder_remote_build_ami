@@ -17,7 +17,7 @@ set -o noclobber
 set -o nounset
 set -o pipefail
 
-_log_prefix="BOXBUILDER - $BASH_SOURCE"
+_log_prefix="BOXBUILDER - $BASH_SOURCE:"
 
 function onexit() {
   local exit_status=${1:-$?}
