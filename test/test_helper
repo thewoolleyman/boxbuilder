@@ -46,7 +46,7 @@ assert_equal() {
   set +o nounset
   if [[ ! $1 = $2 ]]; then
     echo "Expected $2 to be equal to $1"
-    echo "Failure at line, method, file:" `caller 0`
+    echo "Failure at line, method, file:" $(caller 0)
     set -o nounset
     return 1
   fi
@@ -59,7 +59,7 @@ assert_match() {
   echo $2 | grep -e $1
   if [[ ! $? = 0 ]]; then
     echo "Expected $2 to match $1"
-    echo "Failure at line, method, file:" `caller 0`
+    echo "Failure at line, method, file:" $(caller 0)
     set -o nounset
     return 1
   fi
