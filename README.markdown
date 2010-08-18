@@ -7,6 +7,7 @@ EC2 AMIs.  Currently it only supports Debian, but pull requests with support for
 new distros are welcome.
 
 Tracker Project: [http://www.pivotaltracker.com/projects/101913](http://www.pivotaltracker.com/projects/101913)
+Bug Reports/Feature Requests: PENDING - for now, email thewoolleyman@gmail.com
 
 AMI-building code is based on Eric Hammond's tutorial at http://alestic.com/2010/01/ec2-ebs-boot-ubuntu
 
@@ -60,7 +61,7 @@ Building a Box:
 
 Building an AMI Image: 
 
-1. 'boxbuilder\_remote\_build\_ami' (invoked from any Bash shell) starts an EC2 instance, and issues SSH commands on it built to download and invoke...
+1. 'boxbuilder\_remote\_build\_ami' (invoked from any Bash shell with Java) starts an EC2 instance, and issues SSH commands on it built to download and invoke...
 2. 'boxbuilder\_build\_ami' (on the EC2 instance), which creates a chroot jail, and runs commands in the chroot jail to download and invoke...
 3. 'boxbuilder\_bootstrap' (in the chroot jail), which clones a boxbuilder git repo, and invokes...
 4. 'boxbuilder' (in the chroot jail) to build a 'box' in the chroot jail, which exits and returns control to...
@@ -511,6 +512,16 @@ _EC2 Info_
 
 * Alestic AMI list: http://alestic.com/
 * Ubuntu AMI list: http://uec-images.ubuntu.com/releases/lucid/release/
+
+----
+&nbsp;
+
+
+_Known Issues_
+==========
+
+* Boxbuilder was developed and tested on OSX and Ubuntu.  It is intended to be portable across all Bash platforms,
+  but there may be differences in Bash implementations.  Please report bugs!
 
 ----
 &nbsp;
