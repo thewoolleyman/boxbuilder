@@ -280,6 +280,17 @@ boxbuilder_delete_ebs_snapshots() {
   enable_error_checking
   echo "$_snapshots" | while read line; do
     _snapshot_id=$(echo "$line" | cut -f2)
+    echo "$_log_prefix Checking if $_snapshot_id is currently in use by any AMIs ..."
+
+    # Do not attempt to delete snapshots which are currently in use by an AMI, it isn't allowed
+    disable_error_checking
+    _image_using_snapshot=$(ec2-describe-images --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT | grep $_snapshot_id )
+    enable_error_checking
+    if [[ -n $_image_using_snapshot ]]; then
+      echo "$_log_prefix NOT deleting snapshot ID $_snapshot_id because it is in use by AMI ID $_image_using_snapshot"
+      continue
+    fi
+
     echo "$_log_prefix terminating boxbuilder AMI snapshot $_snapshot_id ..."
     disable_error_checking
     _terminate_snapshot_result=$(ec2-delete-snapshot --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_snapshot_id")
