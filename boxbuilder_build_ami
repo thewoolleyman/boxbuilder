@@ -254,6 +254,7 @@ copy_image_to_ami() {
     $_ebsopts \
     --snapshot "$_snapshotid")
   _newami=$(echo $_ec2_register_output | cut -f2)
+  _newami=${_newami##IMAGE?} # strip the 'IMAGE ' prefix ('?' glob matches a space or tab as delimiter)
 
   echo "$_log_prefix NEW AMI SUCCESSFULLY CREATED AND REGISTERED:"
   echo "$_log_prefix grep and following output lines and evaluate them to retrieve and set local variables describing the new AMI"
