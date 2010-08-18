@@ -475,7 +475,7 @@ the default.
 ----
 
 'boxbuilder\_ec2\_api\_tools\_url' is the location from which the Amazon EC2 API Tools will be downloaded and extracted
-to $HOME/.boxbuilder_ec2_tools/ec2-api-tools on your local filesystem .  Override it to use a custom location to download
+to $HOME/.boxbuilder_ec2_tools/ec2-api-tools on your local filesystem.  Override it to use a custom location to download
 the Amazon EC2 API Tools.
 
     boxbuilder_ec2_api_tools=http://s3.amazonaws.com/ec2-downloads/ec2-api-tools.zip

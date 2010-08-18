@@ -118,7 +118,7 @@ run_boxbuilder() {
     return 1
   else
     echo "$_log_prefix Running boxbuilder script at $boxbuilder_script ..."
-    . $boxbuilder_script
+    source $boxbuilder_script
   fi
 }
 
