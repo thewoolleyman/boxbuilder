@@ -43,29 +43,33 @@ exec_remotely_quiet() {
 setup() {
   export boxbuilder_debug
   source $(dirname $0)/test_helper
-  source $HOME/.boxbuilder_testrc # don't use real .boxbuilderrc file, we don't want to pollute it with test vars
 
+  # Set test vars
+  source $HOME/.boxbuilder_testrc # don't use real .boxbuilderrc file, we don't want to pollute it with test vars
+  boxbuilder_ec2_resource_tag='boxbuilder_temp_resource_safe_to_terminate'
   # TODO: grep boxbuilder_keypair value out of boxbuilder_remote_build_ami output
   boxbuilder_keypair=${boxbuilder_keypair:?Please set 'boxbuilder_keypair' to the path of your ssh private key file}
-
   boxbuilder_user=${boxbuilder_user:-'ubuntu'}
   boxbuilder_dir="$(dirname $0)/.."
+  boxbuilder_config="export boxbuilder_ami_prefix=$boxbuilder_ec2_resource_tag"
+
+  # Invoke boxbuilder_remote_build_ami to exercise all boxbuilder scripts except boxbuilder_bootstrap
   boxbuilder_remote_build_ami_output=$($boxbuilder_dir/boxbuilder_remote_build_ami)
+
+  # Start built AMI
   echo "$boxbuilder_remote_build_ami_output"
   ami_vars=$(echo "$boxbuilder_remote_build_ami_output" | grep -e '^boxbuilder_created_ami_')
   echo "$ami_vars"
   eval $ami_vars
   boxbuilder_created_ami_id_no_carriage_returns=$(tr -d '\r' < <(echo $boxbuilder_created_ami_id) )
   boxbuilder_created_ami_id="$boxbuilder_created_ami_id_no_carriage_returns"
-  
   boxbuilder_built_instance_id=$(ec2-run-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
     --key "$EC2_KEYPAIR_NAME" \
     --availability-zone us-east-1a \
     --instance-type "m1.large" \
     "$boxbuilder_created_ami_id" \
-    -d 'boxbuilder_temp_resource_safe_to_terminate' \
+    -d "$boxbuilder_ec2_resource_tag" \
     | egrep ^INSTANCE | cut -f2)
-
   while boxbuilder_built_instance_host=$(ec2-describe-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
      "$boxbuilder_built_instance_id" | \
     egrep ^INSTANCE | cut -f4) && [[ -z $boxbuilder_built_instance_host ]]; do
@@ -86,11 +90,6 @@ test_can_log_in_as_user() {
   assert_equal $boxbuilder_user $remote_user
 }
 
-test_can_download_boxbuilder_bootstrap() {
-  expected_path=$(exec_remotely_quiet "which /tmp/boxbuilder_bootstrap")
-  assert_equal '/tmp/boxbuilder_bootstrap' $expected_path
-}
-
 test_can_install_rvm() {
   rvm_info=$(exec_remotely_quiet "rvm info | head -n 1")
   assert_match 'ruby' $rvm_info
@@ -102,6 +101,12 @@ test_can_set_up_and_run_chef() {
   example2_touchfile_contents=$(exec_remotely_quiet 'cat $HOME/.tmp_boxbuilder_example2_chef_cookbook.touchfile')
   assert_match 'boxbuilder_example2_chef_config_value' $example2_touchfile_contents
 }
+
+# TODO: Test boxbuilder_bootstrap by running it on instance running built AMI, but only after all other AMI tests are complete
+# test_can_download_boxbuilder_bootstrap() {
+#   expected_path=$(exec_remotely_quiet "which /tmp/boxbuilder_bootstrap")
+#   assert_equal '/tmp/boxbuilder_bootstrap' $expected_path
+# }
 
 suite() {
   echo "$_log_prefix Starting tests ..."

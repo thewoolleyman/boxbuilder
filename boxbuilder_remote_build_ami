@@ -90,6 +90,8 @@ setup() {
   EC2_KEYPAIR=${EC2_KEYPAIR:-""}
 
   boxbuilder_skip_build=${boxbuilder_skip_build:-false} # Undocumented flag, for debugging boxbuilder_remote_build_ami
+
+  _boxbuilder_ec2_resource_tag='boxbuilder_temp_resource_safe_to_terminate'
   
   echo "$_log_prefix  Finished environment variable setup:"
   echo "boxbuilder_config=$boxbuilder_config"
@@ -177,7 +179,7 @@ start_builder_instance() {
     --availability-zone us-east-1a \
     --instance-type "$boxbuilder_builder_instance_instance_type" \
     "$boxbuilder_builder_instance_ami_id" \
-    -d 'boxbuilder_temp_resource_safe_to_terminate' \
+    -d "$_boxbuilder_ec2_resource_tag" \
     | egrep ^INSTANCE | cut -f2)
   echo "$_log_prefix Successfully started EC2 builder instance: instance_id=$boxbuilder_builder_instance_id"
 }
@@ -301,7 +303,6 @@ boxbuilder_delete_ebs_snapshots() {
 }
 
 boxbuilder_terminate_ec2_resources() {
-  _boxbuilder_ec2_resource_tag='boxbuilder_temp_resource_safe_to_terminate'
   if [[ $boxbuilder_terminate_ec2_resources = true ]] ; then
     echo "$_log_prefix Terminating EC2 resources, because boxbuilder_terminate_ec2_resources was equal to true ..."
     boxbuilder_terminate_builder_instances
