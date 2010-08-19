@@ -243,9 +243,9 @@ remote_build_ami() {
 
 boxbuilder_terminate_builder_instances() {
   echo "$_log_prefix Terminating EC2 builder instances ..."
+  _instances=$(ec2-describe-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT)
   disable_error_checking # we must disable error checking because grep will fail with nonzero if there are no running instances
-  _instances=$(ec2-describe-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
-    | egrep ^INSTANCE)
+  _instances=$(echo "$_instances" | egrep ^INSTANCE)
   enable_error_checking
   echo "$_instances" | while read line; do
     _instance_id=$(echo "$line" | cut -f2)
@@ -258,12 +258,20 @@ boxbuilder_terminate_builder_instances() {
     echo "$_log_prefix Instance id $_instance_id User Data: $_user_data"
 
     disable_error_checking
-    if [[ -z $(echo $_user_data | grep $_boxbuilder_ec2_resource_tag) ]]; then
-      echo "$_log_prefix NOT terminating instance $_instance_id"
+    if [[ -z $(echo "$_user_data" | grep $_boxbuilder_ec2_resource_tag) ]]; then
+      echo "$_log_prefix NOT terminating instance $_instance_id because it does not contain '$_boxbuilder_ec2_resource_tag' in the User Data"
       continue
     fi
     enable_error_checking
 
+    disable_error_checking
+    # Do not attempt to terminate instances which are already terminated
+    if [[ -z $(echo "$_user_data" | egrep 'terminated$') ]]; then
+      echo "$_log_prefix NOT terminating instance $_instance_id because it is already terminated"
+      continue
+    fi
+    enable_error_checking
+    
     echo "$_log_prefix terminating boxbuilder builder instance $_instance_id ..."
     disable_error_checking
     _terminate_instances_result=$(ec2-terminate-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_instance_id")
@@ -276,9 +284,9 @@ boxbuilder_terminate_builder_instances() {
 boxbuilder_delete_ebs_snapshots() {
   echo "$_log_prefix Deleting EBS snapshots ..."
   # Do not terminate snapshots which boxbuilder did not start (which do not contain $_boxbuilder_ec2_resource_tag)
+  _snapshots=$(ec2-describe-snapshots --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT)
   disable_error_checking # we must disable error checking because grep will fail with nonzero if there are no snapshots
-  _snapshots=$(ec2-describe-snapshots --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
-    | grep $_boxbuilder_ec2_resource_tag)
+  _snapshots=$(echo "$_snapshots" | grep $_boxbuilder_ec2_resource_tag)
   enable_error_checking
   echo "$_snapshots" | while read line; do
     _snapshot_id=$(echo "$line" | cut -f2)
