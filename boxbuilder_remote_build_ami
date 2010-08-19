@@ -281,6 +281,24 @@ boxbuilder_terminate_builder_instances() {
   echo "$_log_prefix Finished terminating EC2 builder instances ..."
 }
 
+boxbuilder_deregister_temp_amis() {
+  echo "$_log_prefix Deregistering temporary AMIs ..."
+  _images=$(ec2-describe-images --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT)
+  disable_error_checking # we must disable error checking because grep will fail with nonzero if there are no temp AMIs
+  _images=$(echo "$_images" | grep $_boxbuilder_ec2_resource_tag)
+  enable_error_checking
+  echo "$_images" | while read line; do
+    _image_id=$(echo "$line" | cut -f2)
+
+    echo "$_log_prefix deregistering boxbuilder temp AMI $_image_id ..."
+    disable_error_checking
+    _deregister_result=$(ec2-deregister --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_image_id")
+    enable_error_checking
+    echo "$_log_prefix ec2-deregister result for image $_image_id: $_deregister_result"
+  done
+  echo "$_log_prefix Finished deregistering temporary AMIs ..."
+}
+
 boxbuilder_delete_ebs_snapshots() {
   echo "$_log_prefix Deleting EBS snapshots ..."
   # Do not terminate snapshots which boxbuilder did not start (which do not contain $_boxbuilder_ec2_resource_tag)
