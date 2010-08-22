@@ -3,7 +3,7 @@
 #  http://github.com/thewoolleyman/boxbuilder
 #  Copyright (c) 2010 Chad Woolley - The MIT License
 
-boxbuilder_debug=${boxbuilder_debug:-false}
+boxbuilder_debug=${boxbuilder_debug:-true} # debug defaults to true only when testing; makes it easier to see what caused failure
 
 if [[ $boxbuilder_debug = true ]]; then
   export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
@@ -112,9 +112,9 @@ suite() {
   echo "$_log_prefix Starting tests ..."
   setup
   test_can_log_in_as_user
-  test_can_download_boxbuilder_bootstrap
   test_can_install_rvm
   test_can_set_up_and_run_chef
+  # test_can_download_boxbuilder_bootstrap
   echo "$_log_prefix All tests passed successfully"
 }
 

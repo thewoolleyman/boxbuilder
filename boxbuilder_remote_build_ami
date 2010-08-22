@@ -91,7 +91,11 @@ setup() {
 
   boxbuilder_skip_build=${boxbuilder_skip_build:-false} # Undocumented flag, for debugging boxbuilder_remote_build_ami
 
+  # Internal constants
   _boxbuilder_ec2_resource_tag='boxbuilder_temp_resource_safe_to_terminate'
+
+  # Initialize local variables which may be undefined if boxbuilder_skip_build=true
+  _build_ami_output=''
   
   echo "$_log_prefix  Finished environment variable setup:"
   echo "boxbuilder_config=$boxbuilder_config"
@@ -236,9 +240,9 @@ remote_build_ami() {
   echo "$_log_prefix Changing permissions on $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
   exec_remotely "chmod a+x $_boxbuilder_build_ami_script"
   echo "$_log_prefix Running $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
-  exec_remotely_pseudo_tty "export boxbuilder_config='$boxbuilder_config' \
+  _build_ami_output=$(exec_remotely_pseudo_tty "export boxbuilder_config='$boxbuilder_config' \
     && export boxbuilder_debug=$boxbuilder_debug \
-    && $_boxbuilder_build_ami_script"
+    && $_boxbuilder_build_ami_script")
 }
 
 boxbuilder_terminate_builder_instances() {
@@ -266,7 +270,7 @@ boxbuilder_terminate_builder_instances() {
 
     disable_error_checking
     # Do not attempt to terminate instances which are already terminated
-    if [[ -z $(echo "$_user_data" | egrep 'terminated$') ]]; then
+    if [[ -e $(echo "$_user_data" | egrep 'terminated$') ]]; then
       echo "$_log_prefix NOT terminating instance $_instance_id because it is already terminated"
       continue
     fi
@@ -283,12 +287,24 @@ boxbuilder_terminate_builder_instances() {
 
 boxbuilder_deregister_temp_amis() {
   echo "$_log_prefix Deregistering temporary AMIs ..."
-  _images=$(ec2-describe-images --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT)
+  _images="$(ec2-describe-images --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT)"
   disable_error_checking # we must disable error checking because grep will fail with nonzero if there are no temp AMIs
-  _images=$(echo "$_images" | grep $_boxbuilder_ec2_resource_tag)
+  _images="$(echo "$_images" | grep $_boxbuilder_ec2_resource_tag)"
   enable_error_checking
   echo "$_images" | while read line; do
     _image_id=$(echo "$line" | cut -f2)
+
+    if [[ -n $_build_ami_output ]] ; then
+      disable_error_checking
+      _created_ami_id_line=$(echo "$_build_ami_output" | grep -e '^boxbuilder_created_ami_id')
+      
+      # Do not attempt to deregister temp AMI which was just built
+      if [[ -n "$_build_ami_output" && -n $(echo "$_created_ami_id_line" | grep $_image_id) ]]; then
+        echo "$_log_prefix NOT deregistering $_image_id because it is was just created in this boxbuilder_remote_build_ami run"
+        continue
+      fi
+      enable_error_checking
+    fi
 
     echo "$_log_prefix deregistering boxbuilder temp AMI $_image_id ..."
     disable_error_checking
@@ -332,9 +348,10 @@ boxbuilder_terminate_ec2_resources() {
   if [[ $boxbuilder_terminate_ec2_resources = true ]] ; then
     echo "$_log_prefix Terminating EC2 resources, because boxbuilder_terminate_ec2_resources was equal to true ..."
     boxbuilder_terminate_builder_instances
+    boxbuilder_deregister_temp_amis
     boxbuilder_delete_ebs_snapshots
   else
-    echo "$_log_prefix boxbuilder_terminate_ec2_resources was not equal to true, so NO boxbuilder instances were terminated."
+    echo "$_log_prefix boxbuilder_terminate_ec2_resources was not equal to true, so NO boxbuilder resources were terminated."
   fi
 }
 
