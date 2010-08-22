@@ -530,9 +530,22 @@ _Known Issues_
 _Testing_
 =========
 
-Boxbuilder has a test suite which runs boxbuilder against a live machine, then asserts that it was
-built correctly.  It requires the same SSH variables to be set as does the 'boxbuilder\_remote\_bootstrap'
-('boxbuilder\_keypair', 'boxbuilder\_user', and 'boxbuilder\_host').  It will also read these and
-any other variables set in ~/.boxbuilderrc.
+Boxbuilder has an integration test in test/boxbuilder_test which does the following:
+
+* Runs boxbuilder\_remote\_build\_ami to create an AMI
+* Starts a new EC2 instance from the newly-built AMI
+* Verifies the AMI was built correctly by performing assertions on the instance via SSH
+* Terminates/deletes all test resources (instance, AMI, and snapshot)
+
+test/boxbuilder\_test requires the same variables to be set as does the 'boxbuilder\_remote\_build\_ami'
+script.  It will prompt with an error if any required variable is unset.  It will also read
+any other variables set in $HOME/.boxbuilder\_testrc.
+
+The test takes several minutes to run, because that is how long it takes boxbuilder\_remote\_build\_ami
+to run.  Be patient.  The terminal will also be locked and prevent input while boxbuilder\_remote\_build\_ami
+is running.
+
+If you are hacking boxbuilder, and the test fails, try setting boxbuilder\_debug to true.  This
+will give a very verbose output to help you find the failure.
 
 ----
