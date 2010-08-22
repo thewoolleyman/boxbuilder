@@ -26,6 +26,9 @@ function onexit() {
   else
     _error_line=''
   fi
+  if [[ $(type -t onexit_hook) = 'function' ]]; then
+    onexit_hook
+  fi
   echo "$_log_prefix $_error_line Exiting $0 with $exit_status"
   exit $exit_status
 }

@@ -26,6 +26,9 @@ function onexit() {
   else
     _error_line=''
   fi
+  if [[ $(type -t onexit_hook) = 'function' ]]; then
+    onexit_hook
+  fi
   echo "$_log_prefix $_error_line Exiting $0 with $exit_status"
   exit $exit_status
 }
@@ -38,6 +41,14 @@ exec_remotely_quiet() {
     arg_array[i++]=$(printf %q "$arg")
   done
   ssh -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_built_instance_host "$@"
+}
+
+onexit_hook() {
+  disable_error_checking
+  _terminate_instances_result=$(ec2-terminate-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$boxbuilder_built_instance_id")
+  enable_error_checking
+  echo "$_log_prefix ec2-terminate-instances result for instance $boxbuilder_built_instance_id: $_terminate_instances_result"
+  # TODO: also kill ami and snapshot - $boxbuilder_created_ami_id
 }
 
 setup() {
@@ -98,7 +109,7 @@ setup() {
     echo "$_log_prefix SSH connect response from $boxbuilder_built_instance_host: $ssh_up"
     echo "$_log_prefix Trying to SSH to $boxbuilder_built_instance_host again after 3 seconds..."
     sleep 3
-  done  
+  done
 }
 
 test_can_log_in_as_user() {
