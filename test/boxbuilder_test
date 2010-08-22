@@ -3,7 +3,7 @@
 #  http://github.com/thewoolleyman/boxbuilder
 #  Copyright (c) 2010 Chad Woolley - The MIT License
 
-boxbuilder_debug=${boxbuilder_debug:-true} # debug defaults to true only when testing; makes it easier to see what caused failure
+boxbuilder_debug=${boxbuilder_debug:-false} # Set this to true to debug failing tests
 
 if [[ $boxbuilder_debug = true ]]; then
   export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
@@ -52,13 +52,29 @@ setup() {
   boxbuilder_user=${boxbuilder_user:-'ubuntu'}
   boxbuilder_dir="$(dirname $0)/.."
   boxbuilder_config="export boxbuilder_ami_prefix=$boxbuilder_ec2_resource_tag"
+  export boxbuilder_config
+
+  set +o xtrace # even if boxbuilder_debug is on, always turn off tracing
+                # while running build and grabbing output.
+                # dumping entire build output makes test output huge and confusing
 
   # Invoke boxbuilder_remote_build_ami to exercise all boxbuilder scripts except boxbuilder_bootstrap
   boxbuilder_remote_build_ami_output=$($boxbuilder_dir/boxbuilder_remote_build_ami)
 
   # Start built AMI
+  echo; echo; echo
+  echo "-------- BEGIN OUTPUT OF boxbuilder_remote_build_ami --------"
   echo "$boxbuilder_remote_build_ami_output"
+  echo "-------- END OUTPUT OF boxbuilder_remote_build_ami --------"
+  echo; echo; echo
+
   ami_vars=$(echo "$boxbuilder_remote_build_ami_output" | grep -e '^boxbuilder_created_ami_')
+
+  if [[ $boxbuilder_debug = true ]]; then
+    # turn back on tracing if we are debugging
+    set -o xtrace
+  fi
+
   echo "$ami_vars"
   eval $ami_vars
   boxbuilder_created_ami_id_no_carriage_returns=$(tr -d '\r' < <(echo $boxbuilder_created_ami_id) )

@@ -243,27 +243,36 @@ remote_build_ami() {
   _build_ami_output=$(exec_remotely_pseudo_tty "export boxbuilder_config='$boxbuilder_config' \
     && export boxbuilder_debug=$boxbuilder_debug \
     && $_boxbuilder_build_ami_script")
+  echo "$_build_ami_output"
 }
 
 boxbuilder_terminate_builder_instances() {
-  echo "$_log_prefix Terminating EC2 builder instances ..."
+  if [[ $boxbuilder_debug = true ]]; then
+    echo "$_log_prefix Terminating EC2 builder instances ..."
+  fi
   _instances=$(ec2-describe-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT)
   disable_error_checking # we must disable error checking because grep will fail with nonzero if there are no running instances
   _instances=$(echo "$_instances" | egrep ^INSTANCE)
   enable_error_checking
   echo "$_instances" | while read line; do
     _instance_id=$(echo "$line" | cut -f2)
-    echo "$_log_prefix Checking instance id $_instance_id for User Data containing '$_boxbuilder_ec2_resource_tag'"
+    if [[ $boxbuilder_debug = true ]]; then
+      echo "$_log_prefix Checking instance id $_instance_id for User Data containing '$_boxbuilder_ec2_resource_tag'"
+    fi
 
     # Do not terminate instances which boxbuilder did not start (which do not contain $_boxbuilder_ec2_resource_tag)
     _user_data=$(ec2-describe-instance-attribute --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
       $_instance_id --user-data \
       | cut -f3)
-    echo "$_log_prefix Instance id $_instance_id User Data: $_user_data"
+    if [[ $boxbuilder_debug = true ]]; then
+      echo "$_log_prefix Instance id $_instance_id User Data: $_user_data"
+    fi
 
     disable_error_checking
     if [[ -z $(echo "$_user_data" | grep $_boxbuilder_ec2_resource_tag) ]]; then
-      echo "$_log_prefix NOT terminating instance $_instance_id because it does not contain '$_boxbuilder_ec2_resource_tag' in the User Data"
+      if [[ $boxbuilder_debug = true ]]; then
+        echo "$_log_prefix NOT terminating instance $_instance_id because it does not contain '$_boxbuilder_ec2_resource_tag' in the User Data"
+      fi
       continue
     fi
     enable_error_checking
@@ -271,7 +280,9 @@ boxbuilder_terminate_builder_instances() {
     disable_error_checking
     # Do not attempt to terminate instances which are already terminated
     if [[ -e $(echo "$_user_data" | egrep 'terminated$') ]]; then
-      echo "$_log_prefix NOT terminating instance $_instance_id because it is already terminated"
+      if [[ $boxbuilder_debug = true ]]; then
+        echo "$_log_prefix NOT terminating instance $_instance_id because it is already terminated"
+      fi
       continue
     fi
     enable_error_checking
@@ -282,11 +293,15 @@ boxbuilder_terminate_builder_instances() {
     enable_error_checking
     echo "$_log_prefix ec2-terminate-instances result for instance $_instance_id: $_terminate_instances_result"
   done
-  echo "$_log_prefix Finished terminating EC2 builder instances ..."
+  if [[ $boxbuilder_debug = true ]]; then
+    echo "$_log_prefix Finished terminating EC2 builder instances ..."
+  fi
 }
 
 boxbuilder_deregister_temp_amis() {
-  echo "$_log_prefix Deregistering temporary AMIs ..."
+  if [[ $boxbuilder_debug = true ]]; then
+    echo "$_log_prefix Deregistering temporary AMIs ..."
+  fi
   _images="$(ec2-describe-images --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT)"
   disable_error_checking # we must disable error checking because grep will fail with nonzero if there are no temp AMIs
   _images="$(echo "$_images" | grep $_boxbuilder_ec2_resource_tag)"
@@ -300,7 +315,9 @@ boxbuilder_deregister_temp_amis() {
       
       # Do not attempt to deregister temp AMI which was just built
       if [[ -n "$_build_ami_output" && -n $(echo "$_created_ami_id_line" | grep $_image_id) ]]; then
-        echo "$_log_prefix NOT deregistering $_image_id because it is was just created in this boxbuilder_remote_build_ami run"
+        if [[ $boxbuilder_debug = true ]]; then
+          echo "$_log_prefix NOT deregistering $_image_id because it is was just created in this boxbuilder_remote_build_ami run"
+        fi
         continue
       fi
       enable_error_checking
@@ -312,11 +329,15 @@ boxbuilder_deregister_temp_amis() {
     enable_error_checking
     echo "$_log_prefix ec2-deregister result for image $_image_id: $_deregister_result"
   done
-  echo "$_log_prefix Finished deregistering temporary AMIs ..."
+  if [[ $boxbuilder_debug = true ]]; then
+    echo "$_log_prefix Finished deregistering temporary AMIs ..."
+  fi
 }
 
 boxbuilder_delete_ebs_snapshots() {
-  echo "$_log_prefix Deleting EBS snapshots ..."
+  if [[ $boxbuilder_debug = true ]]; then
+    echo "$_log_prefix Deleting EBS snapshots ..."
+  fi
   # Do not terminate snapshots which boxbuilder did not start (which do not contain $_boxbuilder_ec2_resource_tag)
   _snapshots=$(ec2-describe-snapshots --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT)
   disable_error_checking # we must disable error checking because grep will fail with nonzero if there are no snapshots
@@ -324,14 +345,18 @@ boxbuilder_delete_ebs_snapshots() {
   enable_error_checking
   echo "$_snapshots" | while read line; do
     _snapshot_id=$(echo "$line" | cut -f2)
-    echo "$_log_prefix Checking if $_snapshot_id is currently in use by any AMIs ..."
+    if [[ $boxbuilder_debug = true ]]; then
+      echo "$_log_prefix Checking if $_snapshot_id is currently in use by any AMIs ..."
+    fi
 
     # Do not attempt to delete snapshots which are currently in use by an AMI, it isn't allowed
     disable_error_checking
     _image_using_snapshot=$(ec2-describe-images --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT | grep $_snapshot_id )
     enable_error_checking
     if [[ -n $_image_using_snapshot ]]; then
-      echo "$_log_prefix NOT deleting snapshot ID $_snapshot_id because it is in use by AMI ID $_image_using_snapshot"
+      if [[ $boxbuilder_debug = true ]]; then
+        echo "$_log_prefix NOT deleting snapshot ID $_snapshot_id because it is in use by AMI ID $_image_using_snapshot"
+      fi
       continue
     fi
 
@@ -341,7 +366,9 @@ boxbuilder_delete_ebs_snapshots() {
     enable_error_checking
     echo "$_log_prefix ec2-delete-snapshot result for snapshot $_snapshot_id: $_terminate_snapshot_result"
   done
-  echo "$_log_prefix Finished deleting EBS snapshots ..."
+  if [[ $boxbuilder_debug = true ]]; then
+    echo "$_log_prefix Finished deleting EBS snapshots ..."
+  fi
 }
 
 boxbuilder_terminate_ec2_resources() {
@@ -350,6 +377,7 @@ boxbuilder_terminate_ec2_resources() {
     boxbuilder_terminate_builder_instances
     boxbuilder_deregister_temp_amis
     boxbuilder_delete_ebs_snapshots
+    echo "$_log_prefix Finished terminating EC2 resources ..."
   else
     echo "$_log_prefix boxbuilder_terminate_ec2_resources was not equal to true, so NO boxbuilder resources were terminated."
   fi
