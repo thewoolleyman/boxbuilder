@@ -5,6 +5,8 @@
 
 boxbuilder_debug=${boxbuilder_debug:-false} # Set this to true to debug failing tests
 
+source $(dirname $0)/test_helper
+
 if [[ $boxbuilder_debug = true ]]; then
   export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
   set –o verbose
@@ -44,16 +46,26 @@ exec_remotely_quiet() {
 }
 
 onexit_hook() {
-  disable_error_checking
-  _terminate_instances_result=$(ec2-terminate-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$boxbuilder_built_instance_id")
-  enable_error_checking
-  echo "$_log_prefix ec2-terminate-instances result for instance $boxbuilder_built_instance_id: $_terminate_instances_result"
-  # TODO: also kill ami and snapshot - $boxbuilder_created_ami_id
+  if [[ $boxbuilder_terminate_ec2_resources = true ]]; then
+    # delete instance
+    _terminate_instances_result=$(ec2-terminate-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$boxbuilder_built_instance_id")
+    echo "$_log_prefix ec2-terminate-instances result for instance $boxbuilder_built_instance_id:"
+    echo "$(sed -n l <<< $_terminate_instances_result)"
+
+    # delete AMI
+    _deregister_result=$(ec2-deregister --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$boxbuilder_created_ami_id")
+    echo "$_log_prefix ec2-deregister result for image $boxbuilder_created_ami_id:"
+    echo "$(sed -n l <<< $_deregister_result)"
+
+    # delete snapshot
+    _delete_snapshot_result=$(ec2-delete-snapshot --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$boxbuilder_created_ami_ebs_snapshot_id")
+    echo "$_log_prefix ec2-delete-snapshot result for snapshot $boxbuilder_created_ami_ebs_snapshot_id:"
+    echo "$(sed -n l <<< $_delete_snapshot_result)"
+  fi
 }
 
 setup() {
   export boxbuilder_debug
-  source $(dirname $0)/test_helper
 
   # Set test vars
   source $HOME/.boxbuilder_testrc # don't use real .boxbuilderrc file, we don't want to pollute it with test vars
@@ -62,7 +74,8 @@ setup() {
   boxbuilder_keypair=${boxbuilder_keypair:?Please set 'boxbuilder_keypair' to the path of your ssh private key file}
   boxbuilder_user=${boxbuilder_user:-'ubuntu'}
   boxbuilder_dir="$(dirname $0)/.."
-  boxbuilder_config="export boxbuilder_ami_prefix=$boxbuilder_ec2_resource_tag"
+  boxbuilder_terminate_ec2_resources=${boxbuilder_terminate_ec2_resources:-true}
+  boxbuilder_config="export boxbuilder_ami_prefix=$boxbuilder_ec2_resource_tag; export boxbuilder_terminate_ec2_resources=$boxbuilder_terminate_ec2_resources"
   export boxbuilder_config
 
   set +o xtrace # even if boxbuilder_debug is on, always turn off tracing
@@ -88,8 +101,10 @@ setup() {
 
   echo "$ami_vars"
   eval $ami_vars
-  boxbuilder_created_ami_id_no_carriage_returns=$(tr -d '\r' < <(echo $boxbuilder_created_ami_id) )
-  boxbuilder_created_ami_id="$boxbuilder_created_ami_id_no_carriage_returns"
+  # Strip carriage returns which show up after eval
+  boxbuilder_created_ami_id="$(tr -d '\r' < <(echo $boxbuilder_created_ami_id) )"
+  boxbuilder_created_ami_ebs_snapshot_id="$(tr -d '\r' < <(echo $boxbuilder_created_ami_ebs_snapshot_id) )"
+
   boxbuilder_built_instance_id=$(ec2-run-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
     --key "$EC2_KEYPAIR_NAME" \
     --availability-zone us-east-1a \

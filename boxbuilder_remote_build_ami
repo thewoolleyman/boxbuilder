@@ -294,7 +294,8 @@ boxbuilder_terminate_builder_instances() {
     disable_error_checking
     _terminate_instances_result=$(ec2-terminate-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_instance_id")
     enable_error_checking
-    echo "$_log_prefix ec2-terminate-instances result for instance $_instance_id: $_terminate_instances_result"
+    echo "$_log_prefix ec2-terminate-instances result for instance $_instance_id:"
+    echo "$(sed -n l <<< $_terminate_instances_result)"
   done
   if [[ $boxbuilder_debug = true ]]; then
     echo "$_log_prefix Finished terminating EC2 builder instances ..."
@@ -330,7 +331,8 @@ boxbuilder_deregister_temp_amis() {
     disable_error_checking
     _deregister_result=$(ec2-deregister --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_image_id")
     enable_error_checking
-    echo "$_log_prefix ec2-deregister result for image $_image_id: $_deregister_result"
+    echo "$_log_prefix ec2-deregister result for image $_image_id:"
+    echo "$(sed -n l <<< $_deregister_result)"
   done
   if [[ $boxbuilder_debug = true ]]; then
     echo "$_log_prefix Finished deregistering temporary AMIs ..."
@@ -365,9 +367,10 @@ boxbuilder_delete_ebs_snapshots() {
 
     echo "$_log_prefix terminating boxbuilder AMI snapshot $_snapshot_id ..."
     disable_error_checking
-    _terminate_snapshot_result=$(ec2-delete-snapshot --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_snapshot_id")
+    _delete_snapshot_result=$(ec2-delete-snapshot --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_snapshot_id")
     enable_error_checking
-    echo "$_log_prefix ec2-delete-snapshot result for snapshot $_snapshot_id: $_terminate_snapshot_result"
+    echo "$_log_prefix ec2-delete-snapshot result for snapshot $_snapshot_id:"
+    echo "$(sed -n l <<< $_delete_snapshot_result)"
   done
   if [[ $boxbuilder_debug = true ]]; then
     echo "$_log_prefix Finished deleting EBS snapshots ..."
