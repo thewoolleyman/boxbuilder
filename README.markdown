@@ -31,8 +31,17 @@ but can be seen using this command:
 &nbsp;
 
 
-_Quick Start and Overview_
-=========================
+_Instructions_
+==============
+
+**Step 1. Run the script to create a default box or AMI**
+
+By default, boxbuilder runs using a sample default config file at
+[http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc\_download\_default](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_default),
+which in turn references sample default chef repositories.
+
+Your first step should be to run boxbuilder with the default config and ensure you can create a sample test box or AMI.  This
+will verify that your EC2 account and credentials are properly configured.
 
 To build a box, download and run
 '[boxbuilder\_bootstrap](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap)'
@@ -47,13 +56,61 @@ instance, or download and run
 from your local shell.
 
 You will be prompted to enter all required variables for the script you are running, such as
-your EC2 credentials, SSH keys, locations of your Chef repositories, etc.  See details in the sections below.
+your EC2 credentials, SSH keys, etc.  See details on supported and required variables for
+each script in the sections below.
 
-Here's the invocation order of the scripts for the two main tasks (building a box or building an AMI).
-You can, of course, run and re-run any of these scripts directly by logging into the box being built or the
-EC2 image building the AMI.
+Check the output of the script for a success message, and/or any errors.  Log into the newly-built
+box (or an instance started from your newly-built AMI), and verify everything worked.  To verify,
+you can check that the sample test chef recipe created touchfiles in the home directory:
+[http://github.com/thewoolleyman/boxbuilder\_example1\_chef\_repo/blob/master/site-cookbooks/boxbuilder_example1_cookbook/recipes/default.rb](http://github.com/thewoolleyman/boxbuilder_example1_chef_repo/blob/master/site-cookbooks/boxbuilder_example1_cookbook/recipes/default.rb)
 
-Building a Box: 
+**Step 2. Create a custom box by using a custom config file and chef repos**
+
+To build a custom box, you must override the variables found in the sample default config file.
+The easiest way to do this is to:
+
+1. Copy the sample boxbuilderrc\_download\_default config file and publish it in your own git repo (you can create one for free on github)
+2. Edit the variables in it to point to your own chef repositories, config path, and json path (and any other variables you want to add/override).
+3. Create or reuse custom chef cookbooks in your chef repositories at which you pointed.  If you wish, you can fork or copy the default ones and customize them.
+
+Once you have your custom config file and chef repos set up, run the script again and verify your chef cookbooks
+and recipes build your custom box/AMI as expected.
+
+**Step 3. Test/Debug/Improve your custom chef repos**
+
+If you have built a box (not an AMI), you can log in to it and directly modify the cloned chef repos
+under $HOME/.chef, and re-run $HOME/.boxbuilder/boxbuilder, or run chef-solo directly.  If you
+add a writeable origin to your git repos under $HOME/.chef, you can check your changes in directly
+from the box.
+
+AMI builds are more complex to create and test.  Most importantly, you must be aware that the AMI build
+runs in a chroot jail.  This means that some chef actions will not work as expected or at all.  To
+work around this, you can have a "chroot" recipe which runs after all others, and prevents any actions
+which are not chroot-safe from running.  For an example of this, see the Rails CI build (warning: incomplete and may move):
+[http://github.com/thewoolleyman/railsci\_chef\_repo/blob/master/site-cookbooks/railsci/chroot/recipes/default.rb](http://github.com/thewoolleyman/railsci_chef_repo/blob/master/site-cookbooks/railsci/chroot/recipes/default.rb)
+
+The recommended way to work directly on a chef repo which builds an AMI is to run 'boxbuilder\_remote\_build\_ami'
+with the 'boxbuilder\_terminate\_ec2\_resources' variable set to 'false'.  This will leave the EC2 builder instance
+running, and you can then log in and run $HOME/.boxbuilder/boxbuilder\_build\_ami repeatedly.  **WARNING: THIS
+MEANS YOU MUST TERMINATE ALL CREATED EC2 INSTANCES MANUALLY OR YOU WILL CONTINUE TO BE CHARGED FOR THEM**
+
+If you suspect a problem with boxbuilder itself, you can set 'boxbuilder\_debug' to true, and you will get
+verbose logging of script execution.  This debug flag is propagated to all other boxbuilder scripts
+which are sourced locally or invoked remotely.
+
+----
+&nbsp;
+
+
+_Overview_
+==========
+
+Boxbuilder consists of simple layered bash scripts which invoke each other locally or remotely, starting
+EC2 instances if required.  Here's the invocation order of the scripts for the two main tasks
+(building a box or building an AMI).  You can, of course, run and re-run any of these scripts directly
+by logging into the box being built or the EC2 image building the AMI.
+
+Building a Box:
 
 1. 'boxbuilder\_remote\_bootstrap' (invoked from any Bash shell) issues SSH commands on the box being built to download and invoke...
 2. 'boxbuilder\_bootstrap' (on the box being built), which clones a boxbuilder git repo, and invokes...
@@ -229,7 +286,11 @@ boxbuilder environment variables
 --------------------------------
 
 'boxbuilderrc\_url' is the URL to a boxbuilder config script which will be automatically
-downloaded to ~/.boxbuilderrc\_download on the box which is being built.
+downloaded to ~/.boxbuilderrc\_download on the box which is being built.  It is automatically
+sourced by the default auto-created ~/.boxbuilderrc file.
+
+To build a custom box, you can override 'boxbuilderrc\_url' to point to a custom configuration file
+which exports variables for chef repo locations and config.
 
     boxbuilderrc_url=http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_default
 
@@ -267,8 +328,10 @@ and created.
 
 ----
 
-**(REQUIRED to specify your chef repos)** 'boxbuilder\_chef_repos' is a space-delimited list of Chef Git repositories which will be automatically
+**(REQUIRED to specify your chef repos)** 'boxbuilder\_chef\_repos' is a space-delimited list of Chef Git repositories which will be automatically
 downloaded by boxbuilder.  They will be checked out under $boxbuilder\_chef\_dir (~/.chef) on the box which is being built.
+
+You must override this variable to point to custom chef repo(s) in order for boxbuilder to build a custom box.
 
     boxbuilder_chef_repos=git://github.com/thewoolleyman/boxbuilder_example1_chef_repo.git[ git://github.com/thewoolleyman/boxbuilder_example2_chef_repo.git[ ...]]
 
@@ -279,6 +342,8 @@ this as the '--config' parameter when it automatically creates and runs a chef-s
 box which is being built.  This should be a path to a file
 in one of your 'boxbuilder\_chef\_repos'.
 
+You must override this variable to point to a custom chef config path in one of the repos specified in 'boxbuilder\_chef\_repos'.
+
     boxbuilder_chef_config_path=$boxbuilder_chef_dir/boxbuilder_chef_repo/config/solo.rb
 
 ----
@@ -287,6 +352,8 @@ in one of your 'boxbuilder\_chef\_repos'.
 this as the '--json-attributes' parameter when it automatically creates and runs a chef-solo script
 on the box which is being built.  This should be a path to a file
 in one of your 'boxbuilder\_chef\_repos'.
+
+You must override this variable to point to a custom chef json path in one of the repos specified in 'boxbuilder\_chef\_repos'.
 
     boxbuilder_chef_json_path=$boxbuilder_chef_dir/boxbuilder_chef_repo/config/node.json
 
