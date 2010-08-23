@@ -152,7 +152,6 @@ set_up_ec2_tools() {
   
   _ec2_tools_path=$HOME/.boxbuilder_ec2_tools
   _ec2_api_tools_path=$_ec2_tools_path/ec2-api-tools
-  export EC2_HOME="$_ec2_api_tools_path"
   if [[ -x $_ec2_api_tools_path/bin/ec2-run-instances ]]; then
     echo "$_log_prefix EC2 API Tools already exist at $_ec2_api_tools_path.  Not re-downloading ..."
   else
@@ -198,7 +197,7 @@ get_builder_instance_host() {
      "$boxbuilder_builder_instance_id" | \
     egrep ^INSTANCE | cut -f4) && [[ -z $boxbuilder_builder_instance_host ]]; do
       echo -n .
-      sleep 3
+      sleep 5
   done
   echo
   echo "$_log_prefix Got hostname $boxbuilder_builder_instance_host for instance $boxbuilder_builder_instance_id"
@@ -206,7 +205,7 @@ get_builder_instance_host() {
   while ssh_up=$(ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "echo 'ssh up'"); [[ "$ssh_up" != "ssh up" ]]; do
     echo "$_log_prefix SSH connect response from $boxbuilder_builder_instance_host: $ssh_up"
     echo "$_log_prefix Trying to SSH to $boxbuilder_builder_instance_host again after 3 seconds..."
-    sleep 3
+    sleep 5
   done
   echo
 }
@@ -237,7 +236,7 @@ remote_build_ami() {
   exec_remotely "wget -O $_boxbuilder_build_ami_script $boxbuilder_build_ami_url"
   while exists=$(exec_remotely_quiet "if [[ -e $_boxbuilder_build_ami_script ]] ; then echo exists; fi"); [[ "$exists" != "exists" ]]; do
     echo "$_log_prefix Waiting for wget to finish downloading  $boxbuilder_build_ami_url to $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
-    sleep 3
+    sleep 5
   done
   echo "$_log_prefix $boxbuilder_build_ami_url successfully downloaded to $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
 

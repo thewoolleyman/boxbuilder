@@ -119,14 +119,14 @@ setup() {
      "$boxbuilder_built_instance_id" | \
     egrep ^INSTANCE | cut -f4) && [[ -z $boxbuilder_built_instance_host ]]; do
       echo -n .
-      sleep 3
+      sleep 5
   done
   echo "$_log_prefix Got hostname $boxbuilder_built_instance_host for instance $boxbuilder_built_instance_id"
   echo "$_log_prefix Waiting for ssh connectivity to $boxbuilder_built_instance_host ..."
   while ssh_up=$(ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_built_instance_host "echo 'ssh up'"); [[ "$ssh_up" != "ssh up" ]]; do
     echo "$_log_prefix SSH connect response from $boxbuilder_built_instance_host: $ssh_up"
     echo "$_log_prefix Trying to SSH to $boxbuilder_built_instance_host again after 3 seconds..."
-    sleep 3
+    sleep 5
   done
 }
 

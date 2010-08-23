@@ -249,7 +249,7 @@ copy_image_to_ami() {
     | cut -f2)
   ec2-delete-volume --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_volumeid"
   while ec2-describe-snapshots --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_snapshotid" | grep -q pending
-    do echo -n .; sleep 3; done
+    do echo -n .; sleep 5; done
   _ec2_register_output=$(ec2-register --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
     --architecture $_arch \
     --name "$_prefix" \
