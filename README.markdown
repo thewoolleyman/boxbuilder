@@ -93,6 +93,8 @@ The recommended way to work directly on a chef repo which builds an AMI is to ru
 with the 'boxbuilder\_terminate\_ec2\_resources' variable set to 'false'.  This will leave the EC2 builder instance
 running, and you can then log in and run $HOME/.boxbuilder/boxbuilder\_build\_ami repeatedly.  **WARNING: THIS
 MEANS YOU MUST TERMINATE ALL CREATED EC2 INSTANCES MANUALLY OR YOU WILL CONTINUE TO BE CHARGED FOR THEM**
+Also, be aware there are sometimes intermittent errors related to reusing the
+same chroot resources for multiple runs of 'boxbuilder\_build\_ami'.
 
 If you suspect a problem with boxbuilder itself, you can set 'boxbuilder\_debug' to true, and you will get
 verbose logging of script execution.  This debug flag is propagated to all other boxbuilder scripts
