@@ -152,6 +152,7 @@ set_up_ec2_tools() {
   
   _ec2_tools_path=$HOME/.boxbuilder_ec2_tools
   _ec2_api_tools_path=$_ec2_tools_path/ec2-api-tools
+  export EC2_HOME="$_ec2_api_tools_path"
   if [[ -x $_ec2_api_tools_path/bin/ec2-run-instances ]]; then
     echo "$_log_prefix EC2 API Tools already exist at $_ec2_api_tools_path.  Not re-downloading ..."
   else
