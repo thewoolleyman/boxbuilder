@@ -71,6 +71,7 @@ setup() {
     # Set test vars
     source $HOME/.boxbuilder_testrc # don't use real .boxbuilderrc file, we don't want to pollute it with test vars
   fi
+  export PATH=$EC2_HOME/bin:$PATH # TODO: this should be automatic, see tracker stories
   boxbuilder_ec2_resource_tag='boxbuilder_temp_resource_safe_to_terminate'
   # TODO: grep boxbuilder_keypair value out of boxbuilder_remote_build_ami output
   boxbuilder_keypair=${boxbuilder_keypair:?Please set 'boxbuilder_keypair' to the path of your ssh private key file}
