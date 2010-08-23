@@ -293,7 +293,7 @@ boxbuilder_terminate_builder_instances() {
       continue
     fi
     enable_error_checking
-    
+
     echo "$_log_prefix terminating boxbuilder builder instance $_instance_id ..."
     disable_error_checking
     _terminate_instances_result=$(ec2-terminate-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$_instance_id")
