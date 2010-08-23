@@ -258,6 +258,10 @@ boxbuilder_terminate_builder_instances() {
   _instances=$(echo "$_instances" | egrep ^INSTANCE)
   enable_error_checking
   echo "$_instances" | while read line; do
+    if [[ -z $line ]]; then
+      # ignore any blank lines that got through previous grepping
+      continue
+    fi
     _instance_id=$(echo "$line" | cut -f2)
     if [[ $boxbuilder_debug = true ]]; then
       echo "$_log_prefix Checking instance id $_instance_id for User Data containing '$_boxbuilder_ec2_resource_tag'"
@@ -309,22 +313,38 @@ boxbuilder_deregister_temp_amis() {
   _images="$(ec2-describe-images --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT)"
   disable_error_checking # we must disable error checking because grep will fail with nonzero if there are no temp AMIs
   _images="$(echo "$_images" | grep $_boxbuilder_ec2_resource_tag)"
+
   enable_error_checking
   echo "$_images" | while read line; do
+    if [[ -z $line ]]; then
+      # ignore any blank lines that got through previous grepping
+      continue
+    fi
     _image_id=$(echo "$line" | cut -f2)
 
+    set +o xtrace # even if boxbuilder_debug is on, always turn off tracing
+                  # while working with $_build_ami_output 
+                  # dumping entire build output makes test output huge and confusing
     if [[ -n $_build_ami_output ]] ; then
       disable_error_checking
       _created_ami_id_line=$(echo "$_build_ami_output" | grep -e '^boxbuilder_created_ami_id')
+      if [[ $boxbuilder_debug = true ]]; then
+        # turn back on tracing if we are debugging
+        set -o xtrace
+      fi
       
       # Do not attempt to deregister temp AMI which was just built
-      if [[ -n "$_build_ami_output" && -n $(echo "$_created_ami_id_line" | grep $_image_id) ]]; then
+      if [[ -n $(echo "$_created_ami_id_line" | grep $_image_id) ]]; then
         if [[ $boxbuilder_debug = true ]]; then
           echo "$_log_prefix NOT deregistering $_image_id because it is was just created in this boxbuilder_remote_build_ami run"
         fi
         continue
       fi
       enable_error_checking
+    fi
+    if [[ $boxbuilder_debug = true ]]; then
+      # turn back on tracing if we are debugging
+      set -o xtrace
     fi
 
     echo "$_log_prefix deregistering boxbuilder temp AMI $_image_id ..."
@@ -349,6 +369,10 @@ boxbuilder_delete_ebs_snapshots() {
   _snapshots=$(echo "$_snapshots" | grep $_boxbuilder_ec2_resource_tag)
   enable_error_checking
   echo "$_snapshots" | while read line; do
+    if [[ -z $line ]]; then
+      # ignore any blank lines that got through previous grepping
+      continue
+    fi
     _snapshot_id=$(echo "$line" | cut -f2)
     if [[ $boxbuilder_debug = true ]]; then
       echo "$_log_prefix Checking if $_snapshot_id is currently in use by any AMIs ..."
