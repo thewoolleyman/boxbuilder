@@ -599,6 +599,8 @@ _Known Issues_
 _Testing_
 =========
 
+Continuous Integration for Boxbuilder is at [http://ci.pivotallabs.com:3333/builds/boxbuilder](http://ci.pivotallabs.com:3333/builds/boxbuilder)
+
 Boxbuilder has an integration test in test/boxbuilder_test which does the following:
 
 * Runs boxbuilder\_remote\_build\_ami to create an AMI
