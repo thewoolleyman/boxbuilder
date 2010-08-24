@@ -6,8 +6,9 @@ Boxbuilder builds boxes!  Basic Bash scripts to bootstrap barebones-OS boxes wit
 EC2 AMIs.  Currently it only supports Debian, but pull requests with support for
 new distros are welcome.
 
-Tracker Project: [http://www.pivotaltracker.com/projects/101913](http://www.pivotaltracker.com/projects/101913)
-Bug Reports/Feature Requests: PENDING - for now, email thewoolleyman@gmail.com
+* Homepage: You're reading it - [http://github.com/thewoolleyman/boxbuilder](http://github.com/thewoolleyman/boxbuilder)
+* Tracker Project: [http://www.pivotaltracker.com/projects/101913](http://www.pivotaltracker.com/projects/101913)
+* Bug Reports/Feature Requests: PENDING - for now, email me at [thewoolleyman@gmail.com](mailto:thewoolleyman@gmail.com)
 
 AMI-building code is based on Eric Hammond's tutorial at http://alestic.com/2010/01/ec2-ebs-boot-ubuntu
 
@@ -19,7 +20,7 @@ It is YOUR RESPONSIBILITY to confirm that any EC2 resources which boxbuilder cre
 terminated even if boxbuilder fails to terminate them automatically.
 If you do not YOU WILL BE CHARGED BY AMAZON FOR ANY RESOURCES UNTIL THEY ARE TERMINATED.
 Learn how to delete any unused resources via the the EC2 AWS Management Console
-before using the 'build\_ami' scripts: [https://console.aws.amazon.com/ec2/home](https://console.aws.amazon.com/ec2/home)
+before using the 'build\_ami' scripts: [https://console.aws.amazon.com/ec2/home](https://console.aws.amazon.com/ec2/home) .
 Resources which boxbuilder automatically starts will be identified by the string
 'boxbuilder\_temp\_builder\_instance\_safe\_to\_terminate' in the resource's
 User Data instance attribute or Snapshot Description.
@@ -92,7 +93,7 @@ which are not chroot-safe from running.  For an example of this, see the Rails C
 The recommended way to work directly on a chef repo which builds an AMI is to run 'boxbuilder\_remote\_build\_ami'
 with the 'boxbuilder\_terminate\_ec2\_resources' variable set to 'false'.  This will leave the EC2 builder instance
 running, and you can then log in and run $HOME/.boxbuilder/boxbuilder\_build\_ami repeatedly.  **WARNING: THIS
-MEANS YOU MUST TERMINATE ALL CREATED EC2 INSTANCES MANUALLY OR YOU WILL CONTINUE TO BE CHARGED FOR THEM**
+MEANS YOU MUST TERMINATE ALL CREATED EC2 INSTANCES MANUALLY OR YOU WILL CONTINUE TO BE CHARGED FOR THEM!**
 Also, be aware there are sometimes intermittent errors related to reusing the
 same chroot resources for multiple runs of 'boxbuilder\_build\_ami'.
 
@@ -120,7 +121,7 @@ Building a Box:
 
 Building an AMI Image: 
 
-1. 'boxbuilder\_remote\_build\_ami' (invoked from any Bash shell with Java) starts an EC2 instance, and issues SSH commands on it built to download and invoke...
+1. 'boxbuilder\_remote\_build\_ami' (invoked from any Bash shell with Java) installs the EC2 tools, starts an EC2 instance, and issues SSH commands on it built to download and invoke...
 2. 'boxbuilder\_build\_ami' (on the EC2 instance), which creates a chroot jail, and runs commands in the chroot jail to download and invoke...
 3. 'boxbuilder\_bootstrap' (in the chroot jail), which clones a boxbuilder git repo, and invokes...
 4. 'boxbuilder' (in the chroot jail) to build a 'box' in the chroot jail, which exits and returns control to...
@@ -603,7 +604,8 @@ Continuous Integration for Boxbuilder is at [http://ci.pivotallabs.com:3333/buil
 
 Boxbuilder has an integration test in test/boxbuilder_test which does the following:
 
-* Runs boxbuilder\_remote\_build\_ami to create an AMI
+* Runs boxbuilder\_remote\_build\_ami to create an AMI with the default
+  sample configuration and chef repos
 * Starts a new EC2 instance from the newly-built AMI
 * Verifies the AMI was built correctly by performing assertions on the instance via SSH
 * Terminates/deletes all test resources (instance, AMI, and snapshot)
