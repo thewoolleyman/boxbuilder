@@ -8,9 +8,7 @@ new distros are welcome.
 
 * Homepage: You're reading it - [http://github.com/thewoolleyman/boxbuilder](http://github.com/thewoolleyman/boxbuilder)
 * Tracker Project: [http://www.pivotaltracker.com/projects/101913](http://www.pivotaltracker.com/projects/101913)
-* Bug Reports/Feature Requests: PENDING - for now, email me at [thewoolleyman@gmail.com](mailto:thewoolleyman@gmail.com)
-
-AMI-building code is based on Eric Hammond's tutorial at http://alestic.com/2010/01/ec2-ebs-boot-ubuntu
+* Bug Reports/Feature Requests: [http://github.com/thewoolleyman/boxbuilder/issues](http://github.com/thewoolleyman/boxbuilder/issues)
 
 **WARNING! BOXBUILDER INCURS EC2 RESOURCE CHARGES!
 The 'build\_ami' scripts will automatically create EC2 instances, EBS volumes and EBS snapshots.
@@ -620,5 +618,27 @@ is running.
 
 If you are hacking boxbuilder, and the test fails, try setting boxbuilder\_debug to true.  This
 will give a very verbose output to help you find the failure.
+
+----
+&nbsp;
+
+
+_Credits_
+=========
+
+AMI-building code is based on Eric Hammond's tutorial at http://alestic.com/2010/01/ec2-ebs-boot-ubuntu
+
+Props to the folks on the ec2ubuntu mailing list and the bash irc
+channel/wiki; they helped me a lot.
+
+----
+&nbsp;
+
+
+_Who to Blame_
+==============
+
+Boxbuilder was designed and written by Chad Woolley: [thewoolleyman@gmail.com](mailto:thewoolleyman@gmail.com)
+
 
 ----
