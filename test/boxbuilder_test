@@ -3,7 +3,7 @@
 #  http://github.com/thewoolleyman/boxbuilder
 #  Copyright (c) 2010 Chad Woolley - The MIT License
 
-boxbuilder_debug=${boxbuilder_debug:-false} # Set this to true to debug failing tests
+boxbuilder_debug=${boxbuilder_debug:-true} # Set this to true to debug failing tests
 
 source $(dirname $0)/test_helper
 
@@ -47,20 +47,26 @@ exec_remotely_quiet() {
 
 onexit_hook() {
   if [[ $boxbuilder_terminate_ec2_resources = true ]]; then
-    # delete instance
-    _terminate_instances_result=$(ec2-terminate-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$boxbuilder_built_instance_id")
-    echo "$_log_prefix ec2-terminate-instances result for instance $boxbuilder_built_instance_id:"
-    echo "$(sed -n l <<< $_terminate_instances_result)"
+    if [[ -n $boxbuilder_built_instance_id ]]; then
+      # delete instance
+      _terminate_instances_result=$(ec2-terminate-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$boxbuilder_built_instance_id")
+      echo "$_log_prefix ec2-terminate-instances result for instance $boxbuilder_built_instance_id:"
+      echo "$(sed -n l <<< $_terminate_instances_result)"
+    fi
 
-    # delete AMI
-    _deregister_result=$(ec2-deregister --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$boxbuilder_created_ami_id")
-    echo "$_log_prefix ec2-deregister result for image $boxbuilder_created_ami_id:"
-    echo "$(sed -n l <<< $_deregister_result)"
+    if [[ -n $boxbuilder_created_ami_id ]]; then
+      # delete AMI
+      _deregister_result=$(ec2-deregister --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$boxbuilder_created_ami_id")
+      echo "$_log_prefix ec2-deregister result for image $boxbuilder_created_ami_id:"
+      echo "$(sed -n l <<< $_deregister_result)"
+    fi
 
-    # delete snapshot
-    _delete_snapshot_result=$(ec2-delete-snapshot --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$boxbuilder_created_ami_ebs_snapshot_id")
-    echo "$_log_prefix ec2-delete-snapshot result for snapshot $boxbuilder_created_ami_ebs_snapshot_id:"
-    echo "$(sed -n l <<< $_delete_snapshot_result)"
+    if [[ -n $boxbuilder_created_ami_ebs_snapshot_id ]]; then
+      # delete snapshot
+      _delete_snapshot_result=$(ec2-delete-snapshot --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT "$boxbuilder_created_ami_ebs_snapshot_id")
+      echo "$_log_prefix ec2-delete-snapshot result for snapshot $boxbuilder_created_ami_ebs_snapshot_id:"
+      echo "$(sed -n l <<< $_delete_snapshot_result)"
+    fi
   fi
 }
 
