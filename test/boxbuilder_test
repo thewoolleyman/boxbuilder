@@ -87,6 +87,12 @@ setup() {
   boxbuilder_config="export boxbuilder_ami_prefix=$boxbuilder_ec2_resource_tag; export boxbuilder_terminate_ec2_resources=$boxbuilder_terminate_ec2_resources"
   export boxbuilder_config
 
+  # initialize local script variables to avoid unbound variable errors
+  # in onexit hook which terminates resources if test fails and they are not set
+  boxbuilder_built_instance_id=${boxbuilder_built_instance_id:-''}
+  boxbuilder_created_ami_id=${boxbuilder_created_ami_id:-''}
+  boxbuilder_created_ami_ebs_snapshot_id=${boxbuilder_created_ami_ebs_snapshot_id:-''}
+
   set +o xtrace # even if boxbuilder_debug is on, always turn off tracing
                 # while running build and grabbing output.
                 # dumping entire build output makes test output huge and confusing
