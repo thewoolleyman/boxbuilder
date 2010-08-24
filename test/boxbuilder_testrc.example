@@ -1,0 +1,8 @@
+# $HOME/.boxbuilder_testrc used on Continuous Integration
+export boxbuilder_keypair="$HOME/.ec2/keypair-ec2-rails-ci.pem"
+export EC2_KEYPAIR_NAME="rails-ci"
+export EC2_KEYPAIR="$HOME/.ec2/keypair-ec2-rails-ci.pem"
+export EC2_PRIVATE_KEY="$HOME/.ec2/pk-ec2-rails-ci.pem"
+export EC2_CERT="$HOME/.ec2/cert-ec2-rails-ci.pem"
+export EC2_HOME="$HOME//.boxbuilder_ec2_tools/ec2-api-tools"
+
