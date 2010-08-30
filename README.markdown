@@ -519,11 +519,14 @@ current 32-bit and 64-bit AMI IDs.  The default value is 'ami-4b4ba522' (64-bit)
 
 ----
 
-'boxbuilder\_user' is the username which is used to log into the EC2 builder instance via SSH.
-It will default to 'ubuntu', which is the default user on the standard Ubuntu EC2 AMIs used to
-start a builder instance.
+**(REQUIRED to match default ssh-able user for builder instance)** 'boxbuilder\_user' is the username which is
+used to log into the EC2 builder instance and perform the remote AMI build via SSH.
+It must match a user which is ssh-able by default on the builder instance which is started from the AMI specified in 'boxbuilder\_builder\_instance\_ami\_id'.
 
-    boxbuilder_user=ubuntu
+Set it to 'ubuntu' if you are using the standard Ubuntu EC2 AMIs to
+start a builder instance (more distros will be supported in the future).
+
+    boxbuilder_user={required to be exported directly or in .boxbuilderrc}
 
 ----
 

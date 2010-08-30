@@ -84,7 +84,7 @@ setup() {
   boxbuilder_user=${boxbuilder_user:-'ubuntu'}
   boxbuilder_dir="$(dirname $0)/.."
   boxbuilder_terminate_ec2_resources=${boxbuilder_terminate_ec2_resources:-true}
-  boxbuilder_config="export boxbuilder_ami_prefix=$boxbuilder_ec2_resource_tag; export boxbuilder_terminate_ec2_resources=$boxbuilder_terminate_ec2_resources"
+  boxbuilder_config="export boxbuilder_ami_prefix=$boxbuilder_ec2_resource_tag; export boxbuilder_terminate_ec2_resources=$boxbuilder_terminate_ec2_resources; export boxbuilder_user=$boxbuilder_user"
   export boxbuilder_config
 
   # initialize local script variables to avoid unbound variable errors
