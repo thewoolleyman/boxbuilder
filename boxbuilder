@@ -50,8 +50,6 @@ setup() {
   source $HOME/.boxbuilderrc
   boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder=boxbuilder_config_placeholder_from_boxbuilder'}
   eval $boxbuilder_config
-  # TODO: specify exact package versions
-  boxbuilder_prerequisite_packages=${boxbuilder_prerequisite_packages:-"build-essential zlib1g zlib1g-dev libssl-dev openssl libreadline5-dev bison libxml2-dev git-core autoconf curl"}
   boxbuilder_rvm_version=${boxbuilder_rvm_version:-$(curl -s http://rvm.beginrescueend.com/releases/stable-version.txt)}
   boxbuilder_default_ruby=${boxbuilder_default:-"1.8.7-p174"}
   boxbuilder_chef_repos=${boxbuilder_chef_repos:?"Please set 'boxbuilder_chef_repos' to a space-delimited list of Chef Git repositories"}
@@ -62,7 +60,6 @@ setup() {
   
   echo "$_log_prefix  Environment variables:"
   echo "boxbuilder_config                    = $boxbuilder_config"
-  echo "boxbuilder_prerequisite_packages     = $boxbuilder_prerequisite_packages"
   echo "boxbuilder_rvm_version               = $boxbuilder_rvm_version"
   echo "boxbuilder_default_ruby              = $boxbuilder_default_ruby"
   echo "boxbuilder_chef_repos                = $boxbuilder_chef_repos"
@@ -95,10 +92,68 @@ setup_boxbuilderrc() {
   echo "$_log_prefix  Finished setting up $HOME/.boxbuilderrc and $HOME/.boxbuilderrc_download ..."
 }
 
-install_packages() {
-  echo "$_log_prefix  Installing packages..."
+prerequisite_packages_debian() {
+  # TODO: specify exact package versions
+  boxbuilder_prerequisite_packages=${boxbuilder_prerequisite_packages:-"build-essential zlib1g zlib1g-dev libssl-dev openssl libreadline5-dev bison libxml2-dev git-core autoconf curl"}
+}
+
+package_status_check_debian() {
+  disable_error_checking
+  _package_status=$(dpkg -l $_package_name | grep "ii  $_package_name" | grep "$_package_version")
+  enable_error_checking
+}
+
+install_package_debian() {
   export DEBIAN_FRONTEND=noninteractive  # Make Debian never prompt for user input on packages ...
-  _packages_missing=false
+  if [[ -z $_aptitude_updated ]]; then
+    echo "$_log_prefix  Updating Aptitude..."
+    sudo apt-get update
+    _aptitude_updated=true
+  fi
+  echo "$_log_prefix  Installing package: $_package"
+  sudo apt-get install -y $_package
+}
+
+prerequisite_packages_darwin() {
+  # TODO: specify exact package versions
+  # TODO: finalize complete list for homebrew
+  boxbuilder_prerequisite_packages=${boxbuilder_prerequisite_packages:-"readline libxml2 git"}
+}
+
+package_status_check_darwin() {
+  disable_error_checking
+  _package_status=$(brew list $_package_name | grep -viE '^Error' | grep $_package_name/$_package_version)
+  enable_error_checking
+}
+
+install_package_darwin() {
+  if [[ -z $_homebrew_updated ]]; then
+    echo "$_log_prefix  Updating Homebrew..."
+    brew update
+    _homebrew_updated=true
+  fi
+  echo "$_log_prefix  Installing package: $_package"
+  brew install $_package
+}
+
+
+install_packages() {
+  echo "$_log_prefix  Installing prerequisite packages for RVM/Ruby..."
+
+  _uname=$(uname -a)
+  if [[ $(echo "$_uname" | grep -i 'debian') || $(echo "$_uname" | grep -i 'ubuntu') ]]; then
+    _platform='debian'
+  elif [[ $(echo "$_uname" | grep -i 'darwin') ]]; then
+    # TODO: for now, darwin platform assumes you are using HomeBrew
+    _platform='darwin'
+  else
+    echo "$_log_prefix error on line $LINENO - unable to determine supported platform from uname: '$_uname'"
+    return 1
+  fi
+
+  boxbuilder_prerequisite_packages=${boxbuilder_prerequisite_packages:-$(prerequisite_packages_$_platform)}
+  echo "$_log_prefix  boxbuilder_prerequisite_packages='$boxbuilder_prerequisite_packages'"
+
   for _package in $boxbuilder_prerequisite_packages
   do
     _package_name=${_package%=*}
@@ -108,30 +163,16 @@ install_packages() {
       _package_version=${_package#*=}
     fi
 
-    disable_error_checking
-    _package_status=$(dpkg -l $_package_name | grep "ii  $_package_name" | grep "$_package_version")
-    enable_error_checking
+    $(package_status_check_$_platform)
 
     if [[ -z $_package_status ]]; then
-      echo "$_log_prefix  Package $_package is NOT already installed..."
-      _packages_missing=true
+      echo "$_log_prefix  Package $_package IS NOT already installed, installing it..."
+      $(install_package_$_debian)
     else
-      echo "$_log_prefix  Package $_package is already installed..."
+      echo "$_log_prefix  Package $_package IS already installed..."
     fi
   done
-  if [[ $_packages_missing = true ]]; then
-    echo "$_log_prefix  Updating Aptitude..."
-    sudo apt-get update
-    echo "$_log_prefix  Installing prerequisite packages for RVM/Ruby..."
-    for _package in $boxbuilder_prerequisite_packages
-    do
-      echo "$_log_prefix  Installing package: $_package"
-      sudo apt-get install -y $_package
-    done
-    echo "$_log_prefix  Finished installing packages..."
-  else
-    echo "$_log_prefix  All packages are already installed, not updating Aptitude or installing packages ..."
-  fi
+  echo "$_log_prefix  Finished installing packages..."
 }
 
 install_rvm() {
@@ -215,6 +256,9 @@ setup_rvm() {
 install_chef() {
   echo "$_log_prefix  Installing Chef..."
   # TODO: Allow override if user wants to force reinstall with different boxbuilder_chef_gem_install_options
+  echo 111111111111111111111111
+  echo $(gem search ^chef$)
+  echo $(gem search ^chef$ | grep -e '^chef')
   if [[ -z $(gem search ^chef$ | grep -e '^chef') ]]; then
     gem install chef $boxbuilder_chef_gem_install_options
     echo "$_log_prefix  Finished installing Chef..."
@@ -254,7 +298,7 @@ download_chef_repos() {
 
 create_chef_script() {
   echo "$_log_prefix  Creating Chef script..."
-  # TODO: ...
+  # TODO: create timestamped chef script, for reproducibility
   echo "$_log_prefix  Finished Creating Chef Script..."
 }
 
