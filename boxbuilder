@@ -46,9 +46,8 @@ function enable_error_checking() {
 trap onexit HUP INT QUIT TERM ERR
 
 setup() {
-  if [ -e $HOME/.boxbuilderrc ]; then
-    source $HOME/.boxbuilderrc
-  fi
+  echo "$_log_prefix  sourcing $HOME/.boxbuilderrc"
+  source $HOME/.boxbuilderrc
   boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder=boxbuilder_config_placeholder_from_boxbuilder'}
   eval $boxbuilder_config
   # TODO: specify exact package versions
@@ -81,14 +80,15 @@ setup_boxbuilderrc() {
 
   echo "$_log_prefix  Creating $HOME/.boxbuilderrc to call $HOME/.boxbuilderrc_download ..."
   if [ -e $HOME/.boxbuilderrc  ]; then
-    echo "$_log_prefix $HOME/.boxbuilderrc already exists.  Not overwriting..."
-    # TODO: check if line to source $HOME/.boxbuilderrc_download exists, add if it doesn't
+    echo "$_log_prefix $HOME/.boxbuilderrc already exists, sourcing now in case it sets boxbuilderrc_url
+    source $HOME/.boxbuilderrc
+    # TODO: check if line to source $HOME/.boxbuilderrc_download exists, print warning if it doesn't
   else
     echo "$_log_prefix Creating $HOME/.boxbuilderrc which will source $HOME/.boxbuilderrc_download ..."
     echo "source $HOME/.boxbuilderrc_download" > $HOME/.boxbuilderrc
   fi
     
-  echo "$_log_prefix  Downloading AND overwriting $HOME/.boxbuilderrc_download from $boxbuilderrc_url ..."
+  echo "$_log_prefix  Downloading AND overwriting $HOME/.boxbuilderrc_download from boxbuilderrc_url $boxbuilderrc_url ..."
   wget -O $HOME/.boxbuilderrc_download $boxbuilderrc_url
   echo "# WARNING: This file was automatically downloaded from $boxbuilderrc_url - it will be overwritten the next time boxbuilder runs.  Put any local overrides at the bottom of $HOME/.boxbuilderrc, which is created by default to source this file." >> $HOME/.boxbuilderrc_download
   
