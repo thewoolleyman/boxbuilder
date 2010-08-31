@@ -106,10 +106,10 @@ package_status_check_debian() {
 
 install_package_debian() {
   export DEBIAN_FRONTEND=noninteractive  # Make Debian never prompt for user input on packages ...
-  if [[ -z $_aptitude_updated ]]; then
+  if [[ $_package_manager_updated = false ]]; then
     echo "$_log_prefix  Updating Aptitude..."
     sudo apt-get update
-    _aptitude_updated=true
+    _package_manager_updated=true
   fi
   echo "$_log_prefix  Installing package: $_package"
   sudo apt-get install -y $_package
@@ -129,10 +129,10 @@ package_status_check_darwin() {
 }
 
 install_package_darwin() {
-  if [[ -z $_homebrew_updated ]]; then
+  if [[ $_package_manager_updated = false ]]; then
     echo "$_log_prefix  Updating Homebrew..."
     brew update
-    _homebrew_updated=true
+    _package_manager_updated=true
   fi
   echo "$_log_prefix  Installing package: $_package"
   brew install $_package
@@ -156,6 +156,7 @@ install_packages() {
   boxbuilder_prerequisite_packages=${boxbuilder_prerequisite_packages:-$(prerequisite_packages_$_platform)}
   echo "$_log_prefix  boxbuilder_prerequisite_packages='$boxbuilder_prerequisite_packages'"
 
+  _package_manager_updated=false
   for _package in $boxbuilder_prerequisite_packages
   do
     _package_name=${_package%=*}
