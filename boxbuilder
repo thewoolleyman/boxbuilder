@@ -80,7 +80,7 @@ setup_boxbuilderrc() {
 
   echo "$_log_prefix  Creating $HOME/.boxbuilderrc to call $HOME/.boxbuilderrc_download ..."
   if [ -e $HOME/.boxbuilderrc  ]; then
-    echo "$_log_prefix $HOME/.boxbuilderrc already exists, sourcing now in case it sets boxbuilderrc_url
+    echo "$_log_prefix $HOME/.boxbuilderrc already exists, sourcing now in case it sets boxbuilderrc_url"
     source $HOME/.boxbuilderrc
     # TODO: check if line to source $HOME/.boxbuilderrc_download exists, print warning if it doesn't
   else
