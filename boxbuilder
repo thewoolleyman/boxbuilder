@@ -170,7 +170,7 @@ install_packages() {
 
     if [[ -z $_package_status ]]; then
       echo "$_log_prefix  Package $_package IS NOT already installed, installing it..."
-      $(install_package_$_platform)
+      install_package_$_platform
     else
       echo "$_log_prefix  Package $_package IS already installed..."
     fi
