@@ -94,7 +94,7 @@ setup_boxbuilderrc() {
 
 prerequisite_packages_debian() {
   # TODO: specify exact package versions
-  boxbuilder_prerequisite_packages=${boxbuilder_prerequisite_packages:-"build-essential zlib1g zlib1g-dev libssl-dev openssl libreadline5-dev bison libxml2-dev git-core autoconf curl"}
+  echo "build-essential zlib1g zlib1g-dev libssl-dev openssl libreadline5-dev bison libxml2-dev git-core autoconf curl"
 }
 
 package_status_check_debian() {
@@ -117,7 +117,7 @@ install_package_debian() {
 prerequisite_packages_darwin() {
   # TODO: specify exact package versions
   # TODO: finalize complete list for homebrew
-  boxbuilder_prerequisite_packages=${boxbuilder_prerequisite_packages:-"readline libxml2 git"}
+  echo "readline libxml2 git"
 }
 
 package_status_check_darwin() {
@@ -256,9 +256,6 @@ setup_rvm() {
 install_chef() {
   echo "$_log_prefix  Installing Chef..."
   # TODO: Allow override if user wants to force reinstall with different boxbuilder_chef_gem_install_options
-  echo 111111111111111111111111
-  echo $(gem search ^chef$)
-  echo $(gem search ^chef$ | grep -e '^chef')
   if [[ -z $(gem search ^chef$ | grep -e '^chef') ]]; then
     gem install chef $boxbuilder_chef_gem_install_options
     echo "$_log_prefix  Finished installing Chef..."
