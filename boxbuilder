@@ -143,6 +143,7 @@ install_packages() {
   echo "$_log_prefix  Installing prerequisite packages for RVM/Ruby..."
 
   _uname=$(uname -a)
+  disable_error_checking
   if [[ $(echo "$_uname" | grep -i 'debian') || $(echo "$_uname" | grep -i 'ubuntu') ]]; then
     _platform='debian'
   elif [[ $(echo "$_uname" | grep -i 'darwin') ]]; then
@@ -152,6 +153,8 @@ install_packages() {
     echo "$_log_prefix error on line $LINENO - unable to determine supported platform from uname: '$_uname'"
     return 1
   fi
+  enable_error_checking
+  echo "$_log_prefix  platform detected as '$_platform'"
 
   boxbuilder_prerequisite_packages=${boxbuilder_prerequisite_packages:-$(prerequisite_packages_$_platform)}
   echo "$_log_prefix  boxbuilder_prerequisite_packages='$boxbuilder_prerequisite_packages'"
