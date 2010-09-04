@@ -165,15 +165,24 @@ test_can_set_up_and_run_chef() {
 #   assert_equal '/tmp/boxbuilder_bootstrap' $expected_path
 # }
 
-suite() {
-  echo "$_log_prefix Starting tests ..."
+suite_ubuntu() {
+  echo "$_log_prefix Starting tests on Ubuntu ..."
+  boxbuilder_user="ubuntu"
+  boxbuilder_builder_instance_ami_id="ami-4b4ba522"
   setup
   test_can_log_in_as_user
   test_can_install_rvm
   test_can_set_up_and_run_chef
   # test_can_download_boxbuilder_bootstrap
+  echo "$_log_prefix All tests passed successfully on Ubuntu"
+}
+
+suite() {
+  echo "$_log_prefix Starting tests ..."
+  suite_ubuntu
   echo "$_log_prefix All tests passed successfully"
 }
+
 
 suite
 onexit
