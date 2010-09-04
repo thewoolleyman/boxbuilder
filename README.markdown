@@ -3,8 +3,8 @@ BOXBUILDER
 
 Boxbuilder builds boxes!  Basic Bash scripts to bootstrap barebones-OS boxes with
 [chef-solo](http://wiki.opscode.com/display/chef/Chef+Solo).  It can also create
-EC2 AMIs.  Currently it only supports Debian, but pull requests with support for
-new distros are welcome.
+EC2 AMIs.  Currently it supports Debian/Ubuntu, CentOS, and OSX/Homebrew.   Pull requests with support for
+new distros and package managers are welcome.
 
 * Homepage: You're reading it - [http://github.com/thewoolleyman/boxbuilder](http://github.com/thewoolleyman/boxbuilder)
 * Tracker Project: [http://www.pivotaltracker.com/projects/101913](http://www.pivotaltracker.com/projects/101913)
@@ -44,7 +44,7 @@ will verify that your EC2 account and credentials are properly configured.
 
 To build a box, download and run
 '[boxbuilder\_bootstrap](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap)'
-on a clean Debian box, or download and run
+on a clean Debian/Ubuntu, CentOS, or OSX box, or download and run
 '[boxbuilder\_remote\_bootstrap](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_remote_bootstrap)'
 from your local shell.
 
@@ -299,12 +299,12 @@ which exports variables for chef repo locations and config.
 
 'boxbuilder\_prerequisite\_packages' is a space-separated list of packages which will be installed
 on the box being built.  By default, it is the minimal set of packages required for RVM and Ruby
-on a clean Debian install.  Other packages which will be used to other applications on the box
+on a clean Debian/Ubuntu, CentOS, or OSX Homebrew install.  Other packages which will be used to other applications on the box
 should be installed via chef, as part of the application setup cookbooks.  On Debian, you can
-specify an exact version with {packagename}={packageversion}.  See the install_packages()
-function in the boxbuilder script for the latest default packages.
+specify an exact version with {packagename}={packageversion}.  See the prerequisite_packages_{platform}()
+functions in the boxbuilder script for the latest default packages.
 
-    boxbuilder_prerequisite_packages={See the install_packages() function in the boxbuilder script for the latest default packages}
+    boxbuilder_prerequisite_packages={See the prerequisite_packages_<platform>() function in the boxbuilder script for the latest default packages}
 
 ----
 
@@ -513,7 +513,7 @@ See [http://aws.amazon.com/ec2/instance-types](http://aws.amazon.com/ec2/instanc
 
 'boxbuilder\_builder\_instance\_ami\_id' is the AMI which you wish to use to start the EC2 builder instance.
 It must match the type of AMI you wish to build (32-bit or 64-bit).  See the **'EC2 Info'** section below for
-current 32-bit and 64-bit AMI IDs.  The default value is 'ami-4b4ba522' (64-bit).
+current 32-bit and 64-bit AMI IDs, as well as the CentOS AMIs.  The default value is 'ami-4b4ba522' (64-bit Ubuntu).
 
     boxbuilder_builder_instance_ami_id=ami-4b4ba522
 
@@ -579,10 +579,16 @@ Set it to false if you want leave the build instance running in order to rerun o
 _EC2 Info_
 ==========
 
-* Current Base AMI: ami-4b4ba522 - Ubuntu 10.04 LTS amd64 server (Lucid Lynx) (us-east-1)
+* Current Ubuntu Base AMI (default): ami-4b4ba522 - Ubuntu 10.04 LTS amd64 server (Lucid Lynx) (us-east-1)
 
 * Alestic AMI list: http://alestic.com/
 * Ubuntu AMI list: http://uec-images.ubuntu.com/releases/lucid/release/
+
+----
+
+* Current CentOS Base AMI: ami-4d42a924 - RightImage_CentOS_5.4_x64_v5.5.9_EBS
+
+* RightScale AMI list: http://support.rightscale.com/18-Release_Notes/ServerTemplates_and_RightImages/Current#V5_Images
 
 ----
 &nbsp;
