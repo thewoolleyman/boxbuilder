@@ -600,6 +600,13 @@ _Known Issues_
 * Boxbuilder was developed and tested on OSX and Ubuntu.  It is intended to be portable across all Bash platforms,
   but there may be differences in Bash implementations.  Please report bugs!
 
+* Boxbuilder is opinionated.  It assumes you are going to install Ruby
+  and Chef via RVM as a non-root user.  It gives you as much control as
+  possible over these tasks, and leaves everything else up to your Chef
+  recipes.  It is written in Bash, and tries to be as portable as
+  possible across platforms and distros.  If there's something you
+  think boxbuilder should do but doesn't, please speak up!
+
 ----
 &nbsp;
 
