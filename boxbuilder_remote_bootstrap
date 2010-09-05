@@ -62,6 +62,21 @@ exec_remotely_pseudo_tty() {
   ssh -t -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_host "$@"
 }
 
+ensure_boxbuilder_user_exists() {
+  echo "$_log_prefix  Ensuring boxbuilder_user '$boxbuilder_user' exists on $boxbuilder_host ..."
+  if [[ $boxbuilder_user = 'root' ]]; then
+    echo "$_log_prefix  boxbuilder_user cannot be root.  Please set \
+boxbuilder_user to a non-root user.  If it does not exist, it will be \
+automatically created if there is a valid no-passphrase SSH key to the root user ..."
+    return 1
+  fi
+  disable_error_checking
+  exec_remotely 'whoami'
+  enable_error_checking
+  # TODO: check return code, create boxbuilder_user if it doesn't exist
+  echo "$_log_prefix  Finished ensuring boxbuilder_user '$boxbuilder_user' exists on $boxbuilder_host ..."
+}
+
 setup() {
   echo "$_log_prefix  Environment variable setup ..."
   if [ -e $HOME/.boxbuilderrc ]; then
@@ -100,6 +115,7 @@ remote_bootstrap() {
 run() {
   echo "$_log_prefix Starting ..."
   setup
+  ensure_boxbuilder_user_exists
   remote_bootstrap
   echo "$_log_prefix Finished and exiting successfully"
 }
