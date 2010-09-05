@@ -45,6 +45,22 @@ function enable_error_checking() {
 
 trap onexit HUP INT QUIT TERM ERR
 
+detect_platform() {
+  _uname=$(uname -a)
+  if echo "$_uname" | grep -i 'debian'; then
+    _platform='debian'
+  elif echo "$_uname" | grep -i 'ubuntu'; then
+    _platform='debian'
+  elif echo "$_uname" | grep -i 'darwin'; then
+    # TODO: for now, darwin platform assumes you are using HomeBrew
+    _platform='darwin'
+  else
+    echo "$_log_prefix error on line $LINENO - unable to determine supported platform from uname: '$_uname'"
+    return 1
+  fi
+  echo "$_log_prefix  Platform detected as '$_platform'"
+}
+
 setup() {
   echo "$_log_prefix  sourcing $HOME/.boxbuilderrc"
   source $HOME/.boxbuilderrc
@@ -141,20 +157,6 @@ install_package_darwin() {
 
 install_packages() {
   echo "$_log_prefix  Installing prerequisite packages for RVM/Ruby..."
-
-  _uname=$(uname -a)
-  disable_error_checking
-  if [[ $(echo "$_uname" | grep -i 'debian') || $(echo "$_uname" | grep -i 'ubuntu') ]]; then
-    _platform='debian'
-  elif [[ $(echo "$_uname" | grep -i 'darwin') ]]; then
-    # TODO: for now, darwin platform assumes you are using HomeBrew
-    _platform='darwin'
-  else
-    echo "$_log_prefix error on line $LINENO - unable to determine supported platform from uname: '$_uname'"
-    return 1
-  fi
-  enable_error_checking
-  echo "$_log_prefix  platform detected as '$_platform'"
 
   boxbuilder_prerequisite_packages=${boxbuilder_prerequisite_packages:-$(prerequisite_packages_$_platform)}
   echo "$_log_prefix  boxbuilder_prerequisite_packages='$boxbuilder_prerequisite_packages'"
@@ -327,6 +329,7 @@ run() {
   echo "$_log_prefix Starting ..."
   setup_boxbuilderrc
   setup
+  detect_platform
   install_packages
   setup_boxbuilderrc
   setup_rvm

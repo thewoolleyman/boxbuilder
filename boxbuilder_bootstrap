@@ -45,6 +45,22 @@ function enable_error_checking() {
 
 trap onexit HUP INT QUIT TERM ERR
 
+detect_platform() {
+  _uname=$(uname -a)
+  if echo "$_uname" | grep -i 'debian'; then
+    _platform='debian'
+  elif echo "$_uname" | grep -i 'ubuntu'; then
+    _platform='debian'
+  elif echo "$_uname" | grep -i 'darwin'; then
+    # TODO: for now, darwin platform assumes you are using HomeBrew
+    _platform='darwin'
+  else
+    echo "$_log_prefix error on line $LINENO - unable to determine supported platform from uname: '$_uname'"
+    return 1
+  fi
+  echo "$_log_prefix  Platform detected as '$_platform'"
+}
+
 setup() {
   echo "$_log_prefix  Environment variable setup ..."
   if [ -e $HOME/.boxbuilderrc ]; then
@@ -96,9 +112,21 @@ grant_nopasswd_sudo_access() {
   fi  
 }
 
-install_git() {
-  echo "$_log_prefix Installing git"
+install_git_debian() {
   sudo apt-get install -y git-core
+}
+
+install_git_darwin() {
+  brew install git
+}
+
+install_git() {
+  if which git; then
+    echo "$_log_prefix git is already installed, not reinstalling"
+  else
+    echo "$_log_prefix Installing git"
+    install_git_$_platform
+  fi
 }
 
 check_out_boxbuilder() {
@@ -128,6 +156,7 @@ run_boxbuilder() {
 run() {
   echo "$_log_prefix Starting ..."
   setup
+  detect_platform
   grant_nopasswd_sudo_access
   install_git
   check_out_boxbuilder
