@@ -601,7 +601,8 @@ _Known Issues_
   but there may be differences in Bash implementations.  Please report bugs!
 
 * Boxbuilder is opinionated and focused.  It assumes you are going to install Ruby
-  and Chef via RVM as a non-root user.  It gives you as much control as
+  and Chef via RVM as a non-root user with no-password sudo priviliges
+  via membership in the 'admin' group.  It gives you as much control as
   possible over these tasks, and leaves everything else up to your Chef
   recipes.  It is written in Bash, and tries to be as portable as
   possible across platforms and distros.  If there's something you
