@@ -196,6 +196,11 @@ install_rvm() {
     rm -rf $HOME/.rvm/src/rvm/
     git clone --depth 1 git://github.com/wayneeseguin/rvm.git $HOME/.rvm/src/rvm
     $HOME/.rvm/src/rvm/install
+
+    # HACK around bug in RVM latest-stable
+    mkdir -p $HOME/.rvm/gems/cache
+    # END HACK
+
     echo "$_log_prefix  Finished installing RVM version $boxbuilder_rvm_version ..."
   fi
 }
@@ -222,7 +227,7 @@ enable_rvm() {
 
 install_rvm_ruby() {
   echo "$_log_prefix  Installing RVM default ruby: $boxbuilder_default_ruby"
-  set +o nounset
+  # set +o nounset
   # disable_error_checking
   
   if [[ -z $($HOME/.rvm/bin/rvm info | head -n 1 | grep $boxbuilder_default_ruby) ]] ; then
@@ -237,7 +242,7 @@ install_rvm_ruby() {
   else
     echo "$_log_prefix  Not installing RVM Ruby $boxbuilder_default_ruby because it is already installed ..."
   fi
-  set -o nounset
+  # set -o nounset
   # enable_error_checking
 }
 
