@@ -42,7 +42,7 @@ exec_remotely_quiet() {
   for arg; do
     arg_array[i++]=$(printf %q "$arg")
   done
-  ssh -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_built_instance_host "$@"
+  ssh -o 'StrictHostKeyChecking no' -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_built_instance_host "$@"
 }
 
 onexit_hook() {
@@ -159,33 +159,48 @@ test_can_set_up_and_run_chef() {
   assert_match 'boxbuilder_example2_chef_config_value' $example2_touchfile_contents
 }
 
-# TODO: Test boxbuilder_bootstrap by running it on instance running built AMI, but only after all other AMI tests are complete
-# test_can_download_boxbuilder_bootstrap() {
-#   expected_path=$(exec_remotely_quiet "which /tmp/boxbuilder_bootstrap")
-#   assert_equal '/tmp/boxbuilder_bootstrap' $expected_path
-# }
+test_boxbuilder_remote_bootstrap() {
+  # Test boxbuilder_remote_bootstrap by running it on instance started
+  # from built AMI 
+  overridden_touchfile_value='boxbuilder_example1_chef_config_value_overridden'
+  boxbuilder_config="export boxbuilder_example1_chef_config_key='$overridden_touchfile_value'"
+  export boxbuilder_config
+  export boxbuilder_keypair
+  export boxbuilder_user
+  boxbuilder_host=$boxbuilder_built_instance_host
+  export boxbuilder_host
+  boxbuilder_remote_bootstrap_output=$($boxbuilder_dir/boxbuilder_remote_bootstrap)
+  echo; echo; echo
+  echo "-------- BEGIN OUTPUT OF boxbuilder_remote_bootstrap --------"
+  echo "$boxbuilder_remote_bootstrap_output"
+  echo "-------- END OUTPUT OF boxbuilder_remote_bootstrap --------"
+  echo; echo; echo
+
+  example1_touchfile_contents=$(exec_remotely_quiet 'cat $HOME/.tmp_boxbuilder_example1_chef_cookbook.touchfile')
+  assert_equal $overridden_touchfile_value $example1_touchfile_contents
+}
 
 suite_centos() {
   echo "$_log_prefix Starting tests on CentOS ..."
-  boxbuilder_user="root"
-  boxbuilder_builder_instance_ami_id="ami-4d42a924"
+  boxbuilder_user=${boxbuilder_user:-"root"}
+  boxbuilder_builder_instance_ami_id=${boxbuilder_builder_instance_ami_id:-"ami-4d42a924"}
   setup
   test_can_log_in_as_user
   test_can_install_rvm
   test_can_set_up_and_run_chef
-  # test_can_download_boxbuilder_bootstrap
+  test_boxbuilder_remote_bootstrap
   echo "$_log_prefix All tests passed successfully on CentOS"
 }
 
 suite_ubuntu() {
   echo "$_log_prefix Starting tests on Ubuntu ..."
-  boxbuilder_user="ubuntu"
-  boxbuilder_builder_instance_ami_id="ami-4b4ba522"
+  boxbuilder_user=${boxbuilder_user:-"ubuntu"}
+  boxbuilder_builder_instance_ami_id=${boxbuilder_builder_instance_ami_id:-"ami-4b4ba522"}
   setup
   test_can_log_in_as_user
   test_can_install_rvm
   test_can_set_up_and_run_chef
-  # test_can_download_boxbuilder_bootstrap
+  test_boxbuilder_remote_bootstrap
   echo "$_log_prefix All tests passed successfully on Ubuntu"
 }
 
