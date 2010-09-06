@@ -328,7 +328,8 @@ run_chef() {
   echo "$_log_prefix  Running Chef Solo command: rvmsudo \"&& $boxbuilder_config && chef-solo -c $boxbuilder_chef_config_path -j $boxbuilder_chef_json_path\""
   # TODO: investigate weird hack required with rvmsudo where exports must be
   #       prepended with &&.  Related to rvmsudo's use of $@
-  rvmsudo "&& $boxbuilder_config && chef-solo -c $boxbuilder_chef_config_path -j $boxbuilder_chef_json_path"
+  # rvmsudo "&& $boxbuilder_config && chef-solo -c $boxbuilder_chef_config_path -j $boxbuilder_chef_json_path"
+  rvmsudo "chef-solo -c $boxbuilder_chef_config_path -j $boxbuilder_chef_json_path"
   echo "$_log_prefix  Finished running Chef Solo command: rvmsudo \"&& $boxbuilder_config && chef-solo -c $boxbuilder_chef_config_path -j $boxbuilder_chef_json_path\""
 }
 
