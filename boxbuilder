@@ -51,6 +51,8 @@ detect_platform() {
     _platform='debian'
   elif echo "$_uname" | grep -i 'ubuntu'; then
     _platform='debian'
+  elif [[ -f /etc/redhat-release ]]; then
+    _platform='redhat'
   elif echo "$_uname" | grep -i 'darwin'; then
     # TODO: for now, darwin platform assumes you are using HomeBrew
     _platform='darwin'

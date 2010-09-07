@@ -45,6 +45,14 @@ function enable_error_checking() {
 
 trap onexit HUP INT QUIT TERM ERR
 
+check_platform() {
+  if ! echo "$_uname" | grep -i 'ubuntu'; then
+    echo "$_log_prefix  Sorry, AMI building is currently only supported
+    on Ubuntu.  Pull requests are welcome! ..."
+    return 1
+  fi  
+}
+
 setup() {
   echo "$_log_prefix  Environment variable setup ..."
   if [ -e $HOME/.boxbuilderrc ]; then

@@ -72,6 +72,33 @@ exec_remotely_pseudo_tty() {
   ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -t -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_host "$@"
 }
 
+exec_remotely_quiet_root() {
+  local arg_array i rc
+  for arg; do
+    arg_array[i++]=$(printf %q "$arg")
+  done
+  ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $boxbuilder_keypair root@$boxbuilder_host "$@"
+}
+
+grant_nopasswd_sudo_access() {
+  echo "$_log_prefix  Checking no-password sudo access for 'admin' group on host $boxbuilder_host and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
+  if ! exec_remotely_quiet_root 'grep -e "%admin.*ALL.*=.*NOPASSWD.*:.*ALL" /etc/sudoers)'; then
+    echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
+    exec_remotely_quiet_root "rm -f /tmp/sudoers.new"
+    exec_remotely_quiet_root "cp /etc/sudoers /etc/sudoers.bak"
+    exec_remotely_quiet_root "cp /etc/sudoers /tmp/sudoers.new"
+    _new_sudoers_line="%admin ALL=NOPASSWD: ALL"
+    exec_remotely_quiet_root "sh -c 'echo \"$_new_sudoers_line\" >> /tmp/sudoers.new'"
+    if ! exec_remotely_quiet_root "visudo -c -s -f /tmp/sudoers.new"; then
+      echo "$_log_prefix  error on line $LINENO -: Syntax error in /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+      return 1
+    fi
+    exec_remotely_quiet_root "cp /tmp/sudoers.new /etc/sudoers"
+  else
+    echo "$_log_prefix  admin group already appears to have NOPASSWD sudo access."
+  fi
+}
+
 ensure_boxbuilder_user_exists() {
   echo "$_log_prefix  Ensuring boxbuilder_user '$boxbuilder_user' exists on $boxbuilder_host ..."
   if [[ $boxbuilder_user = 'root' ]]; then
@@ -80,11 +107,38 @@ boxbuilder_user to a non-root user.  If it does not exist, it will be \
 automatically created if there is a valid no-passphrase SSH key to the root user ..."
     return 1
   fi
-  disable_error_checking
-  exec_remotely 'whoami'
-  enable_error_checking
-  # TODO: check return code, create boxbuilder_user if it doesn't exist
-  echo "$_log_prefix  Finished ensuring boxbuilder_user '$boxbuilder_user' exists on $boxbuilder_host ..."
+  if exec_remotely 'id'; then
+    echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' already exists on $boxbuilder_host ..."
+    return 0
+  fi
+  echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' does not exist, checking for root access on $boxbuilder_host to automatically create it ..."
+  if ! exec_remotely_quiet_root 'id'; then
+    echo "$_log_prefix  No root SSH access on $boxbuilder_host, cannot automatically create boxbuilder_user $boxbuilder_user.  Create manually with valid SSH access or give SSH access to root ..."
+    return 1
+  fi
+  echo "$_log_prefix  SSH access exists for root ..."
+  echo "$_log_prefix  Ensuring 'admin' group exists ..."
+  exec_remotely_quiet_root "groupadd -f admin"
+  _admin_gid=$(exec_remotely_quiet_root "grep 'admin' /etc/group | cut -d: -f3")
+  echo "$_log_prefix  Automatically creating '$boxbuilder_user' user ..."
+  if exec_remotely_quiet_root "id $boxbuilder_user"; then
+    echo "$_log_prefix  '$boxbuilder_user' user already exists, not re-adding ..."
+  else
+    exec_remotely_quiet_root "useradd $boxbuilder_user -m -g $_admin_gid"
+  fi
+  echo "$_log_prefix  Finding home dir for '$boxbuilder_user' user ..."
+  _boxbuilder_user_home=$(exec_remotely_quiet_root "su - $boxbuilder_user -c 'echo \$HOME'")
+  echo "$_log_prefix  Copying SSH authorized keys from root to '$boxbuilder_user' user's home dir with correct ownership ..."
+  exec_remotely_quiet_root "mkdir -p '$_boxbuilder_user_home/.ssh/'"
+  exec_remotely_quiet_root "cp '.ssh/authorized_keys' '$_boxbuilder_user_home/.ssh/'"
+  exec_remotely_quiet_root "chown -R $boxbuilder_user '$_boxbuilder_user_home/.ssh'"
+  if exec_remotely 'id'; then
+    echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' successfully created on $boxbuilder_host ..."
+  else
+    echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' was NOT successfully created on $boxbuilder_host - something went wrong :( - try setting boxbuilder_debug=true ..."
+    return 1
+  fi
+  grant_nopasswd_sudo_access
 }
 
 setup() {

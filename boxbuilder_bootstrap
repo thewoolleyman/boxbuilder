@@ -51,6 +51,8 @@ detect_platform() {
     _platform='debian'
   elif echo "$_uname" | grep -i 'ubuntu'; then
     _platform='debian'
+  elif [[ -f /etc/redhat-release ]]; then
+    _platform='redhat'
   elif echo "$_uname" | grep -i 'darwin'; then
     # TODO: for now, darwin platform assumes you are using HomeBrew
     _platform='darwin'
@@ -81,39 +83,62 @@ setup() {
 }
 
 grant_nopasswd_sudo_access() {
-  echo "BOXBUILDER: Checking 'admin' group membership for user $boxbuilder_user on host $boxbuilder_host."
+  echo "$_log_prefix  Checking 'admin' group membership for user $boxbuilder_user on host $boxbuilder_host."
   if [[ $(groups | grep -q -e 'admin') ]]; then
     echo "$_log_prefix error on line $LINENO - user $boxbuilder_user is not a member of the 'admin' group on host $boxbuilder_host.  Please add..."
     return 1
   fi
 
-  echo "$_log_prefix Checking no-password sudo access for 'admin' group on host $boxbuilder_host and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
+  echo "$_log_prefix  Checking no-password sudo access for 'admin' group on host $boxbuilder_host and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
   if [[ ! $(sudo grep -e "%admin.*ALL.*=.*NOPASSWD.*:.*ALL" /etc/sudoers) ]]; then
-    echo "$_log_prefix Giving user $boxbuilder_user NO PASSWORD sudo privileges"
+    echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
     sudo rm -f /tmp/sudoers.new
     sudo cp /etc/sudoers /etc/sudoers.bak
     sudo cp /etc/sudoers /tmp/sudoers.new
     new_sudoers_line="%admin ALL=NOPASSWD: ALL"
     sudo sh -c "echo \"$new_sudoers_line\" >> /tmp/sudoers.new"
     if [ ! -e /tmp/sudoers.new ]; then
-      echo "$_log_prefix error on line $LINENO - Could not add create /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+      echo "$_log_prefix  error on line $LINENO - Could not add create /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
       return 1
     fi
-    enable_error_checking
     sudo visudo -c -s -f /tmp/sudoers.new
-    disable_error_checking
     if [ ! $? = 0 ]; then
-      echo "$_log_prefix error on line $LINENO -: Syntax error in /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+      echo "$_log_prefix  error on line $LINENO -: Syntax error in /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
       return 1
     fi
     sudo cp /tmp/sudoers.new /etc/sudoers
   else
-    echo "$_log_prefix admin group already appears to have NOPASSWD sudo access."
-  fi  
+    echo "$_log_prefix  admin group already appears to have NOPASSWD sudo access."
+  fi
 }
 
 install_git_debian() {
   sudo apt-get install -y git-core
+}
+
+yum_setup() {
+  cat > /etc/yum.repos.d/epel.repo << here
+[epel]
+name=Extra Packages for Enterprise Linux 5 - \$basearch
+mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=epel-5&arch=\$basearch
+failovermethod=priority
+enabled=1
+here
+
+  cat > /etc/yum.repos.d/rpmforge.repo << here
+[rpmforge]
+name = Red Hat Enterprise \$releasever - RPMforge.net - dag
+baseurl = http://apt.sw.be/redhat/el5/en/\$basearch/rpmforge
+mirrorlist = http://apt.sw.be/redhat/el5/en/mirrors-rpmforge
+enabled = 1
+here
+
+  sudo sed -i".bak-$(date +%Y%m%d-%H%M)" -e 's/gpgcheck=1/gpgcheck=0/' /etc/yum.conf
+}
+
+install_git_redhat() {
+  yum_setup
+  sudo yum install -y git-core
 }
 
 install_git_darwin() {
