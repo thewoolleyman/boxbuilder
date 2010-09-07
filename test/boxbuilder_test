@@ -42,7 +42,7 @@ exec_remotely_quiet() {
   for arg; do
     arg_array[i++]=$(printf %q "$arg")
   done
-  ssh -o 'StrictHostKeyChecking no' -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_built_instance_host "$@"
+  ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_built_instance_host "$@"
 }
 
 onexit_hook() {
@@ -135,7 +135,7 @@ setup() {
   done
   echo "$_log_prefix Got hostname $boxbuilder_built_instance_host for instance $boxbuilder_built_instance_id"
   echo "$_log_prefix Waiting for ssh connectivity to $boxbuilder_built_instance_host ..."
-  while ssh_up=$(ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_built_instance_host "echo 'ssh up'"); [[ "$ssh_up" != "ssh up" ]]; do
+  while ssh_up=$(ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_built_instance_host "echo 'ssh up'"); [[ "$ssh_up" != "ssh up" ]]; do
     echo "$_log_prefix SSH connect response from $boxbuilder_built_instance_host: $ssh_up"
     echo "$_log_prefix Trying to SSH to $boxbuilder_built_instance_host again after 3 seconds..."
     sleep 5

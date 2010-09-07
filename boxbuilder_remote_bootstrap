@@ -50,8 +50,8 @@ exec_remotely() {
   for arg; do
     arg_array[i++]=$(printf %q "$arg")
   done
-  echo "ssh -o 'StrictHostKeyChecking no' -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_host \"$@\""
-  ssh -o 'StrictHostKeyChecking no' -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_host "$@"
+  echo "ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_host \"$@\""
+  ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_host "$@"
 }
 
 exec_remotely_quiet() {
@@ -59,8 +59,8 @@ exec_remotely_quiet() {
   for arg; do
     arg_array[i++]=$(printf %q "$arg")
   done
-  # echo "ssh -o 'StrictHostKeyChecking no' -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_host \"$@\""
-  ssh -o 'StrictHostKeyChecking no' -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_host "$@"
+  # echo "ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_host \"$@\""
+  ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_host "$@"
 }
 
 exec_remotely_pseudo_tty() {
@@ -68,8 +68,8 @@ exec_remotely_pseudo_tty() {
   for arg; do
     arg_array[i++]=$(printf %q "$arg")
   done
-  echo "ssh -o 'StrictHostKeyChecking no' -t -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_host \"$@\""
-  ssh -o 'StrictHostKeyChecking no' -t -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_host "$@"
+  echo "ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -t -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_host \"$@\""
+  ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -t -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_host "$@"
 }
 
 ensure_boxbuilder_user_exists() {

@@ -50,8 +50,8 @@ exec_remotely() {
   for arg; do
     arg_array[i++]=$(printf %q "$arg")
   done
-  echo "ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host \"$@\""
-  ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "$@"
+  echo "ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host \"$@\""
+  ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "$@"
 }
 
 exec_remotely_quiet() {
@@ -59,8 +59,8 @@ exec_remotely_quiet() {
   for arg; do
     arg_array[i++]=$(printf %q "$arg")
   done
-  # echo "ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host \"$@\""
-  ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "$@"
+  # echo "ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host \"$@\""
+  ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "$@"
 }
 
 exec_remotely_pseudo_tty() {
@@ -68,8 +68,8 @@ exec_remotely_pseudo_tty() {
   for arg; do
     arg_array[i++]=$(printf %q "$arg")
   done
-  echo "ssh -t -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host \"$@\""
-  ssh -t -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "$@"
+  echo "ssh -t -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host \"$@\""
+  ssh -t -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "$@"
 }
 
 setup() {
@@ -202,7 +202,7 @@ get_builder_instance_host() {
   echo
   echo "$_log_prefix Got hostname $boxbuilder_builder_instance_host for instance $boxbuilder_builder_instance_id"
   echo "$_log_prefix Waiting for ssh connectivity to $boxbuilder_builder_instance_host ..."
-  while ssh_up=$(ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "echo 'ssh up'"); [[ "$ssh_up" != "ssh up" ]]; do
+  while ssh_up=$(ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "echo 'ssh up'"); [[ "$ssh_up" != "ssh up" ]]; do
     echo "$_log_prefix SSH connect response from $boxbuilder_builder_instance_host: $ssh_up"
     echo "$_log_prefix Trying to SSH to $boxbuilder_builder_instance_host again after 3 seconds..."
     sleep 5
@@ -215,14 +215,14 @@ upload_ec2_credentials() {
   exec_remotely 'mkdir -p $HOME/.ec2'
   echo "$_log_prefix Uploading EC2_CERT $EC2_CERT to $boxbuilder_user@$boxbuilder_builder_instance_host:.ec2/ ..."
   rsync \
-    --rsh="ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR" \
+    --rsh="ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $EC2_KEYPAIR" \
     --rsync-path="rsync" \
     $EC2_CERT \
     $boxbuilder_user@$boxbuilder_builder_instance_host:.ec2/
 
   echo "$_log_prefix Uploading EC2_PRIVATE_KEY $EC2_PRIVATE_KEY to $boxbuilder_user@$boxbuilder_builder_instance_host:.ec2/ ..."
   rsync \
-    --rsh="ssh -o 'StrictHostKeyChecking no' -i $EC2_KEYPAIR" \
+    --rsh="ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $EC2_KEYPAIR" \
     --rsync-path="rsync" \
     $EC2_PRIVATE_KEY \
     $boxbuilder_user@$boxbuilder_builder_instance_host:.ec2/
