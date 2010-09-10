@@ -75,8 +75,8 @@ exec_remotely_pseudo_tty() {
 setup() {
   echo "$_log_prefix  Environment variable setup ..."
 
-  if [ -e $HOME/.boxbuilderrc ]; then
-    source $HOME/.boxbuilderrc
+  if [ -e $HOME/.boxbuilder_remote_build_amirc ]; then
+    source $HOME/.boxbuilder_remote_build_amirc
   fi
   boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder_remote_build_ami=boxbuilder_config_placeholder_from_boxbuilder_remote_build_ami'}
   eval $boxbuilder_config

@@ -55,8 +55,8 @@ check_platform() {
 
 setup() {
   echo "$_log_prefix  Environment variable setup ..."
-  if [ -e $HOME/.boxbuilderrc ]; then
-    source $HOME/.boxbuilderrc
+  if [ -e $HOME/.boxbuilder_build_amirc ]; then
+    source $HOME/.boxbuilder_build_amirc
   fi
   
   boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder_build_ami=boxbuilder_config_placeholder_from_boxbuilder_build_ami'}

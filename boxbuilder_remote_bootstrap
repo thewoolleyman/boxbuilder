@@ -143,8 +143,8 @@ automatically created if there is a valid no-passphrase SSH key to the root user
 
 setup() {
   echo "$_log_prefix  Environment variable setup ..."
-  if [ -e $HOME/.boxbuilderrc ]; then
-    source $HOME/.boxbuilderrc
+  if [ -e $HOME/.boxbuilder_remote_bootstraprc ]; then
+    source $HOME/.boxbuilder_remote_bootstraprc
   fi
   boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder_remote_bootstrap=boxbuilder_config_placeholder_from_boxbuilder_remote_bootstrap'}
   eval $boxbuilder_config

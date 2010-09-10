@@ -226,10 +226,14 @@ download and run 'boxbuilder\_bootstrap' on the box being built.  This also make
 to hook boxbuilder into other tools or processes to automatically build/update multiple boxes.
 
 For example, run the following from a Bash shell on your workstation.  You will be prompted to set required variables
-which you can export from your shell, or set in ~/.boxbuilderrc:
+which you can export from your shell, or set in
+$HOME/.boxbuilder\_remote\_bootstraprc:
 
     wget -O /tmp/boxbuilder_remote_bootstrap http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_remote_bootstrap && chmod +x /tmp/boxbuilder_remote_bootstrap && /tmp/boxbuilder_remote_bootstrap
 
+Note that the config file is $HOME/.boxbuilder\_remote\_bootstraprc, NOT
+$HOME/.boxbuilderrc (which is the config for the current box, not the
+remote box being built).
 
 ----
 
@@ -378,6 +382,10 @@ _boxbuilder\_build\_ami script_
 * Executes the 'boxbuilder\_bootstrap' script while re-rooted within the chroot jail (which builds your image, see documentation for 'boxbuilder\_bootstrap')
 * Creates and publishes an EBS-backed AMI from the image which was created in the chroot jail
 
+Environment variables can be set in $HOME/.boxbuilder\_build\_amirc (not
+$HOME/.boxbuilderrc, that is the config for the current box, not the AMI
+being built in the chroot jail).
+
 ----
 
 boxbuilder\_build_ami environment variables
@@ -438,12 +446,19 @@ automatically shut down.  If you do not YOU WILL BE CHARGED BY AMAZON UNTIL THEY
 the detailed warning at the top of this README.**
 
 'boxbuilder\_remote\_build\_ami' is run from any bash shell.  It allows you to run 'boxbuilder\_build\_ami'
-on a remote box without logging in to it:
+on a remote box without logging in to it.
+You will be prompted to set required variables
+which you can export from your shell, or set in
+$HOME/.boxbuilder\_remote\_build\_amirc:
 
 * Download the Amazon EC2 API tools to your local filesystem
 * Automatically start an EC2 instance (called the 'builder instance') using your EC2 account and credentials (which you are required to obtain and specify)
 * Upload your credentials to the builder instance
 * Issue remote SSH commands to download and run 'boxbuilder\_remote\_build\_ami' on the builder instance (which then builds your AMI, see documentation for 'boxbuilder\_build\_ami')
+
+Note that the config file is $HOME/.boxbuilder\_remote\_build\_amirc, NOT
+$HOME/.boxbuilderrc (which is the config for the current box, not the
+remote AMI being built).
 
 ----
 
