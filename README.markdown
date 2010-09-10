@@ -325,7 +325,7 @@ RVM default, and used to install and run chef.
 'boxbuilder\_chef\_dir' is the directory under which all chef-related files will be downloaded
 and created.
 
-    boxbuilder_prerequisite_packages={See the install_packages() function in the boxbuilder script for the latest default packages}
+    boxbuilder_chef_dir=$HOME/.chef
 
 ----
 
