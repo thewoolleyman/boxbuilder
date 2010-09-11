@@ -61,7 +61,8 @@ each script in the sections below.
 Check the output of the script for a success message, and/or any errors.  Log into the newly-built
 box (or an instance started from your newly-built AMI), and verify everything worked.  To verify,
 you can check that the sample test chef recipe created touchfiles in the home directory:
-[http://github.com/thewoolleyman/boxbuilder\_example1\_chef\_repo/blob/master/site-cookbooks/boxbuilder_example1_cookbook/recipes/default.rb](http://github.com/thewoolleyman/boxbuilder_example1_chef_repo/blob/master/site-cookbooks/boxbuilder_example1_cookbook/recipes/default.rb)
+[http://github.com/thewoolleyman/boxbuilder\_example\_main\_chef\_repo/blob/master/site-cookbooks/boxbuilder\_example\_main\_cookbook/recipes/default.rb](http://github.com/thewoolleyman/boxbuilder_example_main_chef_repo/blob/master/site-cookbooks/boxbuilder_example_main_cookbook/recipes/default.rb) and
+[http://github.com/thewoolleyman/boxbuilder\_example\_dependency\_chef\_repo/blob/master/site-cookbooks/boxbuilder\_example\_dependency\_cookbook/recipes/default.rb](http://github.com/thewoolleyman/boxbuilder_example_main_chef_repo/blob/master/site-cookbooks/boxbuilder_example_main_cookbook/recipes/default.rb)
 
 **Step 2. Create a custom box by using a custom config file and chef repos**
 
@@ -338,7 +339,7 @@ downloaded by boxbuilder.  They will be checked out under $boxbuilder\_chef\_dir
 
 You must override this variable to point to custom chef repo(s) in order for boxbuilder to build a custom box.
 
-    boxbuilder_chef_repos=git://github.com/thewoolleyman/boxbuilder_example1_chef_repo.git[ git://github.com/thewoolleyman/boxbuilder_example2_chef_repo.git[ ...]]
+    boxbuilder_chef_repos=git://github.com/thewoolleyman/boxbuilder_example_main_chef_repo.git[ git://github.com/thewoolleyman/boxbuilder_example_dependency_chef_repo.git[ ...]]
 
 ----
 

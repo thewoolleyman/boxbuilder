@@ -153,17 +153,17 @@ test_can_install_rvm() {
 }
 
 test_can_set_up_and_run_chef() {
-  example1_touchfile_contents=$(exec_remotely_quiet 'cat $HOME/.tmp_boxbuilder_example1_chef_cookbook.touchfile')
-  assert_equal 'boxbuilder_example1_chef_config_value' $example1_touchfile_contents
-  example2_touchfile_contents=$(exec_remotely_quiet 'cat $HOME/.tmp_boxbuilder_example2_chef_cookbook.touchfile')
-  assert_match 'boxbuilder_example2_chef_config_value' $example2_touchfile_contents
+  example_main_touchfile_contents=$(exec_remotely_quiet 'cat $HOME/.tmp_boxbuilder_example_main_chef_cookbook.touchfile')
+  assert_equal 'boxbuilder_example_main_chef_config_value' $example_main_touchfile_contents
+  example_dependency_touchfile_contents=$(exec_remotely_quiet 'cat $HOME/.tmp_boxbuilder_example_dependency_chef_cookbook.touchfile')
+  assert_match 'boxbuilder_example_dependency_chef_config_set_from_main_value' $example_dependency_touchfile_contents
 }
 
 test_boxbuilder_remote_bootstrap() {
   # Test boxbuilder_remote_bootstrap by running it on instance started
   # from built AMI 
-  overridden_touchfile_value='boxbuilder_example1_chef_config_value_overridden'
-  boxbuilder_config="export boxbuilder_example1_chef_config_key='$overridden_touchfile_value'"
+  overridden_touchfile_value='boxbuilder_example_main_chef_config_value_overridden'
+  boxbuilder_config="export boxbuilder_example_main_chef_config_key='$overridden_touchfile_value'"
   export boxbuilder_config
   export boxbuilder_keypair
   export boxbuilder_user
@@ -176,8 +176,8 @@ test_boxbuilder_remote_bootstrap() {
   echo "-------- END OUTPUT OF boxbuilder_remote_bootstrap --------"
   echo; echo; echo
 
-  example1_touchfile_contents=$(exec_remotely_quiet 'cat $HOME/.tmp_boxbuilder_example1_chef_cookbook.touchfile')
-  assert_equal $overridden_touchfile_value $example1_touchfile_contents
+  example_main_touchfile_contents=$(exec_remotely_quiet 'cat $HOME/.tmp_boxbuilder_example_main_chef_cookbook.touchfile')
+  assert_equal $overridden_touchfile_value $example_main_touchfile_contents
 }
 
 suite_centos() {
