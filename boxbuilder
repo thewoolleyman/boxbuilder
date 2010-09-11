@@ -45,22 +45,39 @@ function enable_error_checking() {
 
 trap onexit HUP INT QUIT TERM ERR
 
-detect_platform() {
-  _uname=$(uname -a)
-  if echo "$_uname" | grep -i 'debian'; then
-    _platform='debian'
-  elif echo "$_uname" | grep -i 'ubuntu'; then
-    _platform='debian'
-  elif [[ -f /etc/redhat-release ]]; then
-    _platform='redhat'
-  elif echo "$_uname" | grep -i 'darwin'; then
-    # TODO: for now, darwin platform assumes you are using HomeBrew
-    _platform='darwin'
+setup_boxbuilderrc() {
+  echo "$_log_prefix  Setting up $HOME/.boxbuilderrc and $HOME/.boxbuilderrc_download ..."
+
+  boxbuilderrc_url=${boxbuilderrc_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_default"}
+
+  echo "$_log_prefix  Creating $HOME/.boxbuilderrc to call $HOME/.boxbuilderrc_download ..."
+  if [ -e $HOME/.boxbuilderrc  ]; then
+    echo "$_log_prefix $HOME/.boxbuilderrc already exists, not overwriting ..."
   else
-    echo "$_log_prefix error on line $LINENO - unable to determine supported platform from uname: '$_uname'"
-    return 1
+    echo "$_log_prefix Creating $HOME/.boxbuilderrc which will source $HOME/.boxbuilderrc_download ..."
+    _boxbuilderrc_contents=$( cat <<-LINES
+# This boxbuilder config file was created automatically
+# By default, it will download $boxbuilderrc_url
+# to $HOME/.boxbuilderrc_download and source (execute) it.
+# You can add custom settings to the bottom, or replace it entirely.
+
+boxbuilderrc_url="$boxbuilderrc_url"
+echo "Downloading AND overwriting $HOME/.boxbuilderrc_download from boxbuilderrc_url $boxbuilderrc_url"
+wget -O $HOME/.boxbuilderrc_download $boxbuilderrc_url
+echo "# WARNING: This file was automatically downloaded from $boxbuilderrc_url" >> $HOME/.boxbuilderrc_download
+echo "# It will be overwritten the next time boxbuilder runs." >> $HOME/.boxbuilderrc_download
+echo "# Put any local overrides at the bottom of $HOME/.boxbuilderrc ," >> $HOME/.boxbuilderrc_download
+echo "# which is created by default to source (execute) this file." >> $HOME/.boxbuilderrc_download
+echo "Sourcing (executing) $HOME/.boxbuilderrc_download"
+source $HOME/.boxbuilderrc_download
+LINES
+)
+    echo "$_boxbuilderrc_contents"
+    echo "$_boxbuilderrc_contents" >> $HOME/.boxbuilderrc
   fi
-  echo "$_log_prefix  Platform detected as '$_platform'"
+    
+  
+  echo "$_log_prefix  Finished setting up $HOME/.boxbuilderrc and $HOME/.boxbuilderrc_download ..."
 }
 
 setup() {
@@ -88,26 +105,22 @@ setup() {
   
 }
 
-setup_boxbuilderrc() {
-  echo "$_log_prefix  Setting up $HOME/.boxbuilderrc and $HOME/.boxbuilderrc_download ..."
-
-  boxbuilderrc_url=${boxbuilderrc_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_default"}
-
-  echo "$_log_prefix  Creating $HOME/.boxbuilderrc to call $HOME/.boxbuilderrc_download ..."
-  if [ -e $HOME/.boxbuilderrc  ]; then
-    echo "$_log_prefix $HOME/.boxbuilderrc already exists, sourcing now in case it sets boxbuilderrc_url"
-    source $HOME/.boxbuilderrc
-    # TODO: check if line to source $HOME/.boxbuilderrc_download exists, print warning if it doesn't
+detect_platform() {
+  _uname=$(uname -s)
+  if echo "$_uname" | grep -i 'debian'; then
+    _platform='debian'
+  elif echo "$_uname" | grep -i 'ubuntu'; then
+    _platform='debian'
+  elif [[ -f /etc/redhat-release ]]; then
+    _platform='redhat'
+  elif echo "$_uname" | grep -i 'darwin'; then
+    # TODO: for now, darwin platform assumes you are using HomeBrew
+    _platform='darwin'
   else
-    echo "$_log_prefix Creating $HOME/.boxbuilderrc which will source $HOME/.boxbuilderrc_download ..."
-    echo "source $HOME/.boxbuilderrc_download" > $HOME/.boxbuilderrc
+    echo "$_log_prefix error on line $LINENO - unable to determine supported platform from uname: '$_uname'"
+    return 1
   fi
-    
-  echo "$_log_prefix  Downloading AND overwriting $HOME/.boxbuilderrc_download from boxbuilderrc_url $boxbuilderrc_url ..."
-  wget -O $HOME/.boxbuilderrc_download $boxbuilderrc_url
-  echo "# WARNING: This file was automatically downloaded from $boxbuilderrc_url - it will be overwritten the next time boxbuilder runs.  Put any local overrides at the bottom of $HOME/.boxbuilderrc, which is created by default to source this file." >> $HOME/.boxbuilderrc_download
-  
-  echo "$_log_prefix  Finished setting up $HOME/.boxbuilderrc and $HOME/.boxbuilderrc_download ..."
+  echo "$_log_prefix  Platform detected as '$_platform'"
 }
 
 prerequisite_packages_debian() {
