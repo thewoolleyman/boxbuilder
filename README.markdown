@@ -36,7 +36,7 @@ _Instructions_
 **Step 1. Run the script to create a default box or AMI**
 
 By default, boxbuilder runs using a sample default config file at
-[http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc\_download\_default](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_default),
+[http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc\_download\_example](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_default),
 which in turn references sample default chef repositories.
 
 Your first step should be to run boxbuilder with the default config and ensure you can create a sample test box or AMI.  This
@@ -68,7 +68,7 @@ you can check that the sample test chef recipe created touchfiles in the home di
 To build a custom box, you must override the variables found in the sample default config file.
 The easiest way to do this is to:
 
-1. Copy the sample boxbuilderrc\_download\_default config file and publish it in your own git repo (you can create one for free on github)
+1. Copy the sample boxbuilderrc\_download\_example config file and publish it in your own git repo (you can create one for free on github)
 2. Edit the variables in it to point to your own chef repositories, config path, and json path (and any other variables you want to add/override).
 3. Create or reuse custom chef cookbooks in your chef repositories at which you pointed.  If you wish, you can fork or copy the default ones and customize them.
 
@@ -144,7 +144,7 @@ _Flexible, Automatically Downloaded, Easily Overridable Configuration_
   to read and source ~/.boxbuilderrc\_download.
 * ~/.boxbuilderrc\_download will automatically be downloaded from the URL specified
   in 'boxbuilderrc\_url' environment variable.  By default, it points to
-  the '[boxbuilderrc\_download\_default](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_download_default)'
+  the '[boxbuilderrc\_download\_example](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_download_default)'
   file at [http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_download_default](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_download_default)
 * This simple config-file-based approach allows you to have standard config files for different
   machines stored in source control and always downloaded to ~/.boxbuilderrc\_download,

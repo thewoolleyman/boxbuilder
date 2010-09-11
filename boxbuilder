@@ -48,7 +48,7 @@ trap onexit HUP INT QUIT TERM ERR
 setup_boxbuilderrc() {
   echo "$_log_prefix  Setting up $HOME/.boxbuilderrc and $HOME/.boxbuilderrc_download ..."
 
-  boxbuilderrc_url=${boxbuilderrc_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_default"}
+  boxbuilderrc_url=${boxbuilderrc_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example"}
 
   echo "$_log_prefix  Creating $HOME/.boxbuilderrc to call $HOME/.boxbuilderrc_download ..."
   if [ -e $HOME/.boxbuilderrc  ]; then
