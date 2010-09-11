@@ -106,7 +106,7 @@ setup() {
 }
 
 detect_platform() {
-  _uname=$(uname -s)
+  _uname=$(uname -mprsv) # everything except nodename
   if echo "$_uname" | grep -i 'debian'; then
     _platform='debian'
   elif echo "$_uname" | grep -i 'ubuntu'; then
