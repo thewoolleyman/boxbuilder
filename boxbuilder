@@ -46,14 +46,19 @@ function enable_error_checking() {
 trap onexit HUP INT QUIT TERM ERR
 
 setup_boxbuilderrc() {
-  echo "$_log_prefix  Setting up $HOME/.boxbuilderrc and $HOME/.boxbuilderrc_download ..."
+  echo "$_log_prefix  Setting up $HOME/.boxbuilderrc ..."
 
-  boxbuilderrc_download_url=${boxbuilderrc_download_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example"}
-
-  echo "$_log_prefix  Creating $HOME/.boxbuilderrc to call $HOME/.boxbuilderrc_download ..."
-  if [ -e $HOME/.boxbuilderrc  ]; then
+  if [[ -e $HOME/.boxbuilderrc ]]; then
+    boxbuilderrc_download_url=${boxbuilderrc_download_url:-""}
     echo "$_log_prefix $HOME/.boxbuilderrc already exists, not overwriting ..."
+    if [[ ! -z $boxbuilderrc_download_url ]]; then
+      if ! grep "$boxbuilderrc_download_url" $HOME/.boxbuilderrc; then
+        echo "$_log_prefix Error - boxbuilderrc_download_url was specified as $boxbuilderrc_download_url , but that url is not found in the existing $HOME/.boxbuilderrc .  Either delete $HOME/.boxbuilderrc and allow it to be recreated, or do not set boxbuilderrc_download_url ..."
+        return 1
+      fi
+    fi
   else
+    boxbuilderrc_download_url=${boxbuilderrc_download_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example"}
     echo "$_log_prefix Creating $HOME/.boxbuilderrc which will source $HOME/.boxbuilderrc_download ..."
     _boxbuilderrc_contents=$( cat <<-LINES
 # This boxbuilder config file was created automatically
