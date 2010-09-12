@@ -74,8 +74,8 @@ The easiest way to do this is to:
 1. Copy the example boxbuilderrc\_download\_example config file to boxbuilderrc\_download and publish it in your own git repo (you can create one for free on github)
 2. (optional) Edit the variables in it to point to your own chef repositories, config path, and json path (and any other variables you want to add/override).
 3. (optional) Create or reuse custom chef cookbooks in your chef repositories at which you pointed.  If you wish, you can fork or copy the default ones and customize them.
-4. Set/export the 'boxbuilderrc\_url' variable to point to your custom boxbuilderrc\_download you published in your own git repo.  You can set/export boxbuilderrc\_url in the following ways:
-    * Directly on the command line (an error will be raised if an existing .boxbuilderrc exists and contains a different boxbuilderrc\_url)
+4. Set/export the 'boxbuilderrc\_download\_url' variable to point to your custom boxbuilderrc\_download you published in your own git repo.  You can set/export boxbuilderrc\_download\_url in the following ways:
+    * Directly on the command line (an error will be raised if an existing .boxbuilderrc exists and contains a different boxbuilderrc\_download\_url)
     * In $HOME/.boxbuilderrc if you are running 'boxbuilder\_bootstrap' or 'boxbuilder'
     * In $HOME/.boxbuilder\_remote\_bootstraprc if you are running 'boxbuilder\_remote\_bootstrap'
     * In $HOME/.boxbuilder\_build\_amirc if you are running 'boxbuilder\_build\_ami'
@@ -127,14 +127,14 @@ Building a Box:
 
 1. 'boxbuilder\_remote\_bootstrap' (invoked from any Bash shell) issues SSH commands on the box being built to download and invoke...
 2. 'boxbuilder\_bootstrap' (on the box being built), which clones a boxbuilder git repo, and invokes...
-3. 'boxbuilder' (on the box being built) from the cloned repo, which builds the box according to the config specified in boxbuilderrc\_url.
+3. 'boxbuilder' (on the box being built) from the cloned repo, which builds the box according to the config specified in boxbuilderrc\_download\_url.
 
 Building an AMI Image: 
 
 1. 'boxbuilder\_remote\_build\_ami' (invoked from any Bash shell with Java) installs the EC2 tools, starts an EC2 instance, and issues SSH commands on it built to download and invoke...
 2. 'boxbuilder\_build\_ami' (on the EC2 instance), which creates a chroot jail, and runs commands in the chroot jail to download and invoke...
 3. 'boxbuilder\_bootstrap' (in the chroot jail), which clones a boxbuilder git repo, and invokes...
-4. 'boxbuilder' (in the chroot jail) to build a 'box' in the chroot jail according to the config specified in boxbuilderrc\_url, which then exits and returns control to...
+4. 'boxbuilder' (in the chroot jail) to build a 'box' in the chroot jail according to the config specified in boxbuilderrc\_download\_url, which then exits and returns control to...
 5. 'boxbuilder\_bootstrap' (in the chroot jail), which exits and returns control to...
 6. 'boxbuilder\_build\_ami' (on the EC2 instance), which continues to create an AMI image of the chroot jail.
 
@@ -151,13 +151,13 @@ The configuration approach for boxbuilder is somewhat unorthodox, but it is desi
 
 * Flexible: Several different ways to specify configuration - in a manually edited file, in an auto-downloaded file
   which lives in source control, in a file on a shared drive, etc...
-* Automatically Downloaded: If you specify 'boxbuilderrc\_url' with a URL to your 'boxbuilderrc_download' config file (which can be in a git repo),
+* Automatically Downloaded: If you specify 'boxbuilderrc\_download\_url' with a URL to your 'boxbuilderrc_download' config file (which can be in a git repo),
   it will be automatically downloaded and used.
 * Auto-Updating: The first time boxbuilder is run on a box, it creates a config file which will automatically re-download
-  your config file from 'boxbuilderrc\_url' every time boxbuilder is run.
+  your config file from 'boxbuilderrc\_download\_url' every time boxbuilder is run.
 * Easily Overridable: There are several different points at which you can set or override boxbuilder config environment variables,
   in the config files or on the command line.
-* Example Defaults: When run without specifying a custom config file url in 'boxbuilderrc\_url', boxbuilder will default to
+* Example Defaults: When run without specifying a custom config file url in 'boxbuilderrc\_download\_url', boxbuilder will default to
   using a simple example configuration file which points to example chef repositories.  This makes it easy to see how
   boxbuilder works before you start creating custom configs and chef repos to build your own custom boxes.
 
@@ -171,12 +171,12 @@ Here's the main features and supported usage for the various boxbuilder config a
   files which it sources (executes).
 * If it does not already exist, $HOME/.boxbuilderrc will automatically be created
   with commands to automatically set, download and source (execute)
-  $HOME/.boxbuilderrc\_download from the url specified in the 'boxbuilderrc\_url'
+  $HOME/.boxbuilderrc\_download from the url specified in the 'boxbuilderrc\_download\_url'
   environment variable.  By default, it points to
   the '[boxbuilderrc\_download\_example](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example)'
   file at [http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc\_download\_example](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example)
 * The auto-creation of a $HOME/.boxbuilderrc file is a simple "auto-update" mechanism, which
-  will result in the latest version of the config at 'boxbuilderrc\_url' to be automatically
+  will result in the latest version of the config at 'boxbuilderrc\_download\_url' to be automatically
   downloaded and used every time boxbuilder is run.
 * This simple config-file-based approach allows you to have standard config files for different
   machines stored in source control and ensure the latest version is always
@@ -199,17 +199,17 @@ Here's the main features and supported usage for the various boxbuilder config a
   the $HOME/.boxbuilderrc file, because they are the only scripts which execute on the
   box (or AMI chroot jail image) being built.  All the other scripts (boxbuilder\_remote\_bootstrap,
   boxbuilder\_build\_ami, and boxbuilder\_remote\_build\_ami) read their own dedicated
-  config files, named respectively boxbuilder\_remote\_bootstraprc,
-  boxbuilder\_build\_amirc, and boxbuilder\_remote\_build\_amirc.
+  config files, named respectively .boxbuilder\_remote\_bootstraprc,
+  .boxbuilder\_build\_amirc, and .boxbuilder\_remote\_build\_amirc.
 
 Here's an ordered summary of the process for reading configuration from various sources
 when the 'boxbuilder' script runs.  You can add/override environment variables at any point:
 
 1. Any pre-existing variables are, naturally, already set before 'boxbuilder' is invoked
 2. If $HOME/.boxbuilderrc doesn't exist, it is created by default, with commands to automatically download and source $HOME/.boxbuilderrc\_download
-   from 'boxbuilderrc_url'.  Then it is sourced (executed).  If $HOME/.boxbuilderrc DOES exist, it is never touched or modified.
+   from 'boxbuilderrc_download_url'.  Then it is sourced (executed).  If $HOME/.boxbuilderrc DOES exist, it is never touched or modified.
    You can always delete it and allow it to be recreated, or manually edit it.
-3. You can edit and re-publish the config file at the auto-updated 'boxbuilderrc\_url' specified in $HOME/.boxbuilderrc
+3. You can edit and re-publish the config file at the auto-updated 'boxbuilderrc\_download\_url' specified in $HOME/.boxbuilderrc
 4. You can add any manual, local overrides to the bottom of $HOME/.boxbuilderrc
 5. $HOME/.boxbuilderrc is sourced by the 'boxbuilder' script
 6. The contents of 'boxbuilder\_config' are evaluated.
@@ -334,16 +334,16 @@ on a barebones box with a newly installed OS, it will do the following:
 boxbuilder environment variables
 --------------------------------
 
-'boxbuilderrc\_url' is the URL to a boxbuilder config script.  If $HOME/.boxbuilderrc does not exist,
-it will be created with commands to automatically download 'boxbuilderrc\_url' to
+'boxbuilderrc\_download\_url' is the URL to a boxbuilder config script.  If $HOME/.boxbuilderrc does not exist,
+it will be created with commands to automatically download 'boxbuilderrc\_download\_url' to
 $HOME/.boxbuilderrc\_download on the box which is being built and source (execute) it.
 
-To build a custom box, you can override 'boxbuilderrc\_url' to point to a custom configuration file
+To build a custom box, you can override 'boxbuilderrc\_download\_url' to point to a custom configuration file
 which exports variables for your custom chef repo locations and config.
 
 See more details in the instruction and configuration sections above.
 
-    boxbuilderrc_url=http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example
+    boxbuilderrc_download_url=http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example
 
 ----
 
@@ -642,14 +642,14 @@ _EC2 Info_
 
 * Current Ubuntu Base AMI (default): ami-4b4ba522 - Ubuntu 10.04 LTS amd64 server (Lucid Lynx) (us-east-1)
 
-* Alestic AMI list: http://alestic.com/
-* Ubuntu AMI list: http://uec-images.ubuntu.com/releases/lucid/release/
+* Alestic AMI list: [http://alestic.com](http://alestic.com)
+* Ubuntu AMI list: [http://uec-images.ubuntu.com/releases/lucid/release](http://uec-images.ubuntu.com/releases/lucid/release)
 
 ----
 
-* Current CentOS Base AMI: ami-4d42a924 - RightImage_CentOS_5.4_x64_v5.5.9_EBS
+* Current CentOS Base AMI: ami-4d42a924 - RightImage\_CentOS\_5.4\_x64\_v5.5.9\_EBS
 
-* RightScale AMI list: http://support.rightscale.com/18-Release_Notes/ServerTemplates_and_RightImages/Current#V5_Images
+* RightScale AMI list: [http://support.rightscale.com/18-Release_Notes/ServerTemplates\_and\_RightImages/Current#V5\_Images](http://support.rightscale.com/18-Release_Notes/ServerTemplates_and_RightImages/Current#V5_Images)
 
 ----
 &nbsp;

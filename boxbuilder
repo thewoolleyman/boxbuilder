@@ -48,7 +48,7 @@ trap onexit HUP INT QUIT TERM ERR
 setup_boxbuilderrc() {
   echo "$_log_prefix  Setting up $HOME/.boxbuilderrc and $HOME/.boxbuilderrc_download ..."
 
-  boxbuilderrc_url=${boxbuilderrc_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example"}
+  boxbuilderrc_download_url=${boxbuilderrc_download_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example"}
 
   echo "$_log_prefix  Creating $HOME/.boxbuilderrc to call $HOME/.boxbuilderrc_download ..."
   if [ -e $HOME/.boxbuilderrc  ]; then
@@ -57,14 +57,14 @@ setup_boxbuilderrc() {
     echo "$_log_prefix Creating $HOME/.boxbuilderrc which will source $HOME/.boxbuilderrc_download ..."
     _boxbuilderrc_contents=$( cat <<-LINES
 # This boxbuilder config file was created automatically
-# By default, it will download $boxbuilderrc_url
+# By default, it will download $boxbuilderrc_download_url
 # to $HOME/.boxbuilderrc_download and source (execute) it.
 # You can add custom settings to the bottom, or replace it entirely.
 
-boxbuilderrc_url="$boxbuilderrc_url"
-echo "Downloading AND overwriting $HOME/.boxbuilderrc_download from boxbuilderrc_url $boxbuilderrc_url"
-wget -O $HOME/.boxbuilderrc_download $boxbuilderrc_url
-echo "# WARNING: This file was automatically downloaded from $boxbuilderrc_url" >> $HOME/.boxbuilderrc_download
+boxbuilderrc_download_url="$boxbuilderrc_download_url"
+echo "Downloading AND overwriting $HOME/.boxbuilderrc_download from boxbuilderrc_download_url $boxbuilderrc_download_url"
+wget -O $HOME/.boxbuilderrc_download $boxbuilderrc_download_url
+echo "# WARNING: This file was automatically downloaded from $boxbuilderrc_download_url" >> $HOME/.boxbuilderrc_download
 echo "# It will be overwritten the next time boxbuilder runs." >> $HOME/.boxbuilderrc_download
 echo "# Put any local overrides at the bottom of $HOME/.boxbuilderrc ," >> $HOME/.boxbuilderrc_download
 echo "# which is created by default to source (execute) this file." >> $HOME/.boxbuilderrc_download
@@ -74,10 +74,8 @@ LINES
 )
     echo "$_boxbuilderrc_contents"
     echo "$_boxbuilderrc_contents" >> $HOME/.boxbuilderrc
+    echo "$_log_prefix  Finished creating $HOME/.boxbuilderrc ..."
   fi
-    
-  
-  echo "$_log_prefix  Finished setting up $HOME/.boxbuilderrc and $HOME/.boxbuilderrc_download ..."
 }
 
 setup() {
