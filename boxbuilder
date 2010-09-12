@@ -245,23 +245,18 @@ enable_rvm() {
 
 install_rvm_ruby() {
   echo "$_log_prefix  Installing RVM default ruby: $boxbuilder_default_ruby"
-  # set +o nounset
-  # disable_error_checking
-  
-  if [[ -z $($HOME/.rvm/bin/rvm info | head -n 1 | grep $boxbuilder_default_ruby) ]] ; then
-    $HOME/.rvm/bin/rvm install $boxbuilder_default_ruby
+  _rvm_info_output=$($HOME/.rvm/bin/rvm info)
+  _rvm_info_output_first_line=$(echo "$_rvm_info_output" | head -n 1)
+  if echo "$_rvm_info_output_first_line" | grep "$boxbuilder_default_ruby"; then
+    echo "$_log_prefix  Not installing RVM Ruby $boxbuilder_default_ruby because it is already installed ..."
+  else
+    $HOME/.rvm/bin/rvm install "$boxbuilder_default_ruby"
     if [[ ! $? = 0 ]]; then
-      # TODO: This manual check is only required because RVM can't be invoked without
-      # disable_error_checking.  See http://www.pivotaltracker.com/story/show/5021131
       echo "$_log_prefix  Error installing RVM default ruby"
       return 1
     fi
     echo "$_log_prefix  Finished installing RVM default ruby: $boxbuilder_default_ruby"
-  else
-    echo "$_log_prefix  Not installing RVM Ruby $boxbuilder_default_ruby because it is already installed ..."
   fi
-  # set -o nounset
-  # enable_error_checking
 }
 
 set_rvm_default_ruby() {
