@@ -35,11 +35,11 @@ _Instructions_
 
 **Step 1. Run the script to create a default box or AMI**
 
-By default, boxbuilder runs using a sample default config file at
-[http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc\_download\_example](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_default),
-which in turn references sample default chef repositories.
+By default, boxbuilder runs using a example default config file at
+[http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc\_download\_example](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example),
+which in turn references example default chef repositories.
 
-Your first step should be to run boxbuilder with the default config and ensure you can create a sample test box or AMI.  This
+Your first step should be to run boxbuilder with the default config and ensure you can create a example test box or AMI.  This
 will verify that your EC2 account and credentials are properly configured.
 
 To build a box, download and run
@@ -60,26 +60,37 @@ each script in the sections below.
 
 Check the output of the script for a success message, and/or any errors.  Log into the newly-built
 box (or an instance started from your newly-built AMI), and verify everything worked.  To verify,
-you can check that the sample test chef recipe created touchfiles in the home directory:
-[http://github.com/thewoolleyman/boxbuilder\_example\_main\_chef\_repo/blob/master/site-cookbooks/boxbuilder\_example\_main\_cookbook/recipes/default.rb](http://github.com/thewoolleyman/boxbuilder_example_main_chef_repo/blob/master/site-cookbooks/boxbuilder_example_main_cookbook/recipes/default.rb) and
-[http://github.com/thewoolleyman/boxbuilder\_example\_dependency\_chef\_repo/blob/master/site-cookbooks/boxbuilder\_example\_dependency\_cookbook/recipes/default.rb](http://github.com/thewoolleyman/boxbuilder_example_main_chef_repo/blob/master/site-cookbooks/boxbuilder_example_main_cookbook/recipes/default.rb)
+you can check that the example test chef recipes created touchfiles in the home directory:
+[http://github.com/thewoolleyman/boxbuilder\_example\_main\_chef\_repo/blob/master/cookbooks/boxbuilder\_example\_main\_cookbook/recipes/touchfile.rb](http://github.com/thewoolleyman/boxbuilder_example_main_chef_repo/blob/master/cookbooks/boxbuilder_example_main_cookbook/recipes/touchfile.rb) and
+[http://github.com/thewoolleyman/boxbuilder\_example\_dependency\_chef\_repo/blob/master/cookbooks/boxbuilder\_example\_dependency\_cookbook/recipes/touchfile.rb](http://github.com/thewoolleyman/boxbuilder_example_main_chef_repo/blob/master/cookbooks/boxbuilder_example_main_cookbook/recipes/touchfile.rb)
+
+If you have problems, try setting 'boxbuilder\_debug' to true.
 
 **Step 2. Create a custom box by using a custom config file and chef repos**
 
-To build a custom box, you must override the variables found in the sample default config file.
+To build a custom box, you must override the variables found in the example default config file.
 The easiest way to do this is to:
 
-1. Copy the sample boxbuilderrc\_download\_example config file and publish it in your own git repo (you can create one for free on github)
-2. Edit the variables in it to point to your own chef repositories, config path, and json path (and any other variables you want to add/override).
-3. Create or reuse custom chef cookbooks in your chef repositories at which you pointed.  If you wish, you can fork or copy the default ones and customize them.
+1. Copy the example boxbuilderrc\_download\_example config file to boxbuilderrc\_download and publish it in your own git repo (you can create one for free on github)
+2. (optional) Edit the variables in it to point to your own chef repositories, config path, and json path (and any other variables you want to add/override).
+3. (optional) Create or reuse custom chef cookbooks in your chef repositories at which you pointed.  If you wish, you can fork or copy the default ones and customize them.
+4. Set/export the 'boxbuilderrc\_url' variable to point to your custom boxbuilderrc\_download you published in your own git repo.  You can set/export boxbuilderrc\_url in the following ways:
+    * Directly on the command line (an error will be raised if an existing .boxbuilderrc exists and contains a different boxbuilderrc\_url)
+    * In $HOME/.boxbuilderrc if you are running 'boxbuilder\_bootstrap' or 'boxbuilder'
+    * In $HOME/.boxbuilder\_remote\_bootstraprc if you are running 'boxbuilder\_remote\_bootstrap'
+    * In $HOME/.boxbuilder\_build\_amirc if you are running 'boxbuilder\_build\_ami'
+    * In $HOME/.boxbuilder\_remote\_build\_amirc if you are running 'boxbuilder\_remote\_build\_ami'
 
-Once you have your custom config file and chef repos set up, run the script again and verify your chef cookbooks
+Once you have your custom config file and (optionally) chef repos set up, run the script again and verify your chef cookbooks
 and recipes build your custom box/AMI as expected.
+
+If you have problems, try setting 'boxbuilder\_debug' to true.
 
 **Step 3. Test/Debug/Improve your custom chef repos**
 
 If you have built a box (not an AMI), you can log in to it and directly modify the cloned chef repos
-under $HOME/.chef, and re-run $HOME/.boxbuilder/boxbuilder, or run chef-solo directly.  If you
+under $HOME/.chef, and re-run $HOME/.boxbuilder/boxbuilder, or run chef-solo directly with the
+proper options to specify your chef json and config files.  If you
 add a writeable origin to your git repos under $HOME/.chef, you can check your changes in directly
 from the box.
 
@@ -87,7 +98,7 @@ AMI builds are more complex to create and test.  Most importantly, you must be a
 runs in a chroot jail.  This means that some chef actions will not work as expected or at all.  To
 work around this, you can have a "chroot" recipe which runs after all others, and prevents any actions
 which are not chroot-safe from running.  For an example of this, see the Rails CI build (warning: incomplete and may move):
-[http://github.com/thewoolleyman/railsci\_chef\_repo/blob/master/site-cookbooks/railsci/chroot/recipes/default.rb](http://github.com/thewoolleyman/railsci_chef_repo/blob/master/site-cookbooks/railsci/chroot/recipes/default.rb)
+[http://github.com/thewoolleyman/railsci\_chef\_repo/blob/master/cookbooks/railsci/chroot/recipes/default.rb](http://github.com/thewoolleyman/railsci_chef_repo/blob/master/cookbooks/railsci/chroot/recipes/default.rb)
 
 The recommended way to work directly on a chef repo which builds an AMI is to run 'boxbuilder\_remote\_build\_ami'
 with the 'boxbuilder\_terminate\_ec2\_resources' variable set to 'false'.  This will leave the EC2 builder instance
@@ -116,14 +127,14 @@ Building a Box:
 
 1. 'boxbuilder\_remote\_bootstrap' (invoked from any Bash shell) issues SSH commands on the box being built to download and invoke...
 2. 'boxbuilder\_bootstrap' (on the box being built), which clones a boxbuilder git repo, and invokes...
-3. 'boxbuilder' (on the box being built) from the cloned repo.
+3. 'boxbuilder' (on the box being built) from the cloned repo, which builds the box according to the config specified in boxbuilderrc\_url.
 
 Building an AMI Image: 
 
 1. 'boxbuilder\_remote\_build\_ami' (invoked from any Bash shell with Java) installs the EC2 tools, starts an EC2 instance, and issues SSH commands on it built to download and invoke...
 2. 'boxbuilder\_build\_ami' (on the EC2 instance), which creates a chroot jail, and runs commands in the chroot jail to download and invoke...
 3. 'boxbuilder\_bootstrap' (in the chroot jail), which clones a boxbuilder git repo, and invokes...
-4. 'boxbuilder' (in the chroot jail) to build a 'box' in the chroot jail, which exits and returns control to...
+4. 'boxbuilder' (in the chroot jail) to build a 'box' in the chroot jail according to the config specified in boxbuilderrc\_url, which then exits and returns control to...
 5. 'boxbuilder\_bootstrap' (in the chroot jail), which exits and returns control to...
 6. 'boxbuilder\_build\_ami' (on the EC2 instance), which continues to create an AMI image of the chroot jail.
 
@@ -133,45 +144,76 @@ Building an AMI Image:
 &nbsp;
 
 
-_Flexible, Automatically Downloaded, Easily Overridable Configuration_
+_Configuration: Flexible, Automatically Downloaded, Auto-Updating, Easily Overridable, With Example Defaults_
 ======================================================================
+
+The configuration approach for boxbuilder is somewhat unorthodox, but it is designed to meet the following goals:
+
+* Flexible: Several different ways to specify configuration - in a manually edited file, in an auto-downloaded file
+  which lives in source control, in a file on a shared drive, etc...
+* Automatically Downloaded: If you specify 'boxbuilderrc\_url' with a URL to your 'boxbuilderrc_download' config file (which can be in a git repo),
+  it will be automatically downloaded and used.
+* Auto-Updating: The first time boxbuilder is run on a box, it creates a config file which will automatically re-download
+  your config file from 'boxbuilderrc\_url' every time boxbuilder is run.
+* Easily Overridable: There are several different points at which you can set or override boxbuilder config environment variables,
+  in the config files or on the command line.
+* Example Defaults: When run without specifying a custom config file url in 'boxbuilderrc\_url', boxbuilder will default to
+  using a simple example configuration file which points to example chef repositories.  This makes it easy to see how
+  boxbuilder works before you start creating custom configs and chef repos to build your own custom boxes.
+
+Here's the main features and supported usage for the various boxbuilder config approaches:
 
 * The boxbuilder script itself and the other scripts which invoke it locally or
   remotely are controlled via configuration values set in environment variables.
   Some have overridable defaults.  Others are required, and you will be prompted for
   them if they are not set.
-* Environment variables can also be specified in the config file ~/.boxbuilderrc.  
-  If it does not already exist, ~/.boxbuilderrc will automatically be created
-  to read and source ~/.boxbuilderrc\_download.
-* ~/.boxbuilderrc\_download will automatically be downloaded from the URL specified
-  in 'boxbuilderrc\_url' environment variable.  By default, it points to
-  the '[boxbuilderrc\_download\_example](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_download_default)'
-  file at [http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_download_default](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_download_default)
+* Environment variables can also be specified in the config file $HOME/.boxbuilderrc, or
+  files which it sources (executes).
+* If it does not already exist, $HOME/.boxbuilderrc will automatically be created
+  with commands to automatically set, download and source (execute)
+  $HOME/.boxbuilderrc\_download from the url specified in the 'boxbuilderrc\_url'
+  environment variable.  By default, it points to
+  the '[boxbuilderrc\_download\_example](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example)'
+  file at [http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc\_download\_example](http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example)
+* The auto-creation of a $HOME/.boxbuilderrc file is a simple "auto-update" mechanism, which
+  will result in the latest version of the config at 'boxbuilderrc\_url' to be automatically
+  downloaded and used every time boxbuilder is run.
 * This simple config-file-based approach allows you to have standard config files for different
-  machines stored in source control and always downloaded to ~/.boxbuilderrc\_download,
-  but still add local overrides to the bottom of ~/.boxbuilderrc after it sources
-  ~/.boxbuilderrc\_download if you want to test or debug by re-running the 'boxbuilder'
-  script locally on the box being built.  If you prefer, you can create a
-  ~/.boxbuilderrc file which which does not source ~/.boxbuilderrc\_download, and
-  instead set all variables directly in ~/.boxbuilderrc, via 'boxbuilder\_config' (see next bullet)
-  or in some other way you choose.
+  machines stored in source control and ensure the latest version is always
+  'auto-updated' to $HOME/.boxbuilderrc\_download.  This
+  means your config is always in source control.
+* Or, if you wish, you can add local overrides to the bottom of $HOME/.boxbuilderrc after it sources
+  $HOME/.boxbuilderrc\_download.  This is useful if you want to test or debug by re-running the 'boxbuilder'
+  script locally on the box being built.
+* If you prefer not to use the 'auto-update' functionality, you can are free to edit the
+  $HOME/.boxbuilderrc file to not automatically download and source $HOME/.boxbuilderrc\_download.
+  With this approach, you can set all variables directly in $HOME/.boxbuilderrc, 
+  set them via 'boxbuilder\_config' (see next bullet), or in some other way you choose.
 * Environment variables can also be set or overridden via the 'boxbuilder\_config'
   variable.  The contents of this variable will be evaluated as a line of bash scripting
-  AFTER the ~/.boxbuilderrc and ~/.boxbuilderrc\_download config files are sourced.
+  AFTER the $HOME/.boxbuilderrc config file is sourced.
   This provides another easy command-line-based approach to override environment variables
   when you are using the 'remote' scripts to set up a remote box or the
   'boxbuilder' or 'boxbuilder\_bootstrap' scripts directly.
+* Only the 'boxbuilder' (and 'boxbuilder_bootstrap') scripts directly source (execute)
+  the $HOME/.boxbuilderrc file, because they are the only scripts which execute on the
+  box (or AMI chroot jail image) being built.  All the other scripts (boxbuilder\_remote\_bootstrap,
+  boxbuilder\_build\_ami, and boxbuilder\_remote\_build\_ami) read their own dedicated
+  config files, named respectively boxbuilder\_remote\_bootstraprc,
+  boxbuilder\_build\_amirc, and boxbuilder\_remote\_build\_amirc.
 
 Here's an ordered summary of the process for reading configuration from various sources
 when the 'boxbuilder' script runs.  You can add/override environment variables at any point:
 
-0. Any pre-existing variables are, naturally, already set before 'boxbuilder' is invoked
-1. ~/.boxbuilderrc\_download is automatically downloaded
-2. ~/.boxbuilderrc is created by default, with one line to source ~/.boxbuilderrc\_download
-3. You can add overrides to the bottom of ~/.boxbuilderrc
-4. ~/.boxbuilderrc is sourced by the 'boxbuilder' script
-5. The contents of 'boxbuilder\_config' are evaluated.
-6. Any environment variables not set by this point will either have a default value set, or will
+1. Any pre-existing variables are, naturally, already set before 'boxbuilder' is invoked
+2. If $HOME/.boxbuilderrc doesn't exist, it is created by default, with commands to automatically download and source $HOME/.boxbuilderrc\_download
+   from 'boxbuilderrc_url'.  Then it is sourced (executed).  If $HOME/.boxbuilderrc DOES exist, it is never touched or modified.
+   You can always delete it and allow it to be recreated, or manually edit it.
+3. You can edit and re-publish the config file at the auto-updated 'boxbuilderrc\_url' specified in $HOME/.boxbuilderrc
+4. You can add any manual, local overrides to the bottom of $HOME/.boxbuilderrc
+5. $HOME/.boxbuilderrc is sourced by the 'boxbuilder' script
+6. The contents of 'boxbuilder\_config' are evaluated.
+7. Any environment variables not set by this point will either have a default value set, or will
    cause the script(s) to exit with a prompt if they are required.
 
 ----
@@ -182,13 +224,13 @@ _boxbuilder\_bootstrap script_
 ==============================
 
 'boxbuilder\_bootstrap' is a single downloadable helper script which will check out the
-boxbuilder project to ~/.boxbuilder, and run the main '~/.boxbuilder/boxbuilder' script.  It
+boxbuilder project to $HOME/.boxbuilder, and run the main '$HOME/.boxbuilder/boxbuilder' script.  It
 is intended to be easily invoked on a clean box via wget or curl with a bash one-liner.
 
 For example, log in or SSH to the box being built, and paste the following:
 
     wget -O /tmp/boxbuilder_bootstrap http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap && chmod +x /tmp/boxbuilder_bootstrap && /tmp/boxbuilder_bootstrap
-    # Be sure to log out or source ~/.bashrc after the first build
+    # Be sure to log out or source $HOME/.bashrc after the first build
 
 ----
 
@@ -209,7 +251,7 @@ the 'boxbuilder\_dir' directory has already been cloned, nothing will be downloa
 
 The contents of the 'boxbuilder\_config' variable should be Bash commands to export and override
 boxbuilder config variables from their default values or values which were loaded from
-~/.boxbuilderrc.  They will be evaluated by the 'boxbuilder\_bootstrap' script, which
+$HOME/.boxbuilderrc.  They will be evaluated by the 'boxbuilder\_bootstrap' script, which
 means they are also available when the 'boxbuilder' script is sourced by 'boxbuilder\_bootstrap'
 
     boxbuilder_config="export override_variable1=value; export override_variable2=value"
@@ -243,7 +285,7 @@ boxbuilder\_remote\_bootstrap environment variables
 
 **(REQUIRED to log into the remote box being built)** Set 'boxbuilder\_keypair' to
 the path of your private key which will allow you to log in to the
-box being built (you should already have your public key in ~/.ssh/authorized_keys).  Set 
+box being built (you should already have your public key in $HOME/.ssh/authorized_keys).  Set 
 'boxbuilder\_user' to the user, and 'boxbuilder\_host' to the hostname or IP address of the
 box being built.
 
@@ -255,7 +297,7 @@ box being built.
 
 The contents of the 'boxbuilder\_config' variable should be Bash commands to export and override
 boxbuilder config variables from their default values or values which will be loaded from
-~/.boxbuilderrc on the box build built.  It will be evaluated by the 'boxbuilder\_remote\_bootstrap'
+$HOME/.boxbuilderrc on the box build built.  It will be evaluated by the 'boxbuilder\_remote\_bootstrap'
 script; AND also passed on to the 'boxbuilder\_bootstrap' script when it is invoked via SSH on
 the remote box which is being built.
 
@@ -280,6 +322,7 @@ _boxbuilder script_
 preparing a box to run your custom chef cookbooks, downloading and running them.  When run 
 on a barebones box with a newly installed OS, it will do the following:
 
+* Process all configuration variables (see configuration section above)
 * Install basic packages required for next steps (which you can override/augment with chef)
 * Install Ruby via [RVM](http://rvm.beginrescueend.com/)
 * Install [chef-solo](http://wiki.opscode.com/display/chef/Chef+Solo)
@@ -291,14 +334,16 @@ on a barebones box with a newly installed OS, it will do the following:
 boxbuilder environment variables
 --------------------------------
 
-'boxbuilderrc\_url' is the URL to a boxbuilder config script which will be automatically
-downloaded to ~/.boxbuilderrc\_download on the box which is being built.  It is automatically
-sourced by the default auto-created ~/.boxbuilderrc file.
+'boxbuilderrc\_url' is the URL to a boxbuilder config script.  If $HOME/.boxbuilderrc does not exist,
+it will be created with commands to automatically download 'boxbuilderrc\_url' to
+$HOME/.boxbuilderrc\_download on the box which is being built and source (execute) it.
 
 To build a custom box, you can override 'boxbuilderrc\_url' to point to a custom configuration file
-which exports variables for chef repo locations and config.
+which exports variables for your custom chef repo locations and config.
 
-    boxbuilderrc_url=http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_default
+See more details in the instruction and configuration sections above.
+
+    boxbuilderrc_url=http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example
 
 ----
 
@@ -335,7 +380,7 @@ and created.
 ----
 
 **(REQUIRED to specify your chef repos)** 'boxbuilder\_chef\_repos' is a space-delimited list of Chef Git repositories which will be automatically
-downloaded by boxbuilder.  They will be checked out under $boxbuilder\_chef\_dir (~/.chef) on the box which is being built.
+downloaded by boxbuilder.  They will be checked out under $boxbuilder\_chef\_dir ($HOME/.chef) on the box which is being built.
 
 You must override this variable to point to custom chef repo(s) in order for boxbuilder to build a custom box.
 
@@ -636,7 +681,7 @@ Continuous Integration for Boxbuilder is at [http://ci.pivotallabs.com:3333/buil
 Boxbuilder has an integration test in test/boxbuilder_test which does the following:
 
 * Runs boxbuilder\_remote\_build\_ami to create an AMI with the default
-  sample configuration and chef repos
+  example configuration and chef repos
 * Starts a new EC2 instance from the newly-built AMI
 * Verifies the AMI was built correctly by performing assertions on the instance via SSH
 * Terminates/deletes all test resources (instance, AMI, and snapshot)
