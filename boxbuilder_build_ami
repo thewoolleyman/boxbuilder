@@ -172,16 +172,18 @@ set_ec2_credentials() {
 #  echo "$_log_prefix Finished installing ec2 tools ..."
 #}
 
-install_unzip_redhat() {
-  sudo yum install -y unzip
+install_packages_redhat() {
+  sudo yum install -y unzip java
+  export JAVA_HOME="/usr/lib/jvm/jre"
 }
 
-install_unzip_debian() {
-  sudo -E apt-get install -y unzip
+install_packages_debian() {
+  sudo -E apt-get install -y unzip default-jre-headless
+  export JAVA_HOME="/usr/lib/jvm/default-java"
 }
 
-install_unzip() {
-  install_unzip_$_platform
+install_packages() {
+  install_packages_$_platform
 }
 
 set_up_ec2_tools() {
