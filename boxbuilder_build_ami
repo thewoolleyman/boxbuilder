@@ -45,12 +45,22 @@ function enable_error_checking() {
 
 trap onexit HUP INT QUIT TERM ERR
 
-check_platform() {
-  if ! echo "$_uname" | grep -i 'ubuntu'; then
-    echo "$_log_prefix  Sorry, AMI building is currently only supported
-    on Ubuntu.  Pull requests are welcome! ..."
+detect_platform() {
+  _uname=$(uname -a)
+  if echo "$_uname" | grep -i 'debian'; then
+    _platform='debian'
+  elif echo "$_uname" | grep -i 'ubuntu'; then
+    _platform='debian'
+  elif [[ -f /etc/redhat-release ]]; then
+    _platform='redhat'
+  elif echo "$_uname" | grep -i 'darwin'; then
+    # TODO: for now, darwin platform assumes you are using HomeBrew
+    _platform='darwin'
+  else
+    echo "$_log_prefix error on line $LINENO - unable to determine supported platform from uname: '$_uname'"
     return 1
-  fi  
+  fi
+  echo "$_log_prefix  Platform detected as '$_platform'"
 }
 
 setup() {
@@ -130,6 +140,18 @@ set_ec2_credentials() {
 #  sudo -E apt-get install -y ec2-api-tools ec2-ami-tools
 #  echo "$_log_prefix Finished installing ec2 tools ..."
 #}
+
+install_unzip_redhat() {
+  sudo yum install -y unzip
+}
+
+install_unzip_debian() {
+  sudo -E apt-get install -y unzip
+}
+
+install_unzip() {
+  install_unzip_$_platform
+}
 
 set_up_ec2_tools() {
   echo "$_log_prefix Setting up EC2 tools ..."
@@ -313,7 +335,9 @@ copy_image_to_ami() {
 run() {
   echo "$_log_prefix Starting ..."
   setup
+  detect_platform
   set_ec2_credentials
+  install_unzip
   set_up_ec2_tools
   create_chroot_jail_from_base_image
   run_boxbuilder_bootstrap_in_chroot_jail_to_build_image
