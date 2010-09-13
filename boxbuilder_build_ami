@@ -226,7 +226,7 @@ create_chroot_jail_from_base_image() {
   else
     if [[ "$_imagesource" = *.img ]]; then
       echo "$_log_prefix Downloading image from $_imagesource ..."
-      wget --progress=dot:mega -O $_image $_imagesource
+      sudo wget --progress=dot:mega -O $_image $_imagesource
     else
       echo "$_log_prefix Downloading image from $_imagesource and unzipping to $_image ..."
       wget --progress=dot:mega -O- $_imagesource | sudo tar xzf - -C /mnt
