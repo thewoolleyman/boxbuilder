@@ -232,7 +232,6 @@ create_chroot_jail_from_base_image() {
       wget --progress=dot:mega -O- $_imagesource | sudo tar xzf - -C /mnt
     fi
   fi
-  sudo mkdir -p $_imagedir
 
   if which uec-resize-image; then
     # Only available on Ubuntu, but only needed on Ubuntu
@@ -250,7 +249,14 @@ create_chroot_jail_from_base_image() {
   fi 
 
   echo "$_log_prefix Mounting loop device at /dev/loop4 ..."
-  sudo mount -o loop=/dev/loop4 -t $_image_fs_type $_image $_imagedir
+  if [[ $_image_fs_type = 'squashfs' ]]; then
+    sudo mkdir -p $_imagedir-readonly
+    sudo mount -o loop=/dev/loop4 -t $_image_fs_type $_image $_imagedir-readonly
+    sudo cp -r $_imagedir-readonly $_imagedir
+  else
+    sudo mkdir -p $_imagedir
+    sudo mount -o loop=/dev/loop4 -t $_image_fs_type $_image $_imagedir
+  fi
 
   if which resize2fs; then
     echo "$_log_prefix Resizing loop device at /dev/loop4 to 5G ..."
