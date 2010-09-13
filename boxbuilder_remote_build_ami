@@ -201,11 +201,19 @@ get_builder_instance_host() {
   done
   echo
   echo "$_log_prefix Got hostname $boxbuilder_builder_instance_host for instance $boxbuilder_builder_instance_id"
-  echo "$_log_prefix Waiting for ssh connectivity to $boxbuilder_builder_instance_host ..."
-  while ssh_up=$(ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "echo 'ssh up'"); [[ "$ssh_up" != "ssh up" ]]; do
-    echo "$_log_prefix SSH connect response from $boxbuilder_builder_instance_host: $ssh_up"
-    echo "$_log_prefix Trying to SSH to $boxbuilder_builder_instance_host again after 3 seconds..."
-    sleep 5
+}
+
+verify_builder_instance_host_ssh_connectivity() {
+  echo "$_log_prefix Waiting for ssh connectivity to $boxbuilder_builder_instance_host for either $boxbuilder_user or root..."
+  while
+    boxbuilder_user_ssh_up=$(ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "echo 'ssh up'")
+    root_ssh_up=$(ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $EC2_KEYPAIR root@$boxbuilder_builder_instance_host "echo 'ssh up'")
+    [[ "$boxbuilder_user_ssh_up" != "ssh up" && "$root_ssh_up" != "ssh up" ]]
+    do
+      echo "$_log_prefix SSH connect response from $boxbuilder_user@$boxbuilder_builder_instance_host: $boxbuilder_user_ssh_up"
+      echo "$_log_prefix SSH connect response from root@$boxbuilder_builder_instance_host: $root_ssh_up"
+      echo "$_log_prefix Trying to SSH to $boxbuilder_builder_instance_host as $boxbuilder_user or root again after 5 seconds..."
+      sleep 5
   done
   echo
 }
@@ -423,6 +431,7 @@ run() {
       start_builder_instance
     fi
     get_builder_instance_host
+    verify_builder_instance_host_ssh_connectivity
     upload_ec2_credentials
     remote_build_ami
   fi
