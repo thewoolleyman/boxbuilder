@@ -212,7 +212,8 @@ set_up_ec2_tools() {
     echo "$_log_prefix Symlinking $_ec2_tools_path/$_top_level_zipfile_dir to $_ec2_api_tools_path ..."
     ln -sf $_ec2_tools_path/$_top_level_zipfile_dir $_ec2_api_tools_path # symlink to simple directory name without release date.
   fi
-  export PATH=$_ec2_api_tools_path/bin:$PATH
+  export EC2_HOME=$_ec2_api_tools_path
+  export PATH=$EC2_HOME/bin:$PATH
   echo "$_log_prefix Finished setting up EC2 tools ..."
 }
 
