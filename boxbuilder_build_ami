@@ -64,13 +64,12 @@ detect_platform() {
 }
 
 setup_image_vars_redhat() {
-  # TODO: UNTESTED!
   _release="5.4"
-  # RightImage\_CentOS\_5.4\_x64\_v5.5.9\_EBS
   _standard_ami_prefix="redhat-$_release-$_arch"
   _standard_ami_description="redhat $_release $_arch"
   _imagesource="http://mirrors.usc.edu/pub/linux/distributions/centos/$_release/os/$_arch/images/stage2.img"
   _image="/mnt/stage2.img"
+  _image_fs_type="squashfs"
   _imagedir="/mnt/stage2"
 }
 
@@ -83,6 +82,7 @@ setup_image_vars_debian() {
   _standard_ami_description="Ubuntu $_release $_codename $_tag $_arch"
   _imagesource="http://uec-images.ubuntu.com/releases/$_codename/release/unpacked/ubuntu-$_release-$_tag-uec-$_arch2.img.tar.gz"
   _image="/mnt/$_codename-$_tag-uec-$_arch2.img"
+  _image_fs_type="ext3"
   _imagedir="/mnt/$_codename-uec-$_arch2"
 }
 
@@ -250,7 +250,7 @@ create_chroot_jail_from_base_image() {
   fi 
 
   echo "$_log_prefix Mounting loop device at /dev/loop4 ..."
-  sudo mount -o loop=/dev/loop4 $_image $_imagedir
+  sudo mount -o loop=/dev/loop4 -t $_image_fs_type $_image $_imagedir
 
   echo "$_log_prefix Resizing loop device at /dev/loop4 to 5G ..."
   # Sometimes this is needed even though image was resized before mount with uec-resize-image?
