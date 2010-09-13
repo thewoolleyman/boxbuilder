@@ -252,9 +252,11 @@ create_chroot_jail_from_base_image() {
   echo "$_log_prefix Mounting loop device at /dev/loop4 ..."
   sudo mount -o loop=/dev/loop4 -t $_image_fs_type $_image $_imagedir
 
-  echo "$_log_prefix Resizing loop device at /dev/loop4 to 5G ..."
-  # Sometimes this is needed even though image was resized before mount with uec-resize-image?
-  sudo resize2fs /dev/loop4 5G
+  if which resize2fs; then
+    echo "$_log_prefix Resizing loop device at /dev/loop4 to 5G ..."
+    # Sometimes this is needed even though image was resized before mount with uec-resize-image?
+    sudo resize2fs /dev/loop4 5G
+  fi
 
   echo "$_log_prefix Performing initial setup on chroot jail at $_imagedir ..."
   # Allow network access from chroot environment
