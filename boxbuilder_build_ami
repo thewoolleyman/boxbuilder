@@ -340,7 +340,7 @@ copy_image_to_ami() {
   echo "$_log_prefix Mounting device /dev/sdi mounted at $_imagedir_ebs ..."
   sudo rm -rf $_imagedir_ebs
   sudo mkdir -p $_imagedir_ebs
-  sudo mount /dev/sdi $_imagedir_ebs
+  sudo mount -t ext3 /dev/sdi $_imagedir_ebs
   echo "$_log_prefix Copying built image from chroot jail at $_imagedir to EBS volume $_volumeid attached to device /dev/sdi mounted at $_imagedir_ebs ..."
   sudo tar -cSf - -C $_imagedir . | sudo tar xf - -C $_imagedir_ebs
 
