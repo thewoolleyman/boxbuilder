@@ -88,7 +88,20 @@ setup_image_vars_debian() {
 
 setup_image_vars() {
   echo "$_log_prefix  Image variable setup for platform $_platform..."
+
+  # TODO: Make sure these kernel and ramdisk values are correct for all platforms
+  if [[ $(uname -m) = "x86_64" ]] ; then
+    _arch=x86_64
+    _arch2=amd64
+    _ebsopts="--kernel=aki-0b4aa462 --ramdisk=ari-c515f6ac --block-device-mapping /dev/sdb=ephemeral0"
+  else
+    _arch=i386
+    _arch2=i386
+    _ebsopts="--kernel=aki-754aa41c --ramdisk=ari-0915f660  --block-device-mapping /dev/sda2=ephemeral0"
+  fi
+
   setup_image_vars_$_platform
+
   echo "$_log_prefix  Finished image variable setup for platform $_platform:"
   echo "_standard_ami_prefix=$_standard_ami_prefix"
   echo "_standard_ami_description=$_standard_ami_description"
@@ -113,17 +126,6 @@ setup() {
   EC2_CERT=${EC2_CERT:-""}
   EC2_PRIVATE_KEY=${EC2_PRIVATE_KEY:-""}
   
-  # TODO: Make sure these kernel and ramdisk values are correct for all platforms
-  if [[ $(uname -m) = "x86_64" ]] ; then
-    _arch=x86_64
-    _arch2=amd64
-    _ebsopts="--kernel=aki-0b4aa462 --ramdisk=ari-c515f6ac --block-device-mapping /dev/sdb=ephemeral0"
-  else
-    _arch=i386
-    _arch2=i386
-    _ebsopts="--kernel=aki-754aa41c --ramdisk=ari-0915f660  --block-device-mapping /dev/sda2=ephemeral0"
-  fi
-
   setup_image_vars
 
   echo "$_log_prefix  Finished environment variable setup:"
