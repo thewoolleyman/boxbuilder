@@ -244,7 +244,8 @@ create_chroot_jail_from_base_image() {
 
   echo "$_log_prefix Ensuring existing loop device at /dev/loop4 is unmounted ..."
   # Ensure existing loop device is unmounted (allows script to be run multiple times)
-  if [[ ! -z $(mount | grep '/dev/loop4') ]]; then
+  _mount_output=$(mount)
+  if echo $_mount_output | grep '/dev/loop4'; then
     sudo umount -dfl /dev/loop4
   fi 
 
@@ -288,10 +289,11 @@ run_boxbuilder_bootstrap_in_chroot_jail_to_build_image() {
 copy_image_to_ami() {
   echo "$_log_prefix Copying image to AMI ..."
   echo "$_log_prefix Cleaning up mounts and policy-rc.d in chroot jail before copying image ..."
-  if [[ ! -z $(sudo chroot $_imagedir mount | grep '/proc') ]]; then
+  _mount_output=$(sudo chroot $_imagedir mount)
+  if echo $_mount_output | grep '/proc'; then
     sudo chroot $_imagedir umount /proc
   fi
-  if [[ ! -z $(sudo chroot $_imagedir mount | grep '/dev/pts') ]]; then
+  if echo $_mount_output | grep '/dev/pts'; then
     sudo chroot $_imagedir umount /dev/pts
   fi
   sudo rm -f $_imagedir/usr/sbin/policy-rc.d
@@ -312,7 +314,8 @@ copy_image_to_ami() {
     ec2-delete-volume --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT $_existing_volumeid
   fi
   echo "$_log_prefix Ensuring nothing is mounted at /dev/sdi ..."
-  if [[ ! -z $(sudo mount | grep '/dev/sdi') ]]; then
+  _mount_output=$(mount)
+  if echo $_mount_output | grep '/dev/sdi'; then
     echo "$_log_prefix /dev/sdi is already mounted.  Unmounting ..."
     sudo umount /dev/sdi
   fi
