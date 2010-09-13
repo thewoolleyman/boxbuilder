@@ -83,31 +83,6 @@ LINES
   fi
 }
 
-setup() {
-  echo "$_log_prefix  sourcing $HOME/.boxbuilderrc"
-  source $HOME/.boxbuilderrc
-  boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder=boxbuilder_config_placeholder_from_boxbuilder'}
-  eval $boxbuilder_config
-  boxbuilder_rvm_version=${boxbuilder_rvm_version:-$(curl -s http://rvm.beginrescueend.com/releases/stable-version.txt)}
-  boxbuilder_default_ruby=${boxbuilder_default:-"1.8.7-p174"}
-  boxbuilder_chef_repos=${boxbuilder_chef_repos:?"Please set 'boxbuilder_chef_repos' to a space-delimited list of Chef Git repositories"}
-  boxbuilder_chef_dir=${boxbuilder_chef_dir:-"$HOME/.chef"}
-  boxbuilder_chef_config_path=${boxbuilder_chef_config_path:?"Please set 'boxbuilder_chef_config_path' to the path of the Chef config file"}
-  boxbuilder_chef_json_path=${boxbuilder_chef_json_path:?"Please set 'boxbuilder_chef_json_path' to the path of the Chef JSON attributes file"}
-  boxbuilder_chef_gem_install_options=${boxbuilder_chef_gem_install_options:-"--no-ri --no-rdoc"}
-  
-  echo "$_log_prefix  Environment variables:"
-  echo "boxbuilder_config                    = $boxbuilder_config"
-  echo "boxbuilder_rvm_version               = $boxbuilder_rvm_version"
-  echo "boxbuilder_default_ruby              = $boxbuilder_default_ruby"
-  echo "boxbuilder_chef_repos                = $boxbuilder_chef_repos"
-  echo "boxbuilder_chef_dir                  = $boxbuilder_chef_dir"
-  echo "boxbuilder_chef_config_path          = $boxbuilder_chef_config_path"
-  echo "boxbuilder_chef_json_path            = $boxbuilder_chef_json_path"
-  echo "boxbuilder_chef_gem_install_options  = $boxbuilder_chef_gem_install_options"
-  
-}
-
 detect_platform() {
   _uname=$(uname -mprsv) # everything except nodename
   if echo "$_uname" | grep -i 'debian'; then
@@ -124,6 +99,51 @@ detect_platform() {
     return 1
   fi
   echo "$_log_prefix  Platform detected as '$_platform'"
+}
+
+setup() {
+  echo "$_log_prefix  sourcing $HOME/.boxbuilderrc"
+  source $HOME/.boxbuilderrc
+  boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder=boxbuilder_config_placeholder_from_boxbuilder'}
+  eval $boxbuilder_config
+  boxbuilder_rvm_version=${boxbuilder_rvm_version:-$(curl -s http://rvm.beginrescueend.com/releases/stable-version.txt)}
+  boxbuilder_default_ruby=${boxbuilder_default:-"1.8.7-p174"}
+  boxbuilder_chef_repos=${boxbuilder_chef_repos:?"Please set 'boxbuilder_chef_repos' to a space-delimited list of Chef Git repositories"}
+  boxbuilder_chef_dir=${boxbuilder_chef_dir:-"$HOME/.chef"}
+  boxbuilder_chef_config_path=${boxbuilder_chef_config_path:?"Please set 'boxbuilder_chef_config_path' to the path of the Chef config file"}
+  boxbuilder_chef_json_path=${boxbuilder_chef_json_path:?"Please set 'boxbuilder_chef_json_path' to the path of the Chef JSON attributes file"}
+  boxbuilder_chef_gem_install_options=${boxbuilder_chef_gem_install_options:-"--no-ri --no-rdoc"}
+
+  echo "$_log_prefix  Environment variables:"
+  echo "boxbuilder_config                    = $boxbuilder_config"
+  echo "boxbuilder_rvm_version               = $boxbuilder_rvm_version"
+  echo "boxbuilder_default_ruby              = $boxbuilder_default_ruby"
+  echo "boxbuilder_chef_repos                = $boxbuilder_chef_repos"
+  echo "boxbuilder_chef_dir                  = $boxbuilder_chef_dir"
+  echo "boxbuilder_chef_config_path          = $boxbuilder_chef_config_path"
+  echo "boxbuilder_chef_json_path            = $boxbuilder_chef_json_path"
+  echo "boxbuilder_chef_gem_install_options  = $boxbuilder_chef_gem_install_options"
+
+}
+
+prerequisite_packages_redhat() {
+  # TODO: can be pruned, taken directly from http://support.rightscale.com/index.php?title=06-FAQs/FAQ_0103_-_How_do_I_make_any_Amazon_Machine_Image_(AMI)_capable_of_running_RightScripts%3F
+  echo "wget mlocate nano logrotate ruby ruby-devel ruby-docs ruby-irb ruby-libs ruby-mode ruby-rdoc ruby-ri ruby-tcltk syslog-ng postfix openssl openssh openssh-askpass openssh-clients openssh-server curl gcc* zip unzip bison flex compat-libstdc++-296 cvs subversion autoconf automake libtool compat-gcc-34-g77 mutt sysstat rpm-build fping vim-common vim-enhanced rrdtool-1.2.27 rrdtool-devel-1.2.27 rrdtool-doc-1.2.27 rrdtool-perl-1.2.27 rrdtool-python-1.2.27 rrdtool-ruby-1.2.27 rrdtool-tcl-1.2.27 pkgconfig lynx screen yum-utils bwm-ng createrepo redhat-rpm-config redhat-lsb rsync java"
+}
+
+package_status_check_redhat() {
+  disable_error_checking
+  _package_status=$(rpm -qa | grep -iE "$_package_name" | grep "$_package_version")
+  enable_error_checking
+  echo $_package_status
+}
+
+install_package_redhat() {
+  if grep 'gpgcheck=1' /etc/yum.conf; then
+    sudo sed -i'.bak' -e 's/gpgcheck=1/gpgcheck=0/' /etc/yum.conf
+  fi
+  echo "$_log_prefix  Installing package: $_package"
+  sudo yum install -y $_package
 }
 
 prerequisite_packages_debian() {
@@ -346,8 +366,8 @@ run_chef() {
 run() {
   echo "$_log_prefix Starting ..."
   setup_boxbuilderrc
-  setup
   detect_platform
+  setup
   install_packages
   setup_boxbuilderrc
   setup_rvm

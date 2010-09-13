@@ -63,6 +63,40 @@ detect_platform() {
   echo "$_log_prefix  Platform detected as '$_platform'"
 }
 
+setup_image_vars_redhat() {
+  # TODO: UNTESTED!
+  _release="5.4"
+  # RightImage\_CentOS\_5.4\_x64\_v5.5.9\_EBS
+  _standard_ami_prefix="redhat-$_release-$_arch"
+  _standard_ami_description="redhat $_release $_arch"
+  _imagesource="http://mirrors.usc.edu/pub/linux/distributions/centos/$_release/os/$_arch/images/stage2.img"
+  _image="/mnt/stage2.img"
+  _imagedir="/mnt/stage2"
+}
+
+setup_image_vars_debian() {
+  _codename="lucid"
+  _release="10.04"
+  _tag="server"
+
+  _standard_ami_prefix="ubuntu-$_release-$_codename-$_tag-$_arch"
+  _standard_ami_description="Ubuntu $_release $_codename $_tag $_arch"
+  _imagesource="http://uec-images.ubuntu.com/releases/$_codename/release/unpacked/ubuntu-$_release-$_tag-uec-$_arch2.img.tar.gz"
+  _image="/mnt/$_codename-$_tag-uec-$_arch2.img"
+  _imagedir="/mnt/$_codename-uec-$_arch2"
+}
+
+setup_image_vars() {
+  echo "$_log_prefix  Image variable setup for platform $_platform..."
+  setup_image_vars_$_platform
+  echo "$_log_prefix  Finished image variable setup for platform $_platform:"
+  echo "_standard_ami_prefix=$_standard_ami_prefix"
+  echo "_standard_ami_description=$_standard_ami_description"
+  echo "_imagesource=$_imagesource"
+  echo "_image=$_image"
+  echo "_imagedir=$_imagedir"
+}
+
 setup() {
   echo "$_log_prefix  Environment variable setup ..."
   if [ -e $HOME/.boxbuilder_build_amirc ]; then
@@ -74,15 +108,12 @@ setup() {
   boxbuilder_bootstrap_url=${boxbuilder_bootstrap_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap"}
 
   boxbuilder_ami_prefix=${boxbuilder_ami_prefix:-"built-by-boxbuilder"}
-  
+  boxbuilder_ec2_api_tools_url=${boxbuilder_ec2_api_tools_url:-"http://s3.amazonaws.com/ec2-downloads/ec2-api-tools.zip"}
+
   EC2_CERT=${EC2_CERT:-""}
   EC2_PRIVATE_KEY=${EC2_PRIVATE_KEY:-""}
   
-  _codename=lucid
-  _release=10.04
-  _tag=server
-
-  # TODO: Make sure these kernel and ramdisk values are correct for lucid
+  # TODO: Make sure these kernel and ramdisk values are correct for all platforms
   if [[ $(uname -m) = "x86_64" ]] ; then
     _arch=x86_64
     _arch2=amd64
@@ -93,9 +124,7 @@ setup() {
     _ebsopts="--kernel=aki-754aa41c --ramdisk=ari-0915f660  --block-device-mapping /dev/sda2=ephemeral0"
   fi
 
-  _imagesource=http://uec-images.ubuntu.com/releases/$_codename/release/unpacked/ubuntu-$_release-$_tag-uec-$_arch2.img.tar.gz
-  _image=/mnt/$_codename-$_tag-uec-$_arch2.img
-  _imagedir=/mnt/$_codename-uec-$_arch2
+  setup_image_vars
 
   echo "$_log_prefix  Finished environment variable setup:"
   echo "boxbuilder_config=$boxbuilder_config"
@@ -256,8 +285,8 @@ copy_image_to_ami() {
   
   _size=15 # root disk in GB
   _now=$(date +%Y%m%d-%H%M)
-  _prefix="$boxbuilder_ami_prefix-ubuntu-$_release-$_codename-$_tag-$_arch-$_now"
-  _description="Ubuntu $_release $_codename $_tag $_arch $_now"
+  _full_ami_prefix="$boxbuilder_ami_prefix-$_standard_ami_prefix-$_now"
+  _full_ami_description=""Ubuntu $_standard_ami_description $_now"
 
   echo "$_log_prefix Ensuring no existing volume is already attached at /dev/sdi ..."
   # TODO: why do we need set +o errexit?
@@ -313,8 +342,8 @@ copy_image_to_ami() {
     do echo -n .; sleep 5; done
   _ec2_register_output=$(ec2-register --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
     --architecture $_arch \
-    --name "$_prefix" \
-    --description "$_description" \
+    --name "$_full_ami_prefix" \
+    --description "$_ami_description" \
     $_ebsopts \
     --snapshot "$_snapshotid")
   _newami=$(echo $_ec2_register_output | cut -f2)
@@ -326,16 +355,17 @@ copy_image_to_ami() {
   echo "boxbuilder_created_ami_id='$_newami'"
   echo "boxbuilder_created_ami_ebs_id='$_volumeid'"
   echo "boxbuilder_created_ami_ebs_snapshot_id='$_snapshotid'"
-  echo "boxbuilder_created_ami_prefix='$_prefix'"
-  echo "boxbuilder_created_ami_description='$_description'"
+  echo "boxbuilder_created_ami_prefix='$_full_ami_prefix'"
+  echo "boxbuilder_created_ami_description='$_ami_description'"
   echo "------------------------------------"
   echo "$_log_prefix Finished copying image to AMI ..."
 }
 
 run() {
   echo "$_log_prefix Starting ..."
-  setup
   detect_platform
+  setup_image_vars
+  setup
   set_ec2_credentials
   install_unzip
   set_up_ec2_tools
