@@ -121,15 +121,46 @@ set_ec2_credentials() {
   echo "$_log_prefix Finished setting EC2 credentials.  Using EC2_CERT=$EC2_CERT and EC2_PRIVATE_KEY=$EC2_PRIVATE_KEY ..."
 }
 
-install_ec2_tools() {
-  echo "$_log_prefix Installing ec2 tools ..."
-  echo "$_log_prefix Ensuring that multiverse is added to /etc/apt/sources.list so ec2 packages can be installed ..."
-  sudo sed -i".bak-$(date +%Y%m%d-%H%M)" -e 's/universe$/universe multiverse/' /etc/apt/sources.list
-  echo "$_log_prefix Updating apt and installing EC2 tools ..."
-  sudo apt-get update
-  # sudo -E apt-get dist-upgrade -y    # TODO: Why do we need this?  Left over from ESH's original AMI builder article.  Delete if unnecessary
-  sudo -E apt-get install -y ec2-api-tools ec2-ami-tools
-  echo "$_log_prefix Finished installing ec2 tools ..."
+#install_ec2_tools() {
+#  echo "$_log_prefix Installing ec2 tools ..."
+#  echo "$_log_prefix Ensuring that multiverse is added to /etc/apt/sources.list so ec2 packages can be installed ..."
+#  sudo sed -i".bak-$(date +%Y%m%d-%H%M)" -e 's/universe$/universe multiverse/' /etc/apt/sources.list
+#  echo "$_log_prefix Updating apt and installing EC2 tools ..."
+#  sudo apt-get update
+#  sudo -E apt-get install -y ec2-api-tools ec2-ami-tools
+#  echo "$_log_prefix Finished installing ec2 tools ..."
+#}
+
+set_up_ec2_tools() {
+  echo "$_log_prefix Setting up EC2 tools ..."
+
+  _ec2_tools_path=$HOME/.boxbuilder_ec2_tools
+  _ec2_api_tools_path=$_ec2_tools_path/ec2-api-tools
+  if [[ -x $_ec2_api_tools_path/bin/ec2-run-instances ]]; then
+    echo "$_log_prefix EC2 API Tools already exist at $_ec2_api_tools_path.  Not re-downloading ..."
+  else
+    mkdir -p $_ec2_tools_path
+    if [[ ! $(which unzip) ]]; then
+      echo "$_log_prefix ERROR: 'unzip' executable not available.  It is required to unzip auto-downloaded EC2 API Tools. Either put unzip with on your path, or manually unzip the EC2 API Tools to $_ec2_api_tools_path ..."
+      return 1
+    fi
+    _ec2_api_tools_zipfile=$_ec2_tools_path/${boxbuilder_ec2_api_tools_url##*/} # grabs last path component of url to use as zipfile name
+    echo "$_log_prefix EC2 API Tools do not exist at $_ec2_api_tools_path.  Downloading from $boxbuilder_ec2_api_tools_url to $_ec2_api_tools_path ..."
+    wget -O $_ec2_api_tools_zipfile $boxbuilder_ec2_api_tools_url
+    echo "$_log_prefix Reading top-level directory for $_ec2_api_tools_zipfile ..."
+    # Zipfile is structured with top-level directory containing the release date, so we must determine what it is, extract, and symlink it to _ec2_api_tools_path
+    disable_error_checking
+    _first_zipfile_listing_entry=$(unzip -l $_ec2_api_tools_zipfile | head -n4 | tail -n1) # _first_zipfile_listing_entry should be top-level zipfile dir
+    enable_error_checking
+    _top_level_zipfile_dir=${_first_zipfile_listing_entry##* } # grab just last space-delimited directory component from _first_zipfile_listing_entry
+    _top_level_zipfile_dir=${_top_level_zipfile_dir%%/} # strip trailing slash
+    echo "$_log_prefix Unzipping $_ec2_api_tools_zipfile to $_ec2_tools_path ..."
+    unzip -o -d $_ec2_tools_path $_ec2_api_tools_zipfile # Unzip to $HOME/.boxbuilder_ec2_tools
+    echo "$_log_prefix Symlinking $_ec2_tools_path/$_top_level_zipfile_dir to $_ec2_api_tools_path ..."
+    ln -sf $_ec2_tools_path/$_top_level_zipfile_dir $_ec2_api_tools_path # symlink to simple directory name without release date.
+  fi
+  export PATH=$_ec2_api_tools_path/bin:$PATH
+  echo "$_log_prefix Finished setting up EC2 tools ..."
 }
 
 create_chroot_jail_from_base_image() {
@@ -283,7 +314,7 @@ run() {
   echo "$_log_prefix Starting ..."
   setup
   set_ec2_credentials
-  install_ec2_tools
+  set_up_ec2_tools
   create_chroot_jail_from_base_image
   run_boxbuilder_bootstrap_in_chroot_jail_to_build_image
   copy_image_to_ami
