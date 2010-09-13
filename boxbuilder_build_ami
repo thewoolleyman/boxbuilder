@@ -220,10 +220,15 @@ set_up_ec2_tools() {
 create_chroot_jail_from_base_image() {
   echo "$_log_prefix Creating chroot jail from base image $_imagesource ..."
   if [[ -e $_image ]]; then
-    echo "$_log_prefix Unzipped image $_image already exists.  Not downloading again ..."
+    echo "$_log_prefix Image $_image already exists.  Not downloading again ..."
   else
-    echo "$_log_prefix Downloading image and unzipping to $_image ..."
-    wget --progress=dot:mega -O- $_imagesource | sudo tar xzf - -C /mnt
+    if [[ "$_imagesource" = *.img ]]; then
+      echo "$_log_prefix Downloading image from $_imagesource ..."
+      wget --progress=dot:mega -O $_image $_imagesource
+    else
+      echo "$_log_prefix Downloading image from $_imagesource and unzipping to $_image ..."
+      wget --progress=dot:mega -O- $_imagesource | sudo tar xzf - -C /mnt
+    fi
   fi
   sudo mkdir -p $_imagedir
 
