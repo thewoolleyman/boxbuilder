@@ -7,7 +7,7 @@ boxbuilder_debug=${boxbuilder_debug:-false}
 
 if [[ $boxbuilder_debug = true ]]; then
   export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
-  set –o verbose
+  set -o verbose
   set -o xtrace
 fi
 
