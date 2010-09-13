@@ -286,7 +286,7 @@ copy_image_to_ami() {
   _size=15 # root disk in GB
   _now=$(date +%Y%m%d-%H%M)
   _full_ami_prefix="$boxbuilder_ami_prefix-$_standard_ami_prefix-$_now"
-  _full_ami_description=""Ubuntu $_standard_ami_description $_now"
+  _full_ami_description="Ubuntu $_standard_ami_description $_now"
 
   echo "$_log_prefix Ensuring no existing volume is already attached at /dev/sdi ..."
   # TODO: why do we need set +o errexit?
