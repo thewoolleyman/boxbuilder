@@ -234,10 +234,13 @@ create_chroot_jail_from_base_image() {
   fi
   sudo mkdir -p $_imagedir
 
-  echo "$_log_prefix Resizing $_image to 5G ..."
-  # Resize image so we have enough space to install in chroot
-  # Not sure if one or both of uec-resize-image and resize2fs are needed
-  sudo uec-resize-image $_image 5G
+  if which uec-resize-image; then
+    # Only available on Ubuntu, but only needed on Ubuntu
+    echo "$_log_prefix Resizing $_image to 5G ..."
+    # Resize image so we have enough space to install in chroot
+    # Not sure if one or both of uec-resize-image and resize2fs are needed
+    sudo uec-resize-image $_image 5G
+  fi
 
   echo "$_log_prefix Ensuring existing loop device at /dev/loop4 is unmounted ..."
   # Ensure existing loop device is unmounted (allows script to be run multiple times)
