@@ -501,6 +501,7 @@ run() {
     fi
     get_builder_instance_host
     verify_builder_instance_host_ssh_connectivity
+    ensure_boxbuilder_user_exists
     upload_ec2_credentials
     remote_build_ami
   fi
