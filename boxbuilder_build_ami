@@ -377,7 +377,7 @@ run() {
   setup_image_vars
   setup
   set_ec2_credentials
-  install_unzip
+  install_packages
   set_up_ec2_tools
   create_chroot_jail_from_base_image
   run_boxbuilder_bootstrap_in_chroot_jail_to_build_image
