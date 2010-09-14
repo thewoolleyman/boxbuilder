@@ -322,6 +322,7 @@ remote_build_ami() {
   exec_remotely "chmod a+x $_boxbuilder_build_ami_script"
   echo "$_log_prefix Running $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
   _build_ami_output=$(exec_remotely_pseudo_tty "export boxbuilder_config='$boxbuilder_config' \
+    && export boxbuilder_user=$boxbuilder_user \
     && export boxbuilder_debug=$boxbuilder_debug \
     && $_boxbuilder_build_ami_script")
   echo "$_build_ami_output"

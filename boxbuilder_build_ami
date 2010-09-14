@@ -119,7 +119,7 @@ setup() {
   boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder_build_ami=boxbuilder_config_placeholder_from_boxbuilder_build_ami'}
   eval $boxbuilder_config
   boxbuilder_bootstrap_url=${boxbuilder_bootstrap_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap"}
-
+  boxbuilder_user=${boxbuilder_user:-"$USER"}
   boxbuilder_ami_prefix=${boxbuilder_ami_prefix:-"built-by-boxbuilder"}
   boxbuilder_ec2_api_tools_url=${boxbuilder_ec2_api_tools_url:-"http://s3.amazonaws.com/ec2-downloads/ec2-api-tools.zip"}
 
@@ -269,8 +269,10 @@ create_chroot_jail_from_base_image() {
   sudo cp /etc/resolv.conf $_imagedir/etc/
   # Remove hostname
   sudo rm -f $_imagedir/etc/hostname
-  sudo /usr/sbin/chroot $_imagedir su - ubuntu -c "touch /home/ubuntu/.bash_history"
-  sudo /usr/sbin/chroot $_imagedir apt-key adv --keyserver keyserver.ubuntu.com --recv-keys BE09C571
+  if [[ $_platform = 'debian' ]]; then
+    sudo /usr/sbin/chroot $_imagedir apt-key adv --keyserver keyserver.ubuntu.com --recv-keys BE09C571
+  fi
+  sudo /usr/sbin/chroot $_imagedir su - $boxbuilder_user -c "touch /home/$boxbuilder_user/.bash_history"
   sudo /usr/sbin/chroot $_imagedir mount -t proc none /proc
   sudo /usr/sbin/chroot $_imagedir mount -t devpts none /dev/pts
   echo "$_log_prefix Finished creating chroot jail from base image $_imagesource ..."
@@ -288,7 +290,7 @@ run_boxbuilder_bootstrap_in_chroot_jail_to_build_image() {
   sudo /usr/sbin/chroot $_imagedir chmod a+x $_boxbuilder_bootstrap_script
   echo "$_log_prefix Running $_boxbuilder_bootstrap_script ..."
   # TODO: does this pass everything in environment and $boxbuilder_config, or do we need to do more?
-  sudo /usr/sbin/chroot $_imagedir sudo -u ubuntu -i bash -c "export boxbuilder_config='$boxbuilder_config' \
+  sudo /usr/sbin/chroot $_imagedir sudo -u $boxbuilder_user -i bash -c "export boxbuilder_config='$boxbuilder_config' \
     && export boxbuilder_debug=$boxbuilder_debug \
     && $_boxbuilder_bootstrap_script"
   echo "$_log_prefix Finished running boxbuilder_bootstrap in chroot jail to build image ..."
@@ -309,7 +311,7 @@ copy_image_to_ami() {
   _size=15 # root disk in GB
   _now=$(date +%Y%m%d-%H%M)
   _full_ami_prefix="$boxbuilder_ami_prefix-$_standard_ami_prefix-$_now"
-  _full_ami_description="Ubuntu $_standard_ami_description $_now"
+  _full_ami_description="$_standard_ami_description $_now"
 
   echo "$_log_prefix Ensuring no existing volume is already attached at /dev/sdi ..."
   # TODO: why do we need set +o errexit?
