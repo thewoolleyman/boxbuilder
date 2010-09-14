@@ -263,6 +263,11 @@ create_chroot_jail_from_base_image() {
     # Sometimes this is needed even though image was resized before mount with uec-resize-image?
     sudo resize2fs /dev/loop4 5G
   fi
+
+  sudo /usr/sbin/chroot $_imagedir mount -t proc none /proc
+  sudo cp /proc/cpuinfo $_imagedir/proc/
+  sudo /usr/sbin/chroot $_imagedir mount -t devpts none /dev/pts
+
   echo "$_log_prefix Finished creating chroot jail from base image $_imagesource ..."
 }
 
@@ -331,8 +336,6 @@ perform_initial_chroot_jail_setup() {
     sudo /usr/sbin/chroot $_imagedir apt-key adv --keyserver keyserver.ubuntu.com --recv-keys BE09C571
   fi
   sudo /usr/sbin/chroot $_imagedir su - $boxbuilder_user -c "touch /home/$boxbuilder_user/.bash_history"
-  sudo /usr/sbin/chroot $_imagedir mount -t proc none /proc
-  sudo /usr/sbin/chroot $_imagedir mount -t devpts none /dev/pts
 }
 
 run_boxbuilder_bootstrap_in_chroot_jail_to_build_image() {
