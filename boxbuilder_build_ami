@@ -281,7 +281,9 @@ automatically created..."
   echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' does not exist, automatically creating it ..."
 
   if [[ $_platform = 'redhat' ]]; then
-    echo "$_log_prefix  Installing shodow-utils package to provide groupadd utility..."
+    echo "$_log_prefix  Installing yum in chroot jail..."
+    sudo yum -y installroot="$_imagedir" install yum
+    echo "$_log_prefix  Installing shadow-utils package in chroot jail to provide groupadd utility..."
     sudo /usr/sbin/chroot $_imagedir /usr/bin/yum install -y shadow-utils
   fi
 
