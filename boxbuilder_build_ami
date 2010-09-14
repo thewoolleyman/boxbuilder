@@ -265,7 +265,6 @@ create_chroot_jail_from_base_image() {
   fi
 
   sudo /usr/sbin/chroot $_imagedir mount -t proc none /proc
-  sudo cp /proc/cpuinfo $_imagedir/proc/
   sudo /usr/sbin/chroot $_imagedir mount -t devpts none /dev/pts
 
   echo "$_log_prefix Finished creating chroot jail from base image $_imagesource ..."
