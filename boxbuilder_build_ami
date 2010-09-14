@@ -173,7 +173,7 @@ set_ec2_credentials() {
 #}
 
 install_packages_redhat() {
-  sudo yum install -y unzip java
+  sudo yum install -y unzip java shadow-utils
   export JAVA_HOME="/usr/lib/jvm/jre"
 }
 
