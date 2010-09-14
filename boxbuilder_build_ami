@@ -265,6 +265,7 @@ create_chroot_jail_from_base_image() {
   fi
 
   sudo /usr/sbin/chroot $_imagedir mount -t proc none /proc
+  sudo mkdir $_imagedir/dev/pts
   sudo /usr/sbin/chroot $_imagedir mount -t devpts none /dev/pts
 
   echo "$_log_prefix Finished creating chroot jail from base image $_imagesource ..."
@@ -286,6 +287,8 @@ automatically created..."
 
   if [[ $_platform = 'redhat' ]]; then
     echo "$_log_prefix  Installing yum in chroot jail..."
+    # NOTE: Install of yum in chroot via --installroot brings a lot of packages with it,
+    #       using builder instances yum config (presumably).  Is this bad?
     sudo yum -y --installroot="$_imagedir" install yum
     echo "$_log_prefix  Installing shadow-utils package in chroot jail to provide groupadd utility..."
     sudo /usr/sbin/chroot $_imagedir /usr/bin/yum install -y shadow-utils
