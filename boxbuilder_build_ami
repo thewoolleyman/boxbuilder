@@ -279,6 +279,12 @@ automatically created..."
     return 0
   fi
   echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' does not exist, automatically creating it ..."
+
+  if [[ $_platform = 'redhat' ]]; then
+    echo "$_log_prefix  Installing shodow-utils package to provide groupadd utility..."
+    sudo /usr/sbin/chroot $_imagedir yum install -y shadow-utils
+  fi
+
   echo "$_log_prefix  Ensuring 'admin' group exists ..."
   sudo /usr/sbin/chroot $_imagedir groupadd -f admin
   _admin_gid=$(sudo /usr/sbin/chroot $_imagedir "grep 'admin' /etc/group | cut -d: -f3")
