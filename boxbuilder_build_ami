@@ -282,7 +282,7 @@ automatically created..."
 
   if [[ $_platform = 'redhat' ]]; then
     echo "$_log_prefix  Installing shodow-utils package to provide groupadd utility..."
-    sudo /usr/sbin/chroot $_imagedir yum install -y shadow-utils
+    sudo /usr/sbin/chroot $_imagedir /usr/bin/yum install -y shadow-utils
   fi
 
   echo "$_log_prefix  Ensuring 'admin' group exists ..."
