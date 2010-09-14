@@ -282,7 +282,7 @@ automatically created..."
 
   if [[ $_platform = 'redhat' ]]; then
     echo "$_log_prefix  Installing yum in chroot jail..."
-    sudo yum -y installroot="$_imagedir" install yum
+    sudo yum -y --installroot="$_imagedir" install yum
     echo "$_log_prefix  Installing shadow-utils package in chroot jail to provide groupadd utility..."
     sudo /usr/sbin/chroot $_imagedir /usr/bin/yum install -y shadow-utils
   fi
