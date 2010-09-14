@@ -278,6 +278,54 @@ create_chroot_jail_from_base_image() {
   echo "$_log_prefix Finished creating chroot jail from base image $_imagesource ..."
 }
 
+grant_nopasswd_sudo_access() {
+  echo "$_log_prefix  Checking no-password sudo access for 'admin' group in chroot jail ..."
+  if ! sudo /usr/sbin/chroot $_imagedir 'grep -e "%admin.*ALL.*=.*NOPASSWD.*:.*ALL" /etc/sudoers)'; then
+    echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
+    sudo /usr/sbin/chroot $_imagedir rm -f /tmp/sudoers.new
+    sudo /usr/sbin/chroot $_imagedir cp /etc/sudoers /etc/sudoers.bak
+    sudo /usr/sbin/chroot $_imagedir cp /etc/sudoers /tmp/sudoers.new
+    _new_sudoers_line="%admin ALL=NOPASSWD: ALL"
+    sudo /usr/sbin/chroot $_imagedir sh -c "echo \"$_new_sudoers_line\" >> /tmp/sudoers.new"
+    if ! sudo /usr/sbin/chroot $_imagedir visudo -c -s -f /tmp/sudoers.new; then
+      echo "$_log_prefix  error on line $LINENO -: Syntax error in /tmp/sudoers.new in chroot jail.  Please manually add this entry using visudo: $_new_sudoers_line"
+      return 1
+    fi
+    sudo /usr/sbin/chroot $_imagedir cp /tmp/sudoers.new /etc/sudoers
+  else
+    echo "$_log_prefix  admin group already appears to have NOPASSWD sudo access."
+  fi
+}
+
+ensure_boxbuilder_user_exists() {
+  echo "$_log_prefix  Ensuring boxbuilder_user '$boxbuilder_user' exists in chroot jail ..."
+  if [[ $boxbuilder_user = 'root' ]]; then
+    echo "$_log_prefix  boxbuilder_user cannot be root.  Please set \
+boxbuilder_user to a non-root user.  If it does not exist, it will be \
+automatically created..."
+    return 1
+  fi
+  if sudo /usr/sbin/chroot $_imagedir su - $boxbuilder_user; then
+    echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' already exists in chroot jail ..."
+    return 0
+  fi
+  echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' does not exist, automatically creating it ..."
+  echo "$_log_prefix  Ensuring 'admin' group exists ..."
+  sudo /usr/sbin/chroot $_imagedir groupadd -f admin
+  _admin_gid=$(sudo /usr/sbin/chroot $_imagedir "grep 'admin' /etc/group | cut -d: -f3")
+  echo "$_log_prefix  Automatically creating '$boxbuilder_user' user ..."
+  sudo /usr/sbin/chroot $_imagedir useradd $boxbuilder_user -m -g $_admin_gid
+  echo "$_log_prefix  Finding home dir for '$boxbuilder_user' user ..."
+  _boxbuilder_user_home=$(sudo /usr/sbin/chroot $_imagedir su - $boxbuilder_user -c "echo $HOME")
+  if sudo /usr/sbin/chroot $_imagedir su - $boxbuilder_user; then
+    echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' successfully created in chroot jail..."
+  else
+    echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' was NOT successfully created in chroot jail - something went wrong :( - try setting boxbuilder_debug=true ..."
+    return 1
+  fi
+  grant_nopasswd_sudo_access
+}
+
 run_boxbuilder_bootstrap_in_chroot_jail_to_build_image() {
   echo "$_log_prefix Running boxbuilder_bootstrap in chroot jail to build image ..."
   echo "$_log_prefix Performing custom setup in $_imagedir using script at $boxbuilder_bootstrap_url ..."
@@ -396,6 +444,7 @@ run() {
   install_packages
   set_up_ec2_tools
   create_chroot_jail_from_base_image
+  ensure_boxbuilder_user_exists
   run_boxbuilder_bootstrap_in_chroot_jail_to_build_image
   copy_image_to_ami
   echo "$_log_prefix Finished and exiting successfully"
