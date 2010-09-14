@@ -269,10 +269,10 @@ create_chroot_jail_from_base_image() {
   sudo cp /etc/resolv.conf $_imagedir/etc/
   # Remove hostname
   sudo rm -f $_imagedir/etc/hostname
-  sudo chroot $_imagedir su - ubuntu -c "touch /home/ubuntu/.bash_history"
-  sudo chroot $_imagedir apt-key adv --keyserver keyserver.ubuntu.com --recv-keys BE09C571
-  sudo chroot $_imagedir mount -t proc none /proc
-  sudo chroot $_imagedir mount -t devpts none /dev/pts
+  sudo /usr/sbin/chroot $_imagedir su - ubuntu -c "touch /home/ubuntu/.bash_history"
+  sudo /usr/sbin/chroot $_imagedir apt-key adv --keyserver keyserver.ubuntu.com --recv-keys BE09C571
+  sudo /usr/sbin/chroot $_imagedir mount -t proc none /proc
+  sudo /usr/sbin/chroot $_imagedir mount -t devpts none /dev/pts
   echo "$_log_prefix Finished creating chroot jail from base image $_imagesource ..."
 }
 
@@ -281,14 +281,14 @@ run_boxbuilder_bootstrap_in_chroot_jail_to_build_image() {
   echo "$_log_prefix Performing custom setup in $_imagedir using script at $boxbuilder_bootstrap_url ..."
   _boxbuilder_bootstrap_script=/tmp/${boxbuilder_bootstrap_url##*/} # grabs last path component of url to use as script name
   echo "$_log_prefix Downloading $_boxbuilder_bootstrap_script from $boxbuilder_bootstrap_url ..."
-  sudo chroot $_imagedir wget -O $_boxbuilder_bootstrap_script $boxbuilder_bootstrap_url
+  sudo /usr/sbin/chroot $_imagedir wget -O $_boxbuilder_bootstrap_script $boxbuilder_bootstrap_url
   echo "$_log_prefix $boxbuilder_bootstrap_url successfully downloaded to $_boxbuilder_bootstrap_script ..."
 
   echo "$_log_prefix Changing permissions on $_boxbuilder_bootstrap_script ..."
-  sudo chroot $_imagedir chmod a+x $_boxbuilder_bootstrap_script
+  sudo /usr/sbin/chroot $_imagedir chmod a+x $_boxbuilder_bootstrap_script
   echo "$_log_prefix Running $_boxbuilder_bootstrap_script ..."
   # TODO: does this pass everything in environment and $boxbuilder_config, or do we need to do more?
-  sudo chroot $_imagedir sudo -u ubuntu -i bash -c "export boxbuilder_config='$boxbuilder_config' \
+  sudo /usr/sbin/chroot $_imagedir sudo -u ubuntu -i bash -c "export boxbuilder_config='$boxbuilder_config' \
     && export boxbuilder_debug=$boxbuilder_debug \
     && $_boxbuilder_bootstrap_script"
   echo "$_log_prefix Finished running boxbuilder_bootstrap in chroot jail to build image ..."
@@ -297,12 +297,12 @@ run_boxbuilder_bootstrap_in_chroot_jail_to_build_image() {
 copy_image_to_ami() {
   echo "$_log_prefix Copying image to AMI ..."
   echo "$_log_prefix Cleaning up mounts and policy-rc.d in chroot jail before copying image ..."
-  _mount_output=$(sudo chroot $_imagedir mount)
+  _mount_output=$(sudo /usr/sbin/chroot $_imagedir mount)
   if echo $_mount_output | grep '/proc'; then
-    sudo chroot $_imagedir umount /proc
+    sudo /usr/sbin/chroot $_imagedir umount /proc
   fi
   if echo $_mount_output | grep '/dev/pts'; then
-    sudo chroot $_imagedir umount /dev/pts
+    sudo /usr/sbin/chroot $_imagedir umount /dev/pts
   fi
   sudo rm -f $_imagedir/usr/sbin/policy-rc.d
   
