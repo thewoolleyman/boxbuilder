@@ -109,6 +109,7 @@ automatically created if there is a valid no-passphrase SSH key to the root user
   fi
   if exec_remotely 'id'; then
     echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' already exists on $boxbuilder_host ..."
+    # TODO: should verify admin group exists before returning    
     return 0
   fi
   echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' does not exist, checking for root access on $boxbuilder_host to automatically create it ..."
