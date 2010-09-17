@@ -127,8 +127,13 @@ setup() {
 }
 
 prerequisite_packages_redhat() {
-  # TODO: can be pruned, taken directly from http://support.rightscale.com/index.php?title=06-FAQs/FAQ_0103_-_How_do_I_make_any_Amazon_Machine_Image_(AMI)_capable_of_running_RightScripts%3F
-  echo "wget mlocate nano logrotate ruby ruby-devel ruby-docs ruby-irb ruby-libs ruby-mode ruby-rdoc ruby-ri ruby-tcltk syslog-ng postfix openssl openssh openssh-askpass openssh-clients openssh-server curl gcc* zip unzip bison flex compat-libstdc++-296 cvs subversion autoconf automake libtool compat-gcc-34-g77 mutt sysstat rpm-build fping vim-common vim-enhanced rrdtool-1.2.27 rrdtool-devel-1.2.27 rrdtool-doc-1.2.27 rrdtool-perl-1.2.27 rrdtool-python-1.2.27 rrdtool-ruby-1.2.27 rrdtool-tcl-1.2.27 pkgconfig lynx screen yum-utils bwm-ng createrepo redhat-rpm-config redhat-lsb rsync java"
+  # This is the list taken directly from http://support.rightscale.com/index.php?title=06-FAQs/FAQ_0103_-_How_do_I_make_any_Amazon_Machine_Image_(AMI)_capable_of_running_RightScripts%3F
+  # echo "wget mlocate nano logrotate ruby ruby-devel ruby-docs ruby-irb ruby-libs ruby-mode ruby-rdoc ruby-ri ruby-tcltk syslog-ng postfix openssl openssh openssh-askpass openssh-clients openssh-server curl gcc* zip unzip bison flex compat-libstdc++-296 cvs subversion autoconf automake libtool compat-gcc-34-g77 mutt sysstat rpm-build fping vim-common vim-enhanced rrdtool-1.2.27 rrdtool-devel-1.2.27 rrdtool-doc-1.2.27 rrdtool-perl-1.2.27 rrdtool-python-1.2.27 rrdtool-ruby-1.2.27 rrdtool-tcl-1.2.27 pkgconfig lynx screen yum-utils bwm-ng createrepo redhat-rpm-config redhat-lsb rsync java"
+
+  # This is the list from local_bootstrap.sh
+  # echo "yum install git readline-devel readline bison file gcc gettext-devel expat-devel curl-devel libzip-devel openssl-devel openssl"
+
+  echo "gcc autoconf automake zlib-devel openssl-devel readline-devel bison libxml2-devel git curl"
 }
 
 package_status_check_redhat() {
