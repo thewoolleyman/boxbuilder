@@ -333,7 +333,7 @@ grant_nopasswd_sudo_access_in_chroot() {
   _sudoers_additional_error_instructions='Please use visudo to manually make these changes: '
   if $_needs_requiretty_sudoers_removed; then
     sudo /usr/sbin/chroot $_imagedir "cat /etc/sudoers | grep -v 'requiretty' > /tmp/sudoers.new"
-    $_sudoers_additional_error_instructions="Remove 'requiretty' line. "
+    _sudoers_additional_error_instructions="$_sudoers_additional_error_instructions Remove 'requiretty' line. "
   else
     sudo /usr/sbin/chroot $_imagedir "cp /etc/sudoers /tmp/sudoers.new"
   fi
@@ -343,7 +343,7 @@ grant_nopasswd_sudo_access_in_chroot() {
     echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
     new_sudoers_line="%admin ALL=NOPASSWD: ALL"
     sudo /usr/sbin/chroot $_imagedir sh -c "echo '$new_sudoers_line' >> /tmp/sudoers.new"
-    $_sudoers_additional_error_instructions="Add a line '$new_sudoers_line'. "
+    _sudoers_additional_error_instructions="$_sudoers_additional_error_instructions Add a line '$new_sudoers_line'. "
   fi
 
   if [[ ! -e $_imagedir/tmp/sudoers.new ]]; then

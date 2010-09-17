@@ -111,7 +111,7 @@ grant_nopasswd_sudo_access() {
   _sudoers_additional_error_instructions='Please use visudo to manually make these changes: '
   if $_needs_requiretty_sudoers_removed; then
     sudo cat /etc/sudoers | grep -v 'requiretty' > /tmp/sudoers.new
-    $_sudoers_additional_error_instructions="Remove 'requiretty' line. "
+    _sudoers_additional_error_instructions="$_sudoers_additional_error_instructions Remove 'requiretty' line. "
   else
     sudo cp /etc/sudoers /tmp/sudoers.new
   fi
@@ -121,7 +121,7 @@ grant_nopasswd_sudo_access() {
     echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
     new_sudoers_line="%admin ALL=NOPASSWD: ALL"
     sudo sh -c "echo \"$new_sudoers_line\" >> /tmp/sudoers.new"
-    $_sudoers_additional_error_instructions="Add a line '$new_sudoers_line'. "
+    _sudoers_additional_error_instructions="$_sudoers_additional_error_instructions Add a line '$new_sudoers_line'. "
   fi
 
   if [[ ! -e /tmp/sudoers.new ]]; then
