@@ -337,6 +337,7 @@ grant_nopasswd_sudo_access_in_chroot() {
   else
     sudo /usr/sbin/chroot $_imagedir "cp /etc/sudoers /tmp/sudoers.new"
   fi
+  sudo /usr/sbin/chroot $_imagedir "chmod 0440 /tmp/sudoers.new"
 
   if $_needs_nopasswd_sudoers_added; then
     echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"

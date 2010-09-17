@@ -265,6 +265,7 @@ grant_nopasswd_sudo_access_from_boxbuilder_user() {
   else
     exec_remotely_quiet "sudo cp /etc/sudoers /tmp/sudoers.new"
   fi
+  exec_remotely_quiet "chmod 0440 /tmp/sudoers.new"
 
   if $_needs_nopasswd_sudoers_added; then
     echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
@@ -312,6 +313,7 @@ grant_nopasswd_sudo_access_from_root() {
   else
     exec_remotely_quiet_root "cp /etc/sudoers /tmp/sudoers.new"
   fi
+  exec_remotely_quiet_root "chmod 0440 /tmp/sudoers.new"
 
   if $_needs_nopasswd_sudoers_added; then
     echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"

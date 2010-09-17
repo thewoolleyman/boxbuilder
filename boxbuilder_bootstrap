@@ -115,6 +115,7 @@ grant_nopasswd_sudo_access() {
   else
     sudo cp /etc/sudoers /tmp/sudoers.new
   fi
+  sudo chmod 0440 /tmp/sudoers.new
 
   if $_needs_nopasswd_sudoers_added; then
     echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
