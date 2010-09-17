@@ -72,16 +72,18 @@ onexit_hook() {
 
 setup() {
   export boxbuilder_debug
+  export boxbuilder_builder_instance_ami_id
 
   if [ -e $HOME/.boxbuilder_testrc ]; then
     # Set test vars
     source $HOME/.boxbuilder_testrc # don't use real .boxbuilderrc file, we don't want to pollute it with test vars
   fi
   export PATH=$EC2_HOME/bin:$PATH # TODO: this should be automatic, see tracker stories
-  boxbuilder_ec2_resource_tag='boxbuilder_temp_resource_safe_to_terminate'
+  boxbuilder_ec2_resource_tag=${boxbuilder_ec2_resource_tag:-"boxbuilder_temp_resource_safe_to_terminate"}
   # TODO: grep boxbuilder_keypair value out of boxbuilder_remote_build_ami output
   boxbuilder_keypair=${boxbuilder_keypair:?Please set 'boxbuilder_keypair' to the path of your ssh private key file}
   boxbuilder_user=${boxbuilder_user:-'ubuntu'}
+  export boxbuilder_user
   boxbuilder_dir="$(dirname $0)/.."
   boxbuilder_terminate_ec2_resources=${boxbuilder_terminate_ec2_resources:-true}
   boxbuilder_config="export boxbuilder_ami_prefix=$boxbuilder_ec2_resource_tag; export boxbuilder_terminate_ec2_resources=$boxbuilder_terminate_ec2_resources; export boxbuilder_user=$boxbuilder_user"
@@ -182,7 +184,7 @@ test_boxbuilder_remote_bootstrap() {
 
 suite_centos() {
   echo "$_log_prefix Starting tests on CentOS ..."
-  boxbuilder_user=${boxbuilder_user:-"root"}
+  boxbuilder_user=${boxbuilder_user:-"centos"}
   boxbuilder_builder_instance_ami_id=${boxbuilder_builder_instance_ami_id:-"ami-4d42a924"}
   setup
   test_can_log_in_as_user
