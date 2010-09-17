@@ -137,7 +137,7 @@ install_git_debian() {
 }
 
 yum_setup() {
-  cat > /etc/yum.repos.d/boxbuilder_epel.repo << here
+  cat > /tmp/boxbuilder_epel.repo << here
 [epel]
 name=Extra Packages for Enterprise Linux 5 - \$basearch
 mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=epel-5&arch=\$basearch
