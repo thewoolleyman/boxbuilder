@@ -42,10 +42,14 @@ exec_remotely_quiet() {
   for arg; do
     arg_array[i++]=$(printf %q "$arg")
   done
-  ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_built_instance_host "$@"
+  ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $boxbuilder_keypair $boxbuilder_user@$boxbuilder_host "$@"
 }
 
 onexit_hook() {
+  if ! $_test_remote_build_ami; then
+    # guard clause to skip onexit_hook if we didn't start any EC2 resources
+    return 0
+  fi
   if [[ $boxbuilder_terminate_ec2_resources = true ]]; then
     if [[ -n $boxbuilder_built_instance_id ]]; then
       # delete instance
@@ -71,22 +75,34 @@ onexit_hook() {
 }
 
 setup() {
-  export boxbuilder_debug
-  export boxbuilder_builder_instance_ami_id
+  # setup basic variables for test
+  boxbuilder_dir="$(dirname $0)/.."
+  boxbuilder_keypair=${boxbuilder_keypair:?Please set 'boxbuilder_keypair' to the path of your ssh private key file}
 
-  if [ -e $HOME/.boxbuilder_testrc ]; then
-    # Set test vars
-    source $HOME/.boxbuilder_testrc # don't use real .boxbuilderrc file, we don't want to pollute it with test vars
-  fi
+  boxbuilder_config=${boxbuilder_config:-'echo'}
+
+  boxbuilder_config="$boxbuilder_config; export boxbuilder_user=$boxbuilder_user"
+
+  # override a chef config value via boxbuilder_config before the test build run, it will be tested later
+  overridden_touchfile_value='boxbuilder_example_main_chef_config_value_overridden'
+  boxbuilder_config="$boxbuilder_config; export boxbuilder_example_main_chef_config_key='$overridden_touchfile_value'"
+  export boxbuilder_config
+
+  export boxbuilder_keypair
+  export boxbuilder_debug
+}
+
+run_boxbuilder_remote_build_ami() {
+  export boxbuilder_builder_instance_ami_id
   export PATH=$EC2_HOME/bin:$PATH # TODO: this should be automatic, see tracker stories
   boxbuilder_ec2_resource_tag=${boxbuilder_ec2_resource_tag:-"boxbuilder_temp_resource_safe_to_terminate"}
   # TODO: grep boxbuilder_keypair value out of boxbuilder_remote_build_ami output
-  boxbuilder_keypair=${boxbuilder_keypair:?Please set 'boxbuilder_keypair' to the path of your ssh private key file}
-  boxbuilder_user=${boxbuilder_user:-'ubuntu'}
-  export boxbuilder_user
-  boxbuilder_dir="$(dirname $0)/.."
-  boxbuilder_terminate_ec2_resources=${boxbuilder_terminate_ec2_resources:-true}
-  boxbuilder_config="export boxbuilder_ami_prefix=$boxbuilder_ec2_resource_tag; export boxbuilder_terminate_ec2_resources=$boxbuilder_terminate_ec2_resources; export boxbuilder_user=$boxbuilder_user"
+
+  boxbuilder_terminate_ec2_resources=${boxbuilder_terminate_ec2_resources:-}
+  export boxbuilder_terminate_ec2_resources
+
+  # add specific variables for building AMIs to boxbuilder_config
+  boxbuilder_config="$boxbuilder_config; export boxbuilder_ami_prefix=$boxbuilder_ec2_resource_tag"
   export boxbuilder_config
 
   # initialize local script variables to avoid unbound variable errors
@@ -96,10 +112,10 @@ setup() {
   boxbuilder_created_ami_ebs_snapshot_id=${boxbuilder_created_ami_ebs_snapshot_id:-''}
 
   set +o xtrace # even if boxbuilder_debug is on, always turn off tracing
-                # while running build and grabbing output.
-                # dumping entire build output makes test output huge and confusing
+                # while running boxbuilder_remote_build_ami and grabbing output,
+                # test output is huge and confusing
 
-  # Invoke boxbuilder_remote_build_ami to exercise all boxbuilder scripts except boxbuilder_bootstrap
+  # Invoke boxbuilder_remote_build_ami to build a test AMI
   boxbuilder_remote_build_ami_output=$($boxbuilder_dir/boxbuilder_remote_build_ami)
 
   # Start built AMI
@@ -122,6 +138,8 @@ setup() {
   boxbuilder_created_ami_id="$(tr -d '\r' < <(echo $boxbuilder_created_ami_id) )"
   boxbuilder_created_ami_ebs_snapshot_id="$(tr -d '\r' < <(echo $boxbuilder_created_ami_ebs_snapshot_id) )"
 
+  # Start up an instance from the test AMI we just built, so we can perform tests to confirm
+  # that the AMI was created correctly
   boxbuilder_built_instance_id=$(ec2-run-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
     --key "$EC2_KEYPAIR_NAME" \
     --availability-zone us-east-1a \
@@ -129,6 +147,8 @@ setup() {
     "$boxbuilder_created_ami_id" \
     -d "$boxbuilder_ec2_resource_tag" \
     | egrep ^INSTANCE | cut -f2)
+
+  # wait for the instance to start
   while boxbuilder_built_instance_host=$(ec2-describe-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
      "$boxbuilder_built_instance_id" | \
     egrep ^INSTANCE | cut -f4) && [[ -z $boxbuilder_built_instance_host ]]; do
@@ -142,6 +162,27 @@ setup() {
     echo "$_log_prefix Trying to SSH to $boxbuilder_built_instance_host again after 3 seconds..."
     sleep 5
   done
+  boxbuilder_host=$boxbuilder_built_instance_host
+}
+
+run_boxbuilder_remote_bootstrap() {
+#  set +o xtrace # even if boxbuilder_debug is on, always turn off tracing
+#                # while running boxbuilder_remote_bootstrap and grabbing output,
+#                # test output is huge and confusing
+
+  # Run boxbuilder_remote_bootstrap on boxbuilder_host
+  boxbuilder_remote_bootstrap_output=$($boxbuilder_dir/boxbuilder_remote_bootstrap)
+
+#  if [[ $boxbuilder_debug = true ]]; then
+#    # turn back on tracing if we are debugging
+#    set -o xtrace
+#  fi
+
+  echo; echo; echo
+  echo "-------- BEGIN OUTPUT OF boxbuilder_remote_bootstrap --------"
+  echo "$boxbuilder_remote_bootstrap_output"
+  echo "-------- END OUTPUT OF boxbuilder_remote_bootstrap --------"
+  echo; echo; echo
 }
 
 test_can_log_in_as_user() {
@@ -155,64 +196,77 @@ test_can_install_rvm() {
 }
 
 test_can_set_up_and_run_chef() {
-  example_main_touchfile_contents=$(exec_remotely_quiet 'cat $HOME/.tmp_boxbuilder_example_main_chef_cookbook.touchfile')
-  assert_equal 'boxbuilder_example_main_chef_config_value' $example_main_touchfile_contents
   example_dependency_touchfile_contents=$(exec_remotely_quiet 'cat $HOME/.tmp_boxbuilder_example_dependency_chef_cookbook.touchfile')
   assert_match 'boxbuilder_example_dependency_chef_config_set_from_main_value' $example_dependency_touchfile_contents
 }
 
-test_boxbuilder_remote_bootstrap() {
-  # Test boxbuilder_remote_bootstrap by running it on instance started
-  # from built AMI 
-  overridden_touchfile_value='boxbuilder_example_main_chef_config_value_overridden'
-  boxbuilder_config="export boxbuilder_example_main_chef_config_key='$overridden_touchfile_value'"
-  export boxbuilder_config
-  export boxbuilder_keypair
-  export boxbuilder_user
-  boxbuilder_host=$boxbuilder_built_instance_host
-  export boxbuilder_host
-  boxbuilder_remote_bootstrap_output=$($boxbuilder_dir/boxbuilder_remote_bootstrap)
-  echo; echo; echo
-  echo "-------- BEGIN OUTPUT OF boxbuilder_remote_bootstrap --------"
-  echo "$boxbuilder_remote_bootstrap_output"
-  echo "-------- END OUTPUT OF boxbuilder_remote_bootstrap --------"
-  echo; echo; echo
-
+test_boxbuilder_setup_can_be_used_to_override_chef_config_values() {
   example_main_touchfile_contents=$(exec_remotely_quiet 'cat $HOME/.tmp_boxbuilder_example_main_chef_cookbook.touchfile')
   assert_equal $overridden_touchfile_value $example_main_touchfile_contents
 }
 
-suite_centos() {
-  echo "$_log_prefix Starting tests on CentOS ..."
-  boxbuilder_user=${boxbuilder_user:-"centos"}
-  boxbuilder_builder_instance_ami_id=${boxbuilder_builder_instance_ami_id:-"ami-4d42a924"}
+suite_common() {
   setup
+  if $_test_remote_build_ami; then
+    run_boxbuilder_remote_build_ami
+  fi
+  run_boxbuilder_remote_bootstrap
   test_can_log_in_as_user
   test_can_install_rvm
   test_can_set_up_and_run_chef
-  test_boxbuilder_remote_bootstrap
-  echo "$_log_prefix All tests passed successfully on CentOS"
+  test_boxbuilder_setup_can_be_used_to_override_chef_config_values
 }
 
-suite_ubuntu() {
-  echo "$_log_prefix Starting tests on Ubuntu ..."
+suite_existing_boxbuilder_host() {
+  _test_remote_build_ami=false
+  echo
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "!! NOTE: boxbuilder_host is set to $boxbuilder_host"
+  echo "!!       so we'll SKIP testing of boxbuilder_remote_build_ami on EC2"
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo
+  boxbuilder_user=${boxbuilder_user:?"Error: boxbuilder_user must also be set if boxbuilder_host is set"}
+  echo "$_log_prefix Starting tests for user $boxbuilder_user on existing host $boxbuilder_host ..."
+  suite_common
+  echo "$_log_prefix All tests passed successfully for user $boxbuilder_user on existing host $boxbuilder_host"
+}
+
+suite_ami_build() {
+  _test_remote_build_ami=true
+  echo "$_log_prefix Starting tests for $boxbuilder_user with builder_instance_ami_id boxbuilder_builder_instance_ami_id ..."
+  suite_common
+  echo "$_log_prefix All tests passed successfully for $boxbuilder_user with builder_instance_ami_id boxbuilder_builder_instance_ami_id ..."
+}
+
+suite_ubuntu_ami_build() {
   boxbuilder_user=${boxbuilder_user:-"ubuntu"}
   boxbuilder_builder_instance_ami_id=${boxbuilder_builder_instance_ami_id:-"ami-4b4ba522"}
-  setup
-  test_can_log_in_as_user
-  test_can_install_rvm
-  test_can_set_up_and_run_chef
-  test_boxbuilder_remote_bootstrap
-  echo "$_log_prefix All tests passed successfully on Ubuntu"
+  suite_ami_build
+}
+
+suite_centos_ami_build() {
+  boxbuilder_user=${boxbuilder_user:-"centos"}
+  boxbuilder_builder_instance_ami_id=${boxbuilder_builder_instance_ami_id:-"ami-4d42a924"}
+  suite_ami_build
 }
 
 suite() {
   echo "$_log_prefix Starting tests ..."
-  suite_ubuntu
-#  suite_centos
-  echo "$_log_prefix All tests passed successfully"
-}
+  if [ -e $HOME/.boxbuilder_testrc ]; then
+    # Set test vars
+    source $HOME/.boxbuilder_testrc # don't use .boxbuilderrc file, we don't want to pollute it with test vars
+  fi
 
+  boxbuilder_host=${boxbuilder_host:-}
+  if [[ -n $boxbuilder_host ]]; then
+    suite_existing_boxbuilder_host
+    echo "$_log_prefix All tests passed successfully (boxbuilder_remote_build_ami tests were not run)"
+  else
+    suite_ubuntu_ami_build
+    suite_centos_ami_build
+    echo "$_log_prefix All tests passed successfully"
+  fi
+}
 
 suite
 onexit

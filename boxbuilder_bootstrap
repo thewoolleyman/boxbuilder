@@ -89,27 +89,47 @@ grant_nopasswd_sudo_access() {
     return 1
   fi
 
-  echo "$_log_prefix  Checking no-password sudo access for 'admin' group on host $boxbuilder_host and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
-  if [[ ! $(sudo grep -e "%admin.*ALL.*=.*NOPASSWD.*:.*ALL" /etc/sudoers) ]]; then
-    echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
-    sudo rm -f /tmp/sudoers.new
-    sudo cp /etc/sudoers /etc/sudoers.bak
+  echo "$_log_prefix  Checking no-password and no requiretty sudo access for 'admin' group on host $boxbuilder_host and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
+
+  _needs_nopasswd_sudoers_added=false
+  if ! sudo grep -e "%admin.*ALL.*=.*NOPASSWD.*:.*ALL" /etc/sudoers; then
+    _needs_nopasswd_sudo=true
+  fi
+
+  _needs_requiretty_sudoers_removed=false
+  if sudo grep 'requiretty' /etc/sudoers; then
+    _needs_requiretty_sudoers_removed=true
+  fi
+
+  if ! $_needs_nopasswd_sudoers_added && ! $_needs_requiretty_sudoers_removed; then
+    echo "$_log_prefix  no sudoers changes needed ..."
+    return 0
+  fi
+
+  sudo cp /etc/sudoers /etc/sudoers.bak
+
+  if $_needs_requiretty_sudoers_removed; then
+    sudo cat /etc/sudoers | grep -v 'requiretty' > /tmp/sudoers.new
+  else
     sudo cp /etc/sudoers /tmp/sudoers.new
+  fi
+
+  if $_needs_nopasswd_sudoers_added; then
+    echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
     new_sudoers_line="%admin ALL=NOPASSWD: ALL"
     sudo sh -c "echo \"$new_sudoers_line\" >> /tmp/sudoers.new"
-    if [ ! -e /tmp/sudoers.new ]; then
-      echo "$_log_prefix  error on line $LINENO - Could not add create /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
-      return 1
-    fi
-    sudo visudo -c -s -f /tmp/sudoers.new
-    if [ ! $? = 0 ]; then
-      echo "$_log_prefix  error on line $LINENO -: Syntax error in /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
-      return 1
-    fi
-    sudo cp /tmp/sudoers.new /etc/sudoers
-  else
-    echo "$_log_prefix  admin group already appears to have NOPASSWD sudo access."
   fi
+
+  if [[ ! -e /tmp/sudoers.new ]]; then
+    echo "$_log_prefix error on line $LINENO - Could not add create /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+    return 1
+  fi
+
+  if ! sudo visudo -c -s -f /tmp/sudoers.new; then
+    echo "$_log_prefix error on line $LINENO -: Syntax error in /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+    return 1
+  fi
+  sudo cp /tmp/sudoers.new /etc/sudoers
 }
 
 install_git_debian() {
@@ -146,7 +166,7 @@ install_git_darwin() {
 }
 
 install_git() {
-  if which git; then
+  if git --help; then
     echo "$_log_prefix git is already installed, not reinstalling"
   else
     echo "$_log_prefix Installing git"

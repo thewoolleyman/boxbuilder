@@ -45,6 +45,24 @@ function enable_error_checking() {
 
 trap onexit HUP INT QUIT TERM ERR
 
+detect_platform_remotely() {
+  _remote_uname=$(exec_remotely_quiet "uname -a")
+  if echo "$_remote_uname" | grep -i 'debian'; then
+    _remote_platform='debian'
+  elif echo "$_remote_uname" | grep -i 'ubuntu'; then
+    _remote_platform='debian'
+  elif exec_remotely "test -f /etc/redhat-release"; then
+    _remote_platform='redhat'
+  elif echo "$_remote_uname" | grep -i 'darwin'; then
+    # TODO: for now, darwin platform assumes you are using HomeBrew
+    _remote_platform='darwin'
+  else
+    echo "$_log_prefix error on line $LINENO - unable to determine supported remote platform from uname: '$_remote_uname'"
+    return 1
+  fi
+  echo "$_log_prefix  Remote platform detected as '$_remote_platform'"
+}
+
 exec_remotely() {
   local arg_array i rc
   for arg; do
@@ -80,22 +98,118 @@ exec_remotely_quiet_root() {
   ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $boxbuilder_keypair root@$boxbuilder_host "$@"
 }
 
-grant_nopasswd_sudo_access() {
-  echo "$_log_prefix  Checking no-password sudo access for 'admin' group on host $boxbuilder_host and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
-  if ! exec_remotely_quiet_root 'grep -e "%admin.*ALL.*=.*NOPASSWD.*:.*ALL" /etc/sudoers)'; then
-    echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
-    exec_remotely_quiet_root "rm -f /tmp/sudoers.new"
-    exec_remotely_quiet_root "cp /etc/sudoers /etc/sudoers.bak"
-    exec_remotely_quiet_root "cp /etc/sudoers /tmp/sudoers.new"
-    _new_sudoers_line="%admin ALL=NOPASSWD: ALL"
-    exec_remotely_quiet_root "sh -c 'echo \"$_new_sudoers_line\" >> /tmp/sudoers.new'"
-    if ! exec_remotely_quiet_root "visudo -c -s -f /tmp/sudoers.new"; then
-      echo "$_log_prefix  error on line $LINENO -: Syntax error in /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $_new_sudoers_line"
-      return 1
-    fi
-    exec_remotely_quiet_root "cp /tmp/sudoers.new /etc/sudoers"
+check_for_root_ssh_access() {
+  echo "$_log_prefix  checking for root ssh access on $boxbuilder_host ..."
+  if exec_remotely_quiet_root 'id'; then
+    echo "$_log_prefix  SSH access exists for root ..."
+    _root_ssh_access_exists=true
   else
-    echo "$_log_prefix  admin group already appears to have NOPASSWD sudo access."
+    echo "$_log_prefix  SSH access does not exist for root ..."
+    _root_ssh_access_exists=false
+  fi
+}
+
+grant_nopasswd_sudo_access_from_boxbuilder_user() {
+  echo "$_log_prefix  Checking 'admin' group membership for user $boxbuilder_user on host $boxbuilder_host."
+  if exec_remotely_quiet "groups | grep -q -e 'admin'"; then
+    echo "$_log_prefix error on line $LINENO - user $boxbuilder_user is not a member of the 'admin' group on host $boxbuilder_host.  Please add..."
+    return 1
+  fi
+
+  echo "$_log_prefix  Checking no-password and no requiretty sudo access for 'admin' group on host $boxbuilder_host and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
+
+  _needs_nopasswd_sudoers_added=false
+  if ! exec_remotely_quiet "sudo grep -e '%admin.*ALL.*=.*NOPASSWD.*:.*ALL' /etc/sudoers"; then
+    _needs_nopasswd_sudo=true
+  fi
+
+  _needs_requiretty_sudoers_removed=false
+  if exec_remotely_quiet "sudo grep 'requiretty' /etc/sudoers"; then
+    _needs_requiretty_sudoers_removed=true
+  fi
+
+  if ! $_needs_nopasswd_sudoers_added && ! $_needs_requiretty_sudoers_removed; then
+    echo "$_log_prefix  no sudoers changes needed ..."
+    return 0
+  fi
+
+  exec_remotely_quiet "sudo cp /etc/sudoers /etc/sudoers.bak"
+
+  if $_needs_requiretty_sudoers_removed; then
+    exec_remotely_quiet "sudo cat /etc/sudoers | grep -v 'requiretty' > /tmp/sudoers.new"
+  else
+    exec_remotely_quiet "sudo cp /etc/sudoers /tmp/sudoers.new"
+  fi
+
+  if $_needs_nopasswd_sudoers_added; then
+    echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
+    new_sudoers_line="%admin ALL=NOPASSWD: ALL"
+    exec_remotely_quiet "sudo sh -c 'echo \"$new_sudoers_line\" >> /tmp/sudoers.new' "
+  fi
+
+  if ! exec_remotely_quiet "test -e /tmp/sudoers.new"; then
+    echo "$_log_prefix error on line $LINENO - Could not add create /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+    return 1
+  fi
+
+  if ! exec_remotely_quiet "sudo visudo -c -s -f /tmp/sudoers.new"; then
+    echo "$_log_prefix error on line $LINENO -: Syntax error in /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+    return 1
+  fi
+  exec_remotely_quiet "sudo cp /tmp/sudoers.new /etc/sudoers"
+}
+
+grant_nopasswd_sudo_access_from_root() {
+  echo "$_log_prefix  Checking no-password and no requiretty sudo access for 'admin' group on host $boxbuilder_host and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
+
+  _needs_nopasswd_sudoers_added=false
+  if ! exec_remotely_quiet_root "grep -e '%admin.*ALL.*=.*NOPASSWD.*:.*ALL' /etc/sudoers"; then
+    _needs_nopasswd_sudo=true
+  fi
+
+  _needs_requiretty_sudoers_removed=false
+  if exec_remotely_quiet_root "grep 'requiretty' /etc/sudoers"; then
+    _needs_requiretty_sudoers_removed=true
+  fi
+
+  if ! $_needs_nopasswd_sudoers_added && ! $_needs_requiretty_sudoers_removed; then
+    echo "$_log_prefix  no sudoers changes needed ..."
+    return 0
+  fi
+
+  exec_remotely_quiet_root "cp /etc/sudoers /etc/sudoers.bak"
+
+  if $_needs_requiretty_sudoers_removed; then
+    exec_remotely_quiet_root "cat /etc/sudoers | grep -v 'requiretty' > /tmp/sudoers.new"
+  else
+    exec_remotely_quiet_root "cp /etc/sudoers /tmp/sudoers.new"
+  fi
+
+  if $_needs_nopasswd_sudoers_added; then
+    echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
+    new_sudoers_line="%admin ALL=NOPASSWD: ALL"
+    exec_remotely_quiet_root "sh -c 'echo \"$new_sudoers_line\" >> /tmp/sudoers.new' "
+  fi
+
+  if ! exec_remotely_quiet_root "test -e /tmp/sudoers.new"; then
+    echo "$_log_prefix error on line $LINENO - Could not add create /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+    return 1
+  fi
+
+  if ! exec_remotely_quiet_root "visudo -c -s -f /tmp/sudoers.new"; then
+    echo "$_log_prefix error on line $LINENO -: Syntax error in /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+    return 1
+  fi
+  exec_remotely_quiet_root "cp /tmp/sudoers.new /etc/sudoers"
+}
+
+grant_nopasswd_sudo_access() {
+  if $_root_ssh_access_exists; then
+    # attempt to install sudo if it isn't already installed
+    exec_remotely_quiet_root "yum install -y sudo"
+    grant_nopasswd_sudo_access_from_root
+  else
+    grant_nopasswd_sudo_access_from_boxbuilder_user
   fi
 }
 
@@ -112,12 +226,12 @@ automatically created if there is a valid no-passphrase SSH key to the root user
     # TODO: should verify admin group exists before returning    
     return 0
   fi
-  echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' does not exist, checking for root access on $boxbuilder_host to automatically create it ..."
-  if ! exec_remotely_quiet_root 'id'; then
-    echo "$_log_prefix  No root SSH access on $boxbuilder_host, cannot automatically create boxbuilder_user $boxbuilder_user.  Create manually with valid SSH access or give SSH access to root ..."
+  if $_root_ssh_access_exists; then
+    echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' does not exist, and no root SSH access on $boxbuilder_host; cannot automatically create boxbuilder_user $boxbuilder_user.  Create manually with valid SSH access or give SSH access to root ..."
     return 1
+  else
+    echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' does not exist, but root SSH access exists on $boxbuilder_host to automatically create boxbuilder_user $boxbuilder_user ..."
   fi
-  echo "$_log_prefix  SSH access exists for root ..."
   echo "$_log_prefix  Ensuring 'admin' group exists ..."
   exec_remotely_quiet_root "groupadd -f admin"
   _admin_gid=$(exec_remotely_quiet_root "grep 'admin' /etc/group | cut -d: -f3")
@@ -139,7 +253,6 @@ automatically created if there is a valid no-passphrase SSH key to the root user
     echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' was NOT successfully created on $boxbuilder_host - something went wrong :( - try setting boxbuilder_debug=true ..."
     return 1
   fi
-  grant_nopasswd_sudo_access
 }
 
 setup() {
@@ -157,6 +270,18 @@ setup() {
   echo "$_log_prefix  Finished environment variable setup:"
   echo "boxbuilder_config=$boxbuilder_config"
   # TODO: Add all env vars which are directly used by this script
+}
+
+install_packages_remotely_redhat() {
+  exec_remotely_quiet "sudo yum install -y wget"
+}
+
+install_packages_remotely_debian() {
+  exec_remotely_quiet "sudo apt-get install -y wget"
+}
+
+install_packages_remotely() {
+  install_packages_remotely_$_remote_platform
 }
 
 remote_bootstrap() {
@@ -180,7 +305,11 @@ remote_bootstrap() {
 run() {
   echo "$_log_prefix Starting ..."
   setup
+  check_for_root_ssh_access
   ensure_boxbuilder_user_exists
+  grant_nopasswd_sudo_access
+  detect_platform_remotely
+  install_packages_remotely
   remote_bootstrap
   echo "$_log_prefix Finished and exiting successfully"
 }
