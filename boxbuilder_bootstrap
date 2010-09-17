@@ -144,7 +144,7 @@ mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=epel-5&arch=\$basear
 failovermethod=priority
 enabled=1
 here
-sudo cp /tmp/boxbuilder_epel.repo > /etc/yum.repos.d/epel.repo
+sudo cp /tmp/boxbuilder_epel.repo /etc/yum.repos.d/boxbuilder_epel.repo
 
   cat > /tmp/boxbuilder_rpmforge.repo << here
 [rpmforge]
@@ -153,7 +153,7 @@ baseurl = http://apt.sw.be/redhat/el5/en/\$basearch/rpmforge
 mirrorlist = http://apt.sw.be/redhat/el5/en/mirrors-rpmforge
 enabled = 1
 here
-sudo cp /tmp/boxbuilder_rpmforge.repo > /etc/yum.repos.d/rpmforge.repo
+sudo cp /tmp/boxbuilder_rpmforge.repo /etc/yum.repos.d/boxbuilder_rpmforge.repo
 
   sudo sed -i".bak-$(date +%Y%m%d-%H%M)" -e 's/gpgcheck=1/gpgcheck=0/' /etc/yum.conf
 }
