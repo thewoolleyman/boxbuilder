@@ -279,7 +279,7 @@ boxbuilder_user to a non-root user.  If it does not exist, it will be \
 automatically created..."
     return 1
   fi
-  if sudo grep $_imagedir/etc/shadow "^$boxbuilder_user:"; then
+  if sudo grep -e "^$boxbuilder_user:" $_imagedir/etc/shadow; then
     echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' already exists in chroot jail ..."
     return 0
   fi
