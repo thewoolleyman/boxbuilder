@@ -227,10 +227,10 @@ automatically created if there is a valid no-passphrase SSH key to the root user
     return 0
   fi
   if $_root_ssh_access_exists; then
+    echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' does not exist, but root SSH access exists on $boxbuilder_host to automatically create boxbuilder_user $boxbuilder_user ..."
+  else
     echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' does not exist, and no root SSH access on $boxbuilder_host; cannot automatically create boxbuilder_user $boxbuilder_user.  Create manually with valid SSH access or give SSH access to root ..."
     return 1
-  else
-    echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' does not exist, but root SSH access exists on $boxbuilder_host to automatically create boxbuilder_user $boxbuilder_user ..."
   fi
   echo "$_log_prefix  Ensuring 'admin' group exists ..."
   exec_remotely_quiet_root "groupadd -f admin"
