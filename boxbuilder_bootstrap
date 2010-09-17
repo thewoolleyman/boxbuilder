@@ -137,7 +137,7 @@ install_git_debian() {
 }
 
 yum_setup() {
-  rm /tmp/boxbuilder_epel.repo
+  rm -f /tmp/boxbuilder_epel.repo
   cat > /tmp/boxbuilder_epel.repo << here
 [epel]
 name=Extra Packages for Enterprise Linux 5 - \$basearch
@@ -147,7 +147,7 @@ enabled=1
 here
 sudo cp /tmp/boxbuilder_epel.repo /etc/yum.repos.d/boxbuilder_epel.repo
 
-  rm /tmp/boxbuilder_rpmforge.repo
+  rm -f /tmp/boxbuilder_rpmforge.repo
   cat > /tmp/boxbuilder_rpmforge.repo << here
 [rpmforge]
 name = Red Hat Enterprise \$releasever - RPMforge.net - dag
