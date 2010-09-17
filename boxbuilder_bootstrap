@@ -137,21 +137,23 @@ install_git_debian() {
 }
 
 yum_setup() {
-  sudo cat > /etc/yum.repos.d/epel.repo << here
+  cat > /etc/yum.repos.d/boxbuilder_epel.repo << here
 [epel]
 name=Extra Packages for Enterprise Linux 5 - \$basearch
 mirrorlist=http://mirrors.fedoraproject.org/mirrorlist?repo=epel-5&arch=\$basearch
 failovermethod=priority
 enabled=1
 here
+sudo cp /tmp/boxbuilder_epel.repo > /etc/yum.repos.d/epel.repo
 
-  sudo cat > /etc/yum.repos.d/rpmforge.repo << here
+  cat > /tmp/boxbuilder_rpmforge.repo << here
 [rpmforge]
 name = Red Hat Enterprise \$releasever - RPMforge.net - dag
 baseurl = http://apt.sw.be/redhat/el5/en/\$basearch/rpmforge
 mirrorlist = http://apt.sw.be/redhat/el5/en/mirrors-rpmforge
 enabled = 1
 here
+sudo cp /tmp/boxbuilder_rpmforge.repo > /etc/yum.repos.d/rpmforge.repo
 
   sudo sed -i".bak-$(date +%Y%m%d-%H%M)" -e 's/gpgcheck=1/gpgcheck=0/' /etc/yum.conf
 }
