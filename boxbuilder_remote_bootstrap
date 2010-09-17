@@ -265,7 +265,8 @@ setup() {
   boxbuilder_keypair=${boxbuilder_keypair:?"Please set 'boxbuilder_keypair' to the path of your ssh private key file"}
   boxbuilder_user=${boxbuilder_user:?"Please set 'boxbuilder_user' to the ssh user on the box being built"}
   boxbuilder_host=${boxbuilder_host:?"Please set 'boxbuilder_host' to the hostname or IP of the box being built"}
-  boxbuilder_bootstrap_url=${boxbuilder_bootstrap_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap"}
+  boxbuilder_branch=${boxbuilder_branch:-"master"}
+  boxbuilder_bootstrap_url=${boxbuilder_bootstrap_url:-"http://github.com/thewoolleyman/boxbuilder/raw/$boxbuilder_branch/boxbuilder_bootstrap"}
 
   echo "$_log_prefix  Finished environment variable setup:"
   echo "boxbuilder_config=$boxbuilder_config"
