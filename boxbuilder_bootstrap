@@ -108,8 +108,10 @@ grant_nopasswd_sudo_access() {
 
   sudo cp /etc/sudoers /etc/sudoers.bak
 
+  _sudoers_additional_error_instructions='Please use visudo to manually make these changes: '
   if $_needs_requiretty_sudoers_removed; then
     sudo cat /etc/sudoers | grep -v 'requiretty' > /tmp/sudoers.new
+    $_sudoers_additional_error_instructions="Remove 'requiretty' line. "
   else
     sudo cp /etc/sudoers /tmp/sudoers.new
   fi
@@ -118,15 +120,16 @@ grant_nopasswd_sudo_access() {
     echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
     new_sudoers_line="%admin ALL=NOPASSWD: ALL"
     sudo sh -c "echo \"$new_sudoers_line\" >> /tmp/sudoers.new"
+    $_sudoers_additional_error_instructions="Add a line '$new_sudoers_line'. "
   fi
 
   if [[ ! -e /tmp/sudoers.new ]]; then
-    echo "$_log_prefix error on line $LINENO - Could not add create /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+    echo "$_log_prefix error on line $LINENO - Could not add create /tmp/sudoers.new on host $boxbuilder_host.  $_sudoers_additional_error_instructions"
     return 1
   fi
 
   if ! sudo visudo -c -s -f /tmp/sudoers.new; then
-    echo "$_log_prefix error on line $LINENO -: Syntax error in /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+    echo "$_log_prefix error on line $LINENO -: Syntax error in /tmp/sudoers.new on host $boxbuilder_host.  $_sudoers_additional_error_instructions"
     return 1
   fi
   sudo cp /tmp/sudoers.new /etc/sudoers

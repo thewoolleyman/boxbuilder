@@ -311,7 +311,7 @@ automatically created..."
 }
 
 grant_nopasswd_sudo_access_in_chroot() {
-  echo "$_log_prefix  Checking no-password and no requiretty sudo access for 'admin' group on host $boxbuilder_host and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
+  echo "$_log_prefix  Checking no-password and no requiretty sudo access for 'admin' group in chroot jail and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
 
   _needs_nopasswd_sudoers_added=false
   if ! sudo grep -e "%admin.*ALL.*=.*NOPASSWD.*:.*ALL" $_imagedir/etc/sudoers; then
@@ -330,8 +330,10 @@ grant_nopasswd_sudo_access_in_chroot() {
 
   sudo /usr/sbin/chroot $_imagedir cp /etc/sudoers /etc/sudoers.bak
 
+  _sudoers_additional_error_instructions='Please use visudo to manually make these changes: '
   if $_needs_requiretty_sudoers_removed; then
     sudo /usr/sbin/chroot $_imagedir "cat /etc/sudoers | grep -v 'requiretty' > /tmp/sudoers.new"
+    $_sudoers_additional_error_instructions="Remove 'requiretty' line. "
   else
     sudo /usr/sbin/chroot $_imagedir "cp /etc/sudoers /tmp/sudoers.new"
   fi
@@ -340,15 +342,16 @@ grant_nopasswd_sudo_access_in_chroot() {
     echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
     new_sudoers_line="%admin ALL=NOPASSWD: ALL"
     sudo /usr/sbin/chroot $_imagedir sh -c "echo '$new_sudoers_line' >> /tmp/sudoers.new"
+    $_sudoers_additional_error_instructions="Add a line '$new_sudoers_line'. "
   fi
 
   if [[ ! -e $_imagedir/tmp/sudoers.new ]]; then
-    echo "$_log_prefix error on line $LINENO - Could not add create /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+    echo "$_log_prefix error on line $LINENO - Could not add create /tmp/sudoers.new in chroot jail.  $_sudoers_additional_error_instructions"
     return 1
   fi
 
   if ! sudo /usr/sbin/chroot $_imagedir visudo -c -s -f /tmp/sudoers.new; then
-    echo "$_log_prefix error on line $LINENO -: Syntax error in /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+    echo "$_log_prefix error on line $LINENO -: Syntax error in /tmp/sudoers.new in chroot jail.  $_sudoers_additional_error_instructions"
     return 1
   fi
   sudo /usr/sbin/chroot $_imagedir cp /tmp/sudoers.new /etc/sudoers

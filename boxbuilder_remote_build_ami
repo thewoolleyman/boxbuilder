@@ -239,7 +239,7 @@ grant_nopasswd_sudo_access_from_boxbuilder_user() {
     return 1
   fi
 
-  echo "$_log_prefix  Checking no-password and no requiretty sudo access for 'admin' group on host $boxbuilder_host and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
+  echo "$_log_prefix  Checking no-password and no requiretty sudo access for 'admin' group on host $boxbuilder_builder_instance_host and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
 
   _needs_nopasswd_sudoers_added=false
   if ! exec_remotely_quiet "sudo grep -e '%admin.*ALL.*=.*NOPASSWD.*:.*ALL' /etc/sudoers"; then
@@ -258,8 +258,10 @@ grant_nopasswd_sudo_access_from_boxbuilder_user() {
 
   exec_remotely_quiet "sudo cp /etc/sudoers /etc/sudoers.bak"
 
+  _sudoers_additional_error_instructions='Please use visudo to manually make these changes: '
   if $_needs_requiretty_sudoers_removed; then
     exec_remotely_quiet "sudo cat /etc/sudoers | grep -v 'requiretty' > /tmp/sudoers.new"
+    $_sudoers_additional_error_instructions="Remove 'requiretty' line. "
   else
     exec_remotely_quiet "sudo cp /etc/sudoers /tmp/sudoers.new"
   fi
@@ -268,22 +270,23 @@ grant_nopasswd_sudo_access_from_boxbuilder_user() {
     echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
     new_sudoers_line="%admin ALL=NOPASSWD: ALL"
     exec_remotely_quiet "sudo sh -c 'echo \"$new_sudoers_line\" >> /tmp/sudoers.new' "
+    $_sudoers_additional_error_instructions="Add a line '$new_sudoers_line'. "
   fi
 
   if ! exec_remotely_quiet "test -e /tmp/sudoers.new"; then
-    echo "$_log_prefix error on line $LINENO - Could not add create /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+    echo "$_log_prefix error on line $LINENO - Could not add create /tmp/sudoers.new on host $boxbuilder_builder_instance_host.  $_sudoers_additional_error_instructions"
     return 1
   fi
 
   if ! exec_remotely_quiet "sudo visudo -c -s -f /tmp/sudoers.new"; then
-    echo "$_log_prefix error on line $LINENO -: Syntax error in /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+    echo "$_log_prefix error on line $LINENO -: Syntax error in /tmp/sudoers.new on host $boxbuilder_builder_instance_host.  $_sudoers_additional_error_instructions"
     return 1
   fi
   exec_remotely_quiet "sudo cp /tmp/sudoers.new /etc/sudoers"
 }
 
 grant_nopasswd_sudo_access_from_root() {
-  echo "$_log_prefix  Checking no-password and no requiretty sudo access for 'admin' group on host $boxbuilder_host and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
+  echo "$_log_prefix  Checking no-password and no requiretty sudo access for 'admin' group on host $boxbuilder_builder_instance_host and adding if necessary.  If prompted, please type your password, or ctrl-c to abort..."
 
   _needs_nopasswd_sudoers_added=false
   if ! exec_remotely_quiet_root "sudo grep -e '%admin.*ALL.*=.*NOPASSWD.*:.*ALL' /etc/sudoers"; then
@@ -302,8 +305,10 @@ grant_nopasswd_sudo_access_from_root() {
 
   exec_remotely_quiet_root "sudo cp /etc/sudoers /etc/sudoers.bak"
 
+  _sudoers_additional_error_instructions='Please use visudo to manually make these changes: '
   if $_needs_requiretty_sudoers_removed; then
     exec_remotely_quiet_root "sudo cat /etc/sudoers | grep -v 'requiretty' > /tmp/sudoers.new"
+    $_sudoers_additional_error_instructions="Remove 'requiretty' line. "
   else
     exec_remotely_quiet_root "sudo cp /etc/sudoers /tmp/sudoers.new"
   fi
@@ -312,15 +317,16 @@ grant_nopasswd_sudo_access_from_root() {
     echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
     new_sudoers_line="%admin ALL=NOPASSWD: ALL"
     exec_remotely_quiet_root "sudo sh -c 'echo \"$new_sudoers_line\" >> /tmp/sudoers.new' "
+    $_sudoers_additional_error_instructions="Add a line '$new_sudoers_line'. "
   fi
 
   if ! exec_remotely_quiet_root "test -e /tmp/sudoers.new"; then
-    echo "$_log_prefix error on line $LINENO - Could not add create /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+    echo "$_log_prefix error on line $LINENO - Could not add create /tmp/sudoers.new on host $boxbuilder_builder_instance_host.  $_sudoers_additional_error_instructions"
     return 1
   fi
 
   if ! exec_remotely_quiet_root "sudo visudo -c -s -f /tmp/sudoers.new"; then
-    echo "$_log_prefix error on line $LINENO -: Syntax error in /tmp/sudoers.new on host $boxbuilder_host.  Please manually add this entry using visudo: $new_sudoers_line"
+    echo "$_log_prefix error on line $LINENO -: Syntax error in /tmp/sudoers.new on host $boxbuilder_builder_instance_host.  $_sudoers_additional_error_instructions"
     return 1
   fi
   exec_remotely_quiet_root "sudo cp /tmp/sudoers.new /etc/sudoers"
