@@ -138,7 +138,8 @@ prerequisite_packages_redhat() {
 
 package_status_check_redhat() {
   disable_error_checking
-  _package_status=$(rpm -qa | grep -iE "$_package_name" | grep "$_package_version")
+  # TODO: refactor into conditional with command so we don't have to disable error checking
+  _package_status=$(rpm -qa --queryformat="%{NAME}\n" | grep -iE "^$_package_name\$" | grep "$_package_version")
   enable_error_checking
   echo $_package_status
 }
@@ -158,6 +159,8 @@ prerequisite_packages_debian() {
 
 package_status_check_debian() {
   disable_error_checking
+  # TODO: refactor into conditional with command so we don't have to disable error checking
+  # TODO: better regexp like centos, so we don't accidentally match on packages with substring match - e.g. bzip2 vs. bzip2-libs on centos
   _package_status=$(dpkg -l $_package_name | grep "ii  $_package_name" | grep "$_package_version")
   enable_error_checking
   echo $_package_status
