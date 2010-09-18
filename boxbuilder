@@ -208,10 +208,10 @@ install_packages() {
   for _package in $boxbuilder_prerequisite_packages
   do
     _package_name=${_package%=*}
-    if [[ -z $(echo $_package | grep '=') ]]; then
-      _package_version=''
-    else
+    if echo $_package | grep '='; then
       _package_version=${_package#*=}
+    else
+      _package_version=''
     fi
 
     _package_status=$(package_status_check_$_platform)
