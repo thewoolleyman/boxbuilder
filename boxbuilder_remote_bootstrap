@@ -146,9 +146,9 @@ grant_nopasswd_sudo_access_from_boxbuilder_user() {
 
   if $_needs_nopasswd_sudoers_added; then
     echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
-    new_sudoers_line="%admin ALL=NOPASSWD: ALL"
-    exec_remotely_quiet "sudo sh -c 'echo \"$new_sudoers_line\" >> /tmp/sudoers.new' "
-    _sudoers_additional_error_instructions="$_sudoers_additional_error_instructions Add a line '$new_sudoers_line'. "
+    _new_sudoers_line="%admin ALL=NOPASSWD: ALL"
+    exec_remotely_quiet "sudo sh -c 'echo \"$_new_sudoers_line\" >> /tmp/sudoers.new' "
+    _sudoers_additional_error_instructions="$_sudoers_additional_error_instructions Add a line '$_new_sudoers_line'. "
   fi
 
   if ! exec_remotely_quiet "test -e /tmp/sudoers.new"; then
@@ -196,7 +196,7 @@ grant_nopasswd_sudo_access_from_root() {
     echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
     _new_sudoers_line="%admin ALL=NOPASSWD: ALL"
     exec_remotely_quiet_root "sh -c 'echo \"$_new_sudoers_line\" >> /tmp/sudoers.new' "
-    _sudoers_additional_error_instructions="$_sudoers_additional_error_instructions Add a line '$new_sudoers_line'. "
+    _sudoers_additional_error_instructions="$_sudoers_additional_error_instructions Add a line '$_new_sudoers_line'. "
   fi
 
   if ! exec_remotely_quiet_root "test -e /tmp/sudoers.new"; then
