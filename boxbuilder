@@ -322,7 +322,8 @@ setup_rvm() {
 install_chef() {
   echo "$_log_prefix  Installing Chef..."
   # TODO: Allow override if user wants to force reinstall with different boxbuilder_chef_gem_install_options
-  if [[ -z $(gem search ^chef$ | grep -e '^chef') ]]; then
+  # TODO: Split out specific var for user to override chef version, so it can be used for installed check
+  if ! gem search -i '^chef$'; then
     gem install chef $boxbuilder_chef_gem_install_options
     echo "$_log_prefix  Finished installing Chef..."
   else
