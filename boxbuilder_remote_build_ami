@@ -203,7 +203,7 @@ get_builder_instance_host() {
       echo -n .
       sleep $_instance_startup_check_interval
       let _instance_startup_elapsed_time=$_instance_startup_elapsed_time+$_instance_startup_check_interval
-      if [[ $_instance_startup_elapsed_time > 360 ]]; then
+      if (( $_instance_startup_elapsed_time > 360 )); then
         echo "$_log_prefix Unable to start instance for AMI $boxbuilder_builder_instance_ami_id after $_instance_startup_elapsed_time seconds.  Aborting."
         return 1
       fi
