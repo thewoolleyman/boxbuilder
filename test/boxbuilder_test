@@ -160,7 +160,7 @@ run_boxbuilder_remote_build_ami() {
     | egrep ^INSTANCE | cut -f2)
 
   # wait for the instance to start
-  let _instance_startup_elapsed_time=0 | true # | pipe to true to avoid error due to nonzero rc.  zero is false is one :)
+  let _instance_startup_elapsed_time=1 # HACK: don't initialize to zero avoid error due to nonzero rc.  arithmetic false is not shell false.  zero is false is one :)  See http://wiki.bash-hackers.org/syntax/arith_expr#arithmetic_expressions_and_return_codes
   let _instance_startup_check_interval=5
   while boxbuilder_built_instance_host=$(ec2-describe-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
      "$boxbuilder_built_instance_id" | \
