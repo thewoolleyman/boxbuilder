@@ -234,7 +234,7 @@ exec_remotely_quiet_root() {
 
 grant_nopasswd_sudo_access_from_boxbuilder_user() {
   echo "$_log_prefix  Checking 'admin' group membership for user $boxbuilder_user on host $boxbuilder_builder_instance_host."
-  if exec_remotely_quiet "groups | grep -q -e 'admin'"; then
+  if ! exec_remotely_quiet "groups | grep -q -e 'admin'"; then
     echo "$_log_prefix error on line $LINENO - user $boxbuilder_user is not a member of the 'admin' group on host $boxbuilder_builder_instance_host.  Please add..."
     return 1
   fi

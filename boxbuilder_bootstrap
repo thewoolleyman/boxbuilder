@@ -84,7 +84,7 @@ setup() {
 
 grant_nopasswd_sudo_access() {
   echo "$_log_prefix  Checking 'admin' group membership for user $boxbuilder_user on host $boxbuilder_host."
-  if [[ $(groups | grep -q -e 'admin') ]]; then
+  if ! groups | grep -q -e 'admin'; then
     echo "$_log_prefix error on line $LINENO - user $boxbuilder_user is not a member of the 'admin' group on host $boxbuilder_host.  Please add..."
     return 1
   fi
