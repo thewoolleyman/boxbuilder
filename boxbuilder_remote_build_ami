@@ -189,16 +189,23 @@ start_builder_instance() {
     "$boxbuilder_builder_instance_ami_id" \
     -d "$_boxbuilder_ec2_resource_tag" \
     | egrep ^INSTANCE | cut -f2)
-  echo "$_log_prefix Successfully started EC2 builder instance: instance_id=$boxbuilder_builder_instance_id"
+  echo "$_log_prefix  Started EC2 builder instance: instance_id=$boxbuilder_builder_instance_id"
 }
 
 get_builder_instance_host() {
   echo "$_log_prefix Finding hostname for $boxbuilder_builder_instance_id ..."
+  let _instance_startup_elapsed_time=0
+  let _instance_startup_check_interval=5
   while boxbuilder_builder_instance_host=$(ec2-describe-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
      "$boxbuilder_builder_instance_id" | \
     egrep ^INSTANCE | cut -f4) && [[ -z $boxbuilder_builder_instance_host ]]; do
       echo -n .
-      sleep 5
+      sleep $_instance_startup_check_interval
+      let _instance_startup_elapsed_time=$_instance_startup_elapsed_time+$_instance_startup_check_interval
+      if [[ $_instance_startup_elapsed_time > 360 ]]; then
+        echo "$_log_prefix Unable to start instance for AMI $boxbuilder_builder_instance_ami_id after $_instance_startup_elapsed_time seconds.  Aborting."
+        return 1
+      fi
   done
   echo
   echo "$_log_prefix Got hostname $boxbuilder_builder_instance_host for instance $boxbuilder_builder_instance_id"
