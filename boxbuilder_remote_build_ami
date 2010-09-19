@@ -95,7 +95,7 @@ setup() {
   boxbuilder_skip_build=${boxbuilder_skip_build:-false} # Undocumented flag, for debugging boxbuilder_remote_build_ami
 
   # Internal constants
-  _boxbuilder_ec2_resource_tag='boxbuilder_temp_resource_safe_to_terminate'
+  _autoterminating_temp_ec2_resource_tag='boxbuilder_temp_resource_safe_to_terminate'
 
   # Initialize local variables which may be undefined if boxbuilder_skip_build=true
   _build_ami_output=''
@@ -187,7 +187,7 @@ start_builder_instance() {
     --availability-zone us-east-1a \
     --instance-type "$boxbuilder_builder_instance_instance_type" \
     "$boxbuilder_builder_instance_ami_id" \
-    -d "$_boxbuilder_ec2_resource_tag" \
+    -d "$_autoterminating_temp_ec2_resource_tag" \
     | egrep ^INSTANCE | cut -f2)
   echo "$_log_prefix  Started EC2 builder instance: instance_id=$boxbuilder_builder_instance_id"
 }
@@ -449,10 +449,10 @@ boxbuilder_terminate_builder_instances() {
     fi
     _instance_id=$(echo "$line" | cut -f2)
     if [[ $boxbuilder_debug = true ]]; then
-      echo "$_log_prefix Checking instance id $_instance_id for User Data containing '$_boxbuilder_ec2_resource_tag'"
+      echo "$_log_prefix Checking instance id $_instance_id for User Data containing '$_autoterminating_temp_ec2_resource_tag'"
     fi
 
-    # Do not terminate instances which boxbuilder did not start (which do not contain $_boxbuilder_ec2_resource_tag)
+    # Do not terminate instances which boxbuilder did not start (which do not contain $_autoterminating_temp_ec2_resource_tag)
     _user_data=$(ec2-describe-instance-attribute --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
       $_instance_id --user-data \
       | cut -f3)
@@ -461,9 +461,9 @@ boxbuilder_terminate_builder_instances() {
     fi
 
     disable_error_checking
-    if [[ -z $(echo "$_user_data" | grep $_boxbuilder_ec2_resource_tag) ]]; then
+    if [[ -z $(echo "$_user_data" | grep $_autoterminating_temp_ec2_resource_tag) ]]; then
       if [[ $boxbuilder_debug = true ]]; then
-        echo "$_log_prefix NOT terminating instance $_instance_id because it does not contain '$_boxbuilder_ec2_resource_tag' in the User Data"
+        echo "$_log_prefix NOT terminating instance $_instance_id because it does not contain '$_autoterminating_temp_ec2_resource_tag' in the User Data"
       fi
       continue
     fi
@@ -497,7 +497,7 @@ boxbuilder_deregister_temp_amis() {
   fi
   _images="$(ec2-describe-images --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT)"
   disable_error_checking # we must disable error checking because grep will fail with nonzero if there are no temp AMIs
-  _images="$(echo "$_images" | grep $_boxbuilder_ec2_resource_tag)"
+  _images="$(echo "$_images" | grep $_autoterminating_temp_ec2_resource_tag)"
 
   enable_error_checking
   echo "$_images" | while read line; do
@@ -548,10 +548,10 @@ boxbuilder_delete_ebs_snapshots() {
   if [[ $boxbuilder_debug = true ]]; then
     echo "$_log_prefix Deleting EBS snapshots ..."
   fi
-  # Do not terminate snapshots which boxbuilder did not start (which do not contain $_boxbuilder_ec2_resource_tag)
+  # Do not terminate snapshots which boxbuilder did not start (which do not contain $_autoterminating_temp_ec2_resource_tag)
   _snapshots=$(ec2-describe-snapshots --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT)
   disable_error_checking # we must disable error checking because grep will fail with nonzero if there are no snapshots
-  _snapshots=$(echo "$_snapshots" | grep $_boxbuilder_ec2_resource_tag)
+  _snapshots=$(echo "$_snapshots" | grep $_autoterminating_temp_ec2_resource_tag)
   enable_error_checking
   echo "$_snapshots" | while read line; do
     if [[ -z $line ]]; then
