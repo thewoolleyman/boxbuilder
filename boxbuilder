@@ -106,7 +106,7 @@ setup() {
   source $HOME/.boxbuilderrc
   boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder=boxbuilder_config_placeholder_from_boxbuilder'}
   eval $boxbuilder_config
-  boxbuilder_rvm_version=${boxbuilder_rvm_version:-$(curl -s http://rvm.beginrescueend.com/releases/stable-version.txt)}
+  boxbuilder_rvm_version=${boxbuilder_rvm_version:-}
   boxbuilder_default_ruby=${boxbuilder_default:-"1.8.7-p174"}
   boxbuilder_chef_repos=${boxbuilder_chef_repos:?"Please set 'boxbuilder_chef_repos' to a space-delimited list of Chef Git repositories"}
   boxbuilder_chef_dir=${boxbuilder_chef_dir:-"$HOME/.chef"}
@@ -116,13 +116,17 @@ setup() {
 
   echo "$_log_prefix  Environment variables:"
   echo "boxbuilder_config                    = $boxbuilder_config"
-  echo "boxbuilder_rvm_version               = $boxbuilder_rvm_version"
   echo "boxbuilder_default_ruby              = $boxbuilder_default_ruby"
   echo "boxbuilder_chef_repos                = $boxbuilder_chef_repos"
   echo "boxbuilder_chef_dir                  = $boxbuilder_chef_dir"
   echo "boxbuilder_chef_config_path          = $boxbuilder_chef_config_path"
   echo "boxbuilder_chef_json_path            = $boxbuilder_chef_json_path"
   echo "boxbuilder_chef_gem_install_options  = $boxbuilder_chef_gem_install_options"
+  if [[ -n $boxbuilder_rvm_version ]]; then
+    echo "boxbuilder_rvm_version               = $boxbuilder_rvm_version"
+  else
+    echo "boxbuilder_rvm_version               = undefined, will use default"
+  fi
 
 }
 
@@ -230,6 +234,7 @@ install_packages() {
 }
 
 install_rvm() {
+  boxbuilder_rvm_version=${boxbuilder_rvm_version:-$(curl -s http://rvm.beginrescueend.com/releases/stable-version.txt)}
   echo "$_log_prefix  Installing RVM version $boxbuilder_rvm_version ..."
   echo "$_log_prefix  Reloading default RVM interpreter in this shell, if it is installed"
   if [[ -s $HOME/.rvm/environments/default ]]; then
