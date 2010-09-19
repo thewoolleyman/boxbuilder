@@ -194,7 +194,8 @@ start_builder_instance() {
 
 get_builder_instance_host() {
   echo "$_log_prefix Finding hostname for $boxbuilder_builder_instance_id ..."
-  let _instance_startup_elapsed_time=0
+  _instance_startup_elapsed_time=${_instance_startup_elapsed_time:-}
+  let _instance_startup_elapsed_time=0 | true # | pipe to true to avoid error due to nonzero rc.  zero is false is one :)
   let _instance_startup_check_interval=5
   while boxbuilder_builder_instance_host=$(ec2-describe-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
      "$boxbuilder_builder_instance_id" | \
