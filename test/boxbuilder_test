@@ -166,17 +166,9 @@ run_boxbuilder_remote_build_ami() {
 }
 
 run_boxbuilder_remote_bootstrap() {
-#  set +o xtrace # even if boxbuilder_debug is on, always turn off tracing
-#                # while running boxbuilder_remote_bootstrap and grabbing output,
-#                # test output is huge and confusing
-
+  export boxbuilder_host
   # Run boxbuilder_remote_bootstrap on boxbuilder_host
   boxbuilder_remote_bootstrap_output=$($boxbuilder_dir/boxbuilder_remote_bootstrap)
-
-#  if [[ $boxbuilder_debug = true ]]; then
-#    # turn back on tracing if we are debugging
-#    set -o xtrace
-#  fi
 
   echo; echo; echo
   echo "-------- BEGIN OUTPUT OF boxbuilder_remote_bootstrap --------"
