@@ -272,6 +272,47 @@ create_chroot_jail_from_base_image() {
   echo "$_log_prefix Finished creating chroot jail from base image $_imagesource ..."
 }
 
+perform_initial_chroot_jail_setup() {
+  echo "$_log_prefix Performing initial setup on chroot jail at $_imagedir ..."
+  if [[ $_platform = 'redhat' ]]; then
+
+    echo "$_log_prefix  Making devices in in chroot jail..."
+    for _device in console null zero; do
+      sudo /sbin/MAKEDEV -d $_imagedir/dev -x $_device
+    done
+
+    echo "$_log_prefix  Installing yum in chroot jail..."
+    # NOTE: Install of yum in chroot via --installroot brings a lot of packages with it,
+    #       using builder instances yum config (presumably).  Is this bad?
+    sudo yum -y --installroot="$_imagedir" install yum
+
+    echo "$_log_prefix  Installing base packages in chroot jail..."
+    sudo yum -y --installroot="$_imagedir" groupinstall Base
+
+    _sysconfig_network_contents=$( cat <<-LINES
+HOSTNAME=localhost.localdomain
+NETWORKING=yes
+NOZEROCONF=true
+NETWORKING_IPV6=no
+LINES
+)
+    echo "$_sysconfig_network_contents"
+    sudo bash -c "echo \"$_sysconfig_network_contents\" >> $_imagedir/etc/sysconfig/network"
+
+    _sysconfig_network_scripts_ifcfg_eth0_contents=$( cat <<-LINES
+ONBOOT=yes
+DEVICE=eth0
+BOOTPROTO=dhcp
+LINES
+)
+    echo "$_sysconfig_network_scripts_ifcfg_eth0_contents"
+    sudo bash -c "echo \"$_sysconfig_network_scripts_ifcfg_eth0_contents\" >> $_imagedir/etc/sysconfig/network-scripts/ifcfg-eth0"
+
+    # restart networking in chroot to create /etc/resolv.conf (and other required stuff?)
+    sudo /usr/sbin/chroot $_imagedir /etc/init.d/network restart
+  fi
+}
+
 ensure_boxbuilder_user_exists() {
   echo "$_log_prefix  Ensuring boxbuilder_user '$boxbuilder_user' exists in chroot jail ..."
   if [[ $boxbuilder_user = 'root' ]]; then
@@ -285,15 +326,6 @@ automatically created..."
     return 0
   fi
   echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' does not exist, automatically creating it ..."
-
-  if [[ $_platform = 'redhat' ]]; then
-    echo "$_log_prefix  Installing yum in chroot jail..."
-    # NOTE: Install of yum in chroot via --installroot brings a lot of packages with it,
-    #       using builder instances yum config (presumably).  Is this bad?
-    sudo yum -y --installroot="$_imagedir" install yum
-    echo "$_log_prefix  Installing shadow-utils package in chroot jail to provide groupadd utility..."
-    sudo /usr/sbin/chroot $_imagedir /usr/bin/yum install -y shadow-utils
-  fi
 
   echo "$_log_prefix  Ensuring 'admin' group exists ..."
   sudo /usr/sbin/chroot $_imagedir groupadd -f admin
@@ -358,8 +390,8 @@ grant_nopasswd_sudo_access_in_chroot() {
   sudo /usr/sbin/chroot $_imagedir cp /tmp/sudoers.new /etc/sudoers
 }
 
-perform_initial_chroot_jail_setup() {
-  echo "$_log_prefix Performing initial setup on chroot jail at $_imagedir ..."
+perform_remaining_chroot_jail_setup() {
+  echo "$_log_prefix Performing remaining setup on chroot jail at $_imagedir ..."
   # Allow network access from chroot environment
   sudo cp /etc/resolv.conf $_imagedir/etc/
   # Remove hostname
@@ -488,9 +520,10 @@ run() {
   install_packages
   set_up_ec2_tools
   create_chroot_jail_from_base_image
+  perform_initial_chroot_jail_setup
   ensure_boxbuilder_user_exists
   grant_nopasswd_sudo_access_in_chroot
-  perform_initial_chroot_jail_setup
+  perform_remaining_chroot_jail_setup
   run_boxbuilder_bootstrap_in_chroot_jail_to_build_image
   copy_image_to_ami
   echo "$_log_prefix Finished and exiting successfully"
