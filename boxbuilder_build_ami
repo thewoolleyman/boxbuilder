@@ -287,11 +287,6 @@ perform_initial_chroot_jail_setup() {
       sudo /sbin/MAKEDEV -d $_imagedir/dev -x $_device
     done
 
-    echo "$_log_prefix  Installing yum in chroot jail..."
-    # NOTE: Install of yum in chroot via --installroot brings a lot of packages with it,
-    #       using builder instances yum config (presumably).  Is this bad?
-    sudo yum -y --installroot="$_imagedir" install yum
-
     echo "$_log_prefix  Installing base packages in chroot jail..."
     sudo yum -y --installroot="$_imagedir" groupinstall Base
 
