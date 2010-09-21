@@ -249,6 +249,12 @@ create_chroot_jail_from_base_image() {
     sudo umount -dfl /dev/loop4
   fi 
 
+  if [[ $_platform = 'redhat' ]]; then
+    _image_fs_type='squashfs'
+  else
+    _image_fs_type='' # default
+  fi
+  
   echo "$_log_prefix Mounting loop device at /dev/loop4 ..."
   if [[ $_image_fs_type = 'squashfs' ]]; then
     sudo mkdir -p $_imagedir-readonly
@@ -256,7 +262,7 @@ create_chroot_jail_from_base_image() {
     sudo cp -r $_imagedir-readonly $_imagedir
   else
     sudo mkdir -p $_imagedir
-    sudo mount -o loop=/dev/loop4 -t $_image_fs_type $_image $_imagedir
+    sudo mount -o loop=/dev/loop4 $_image $_imagedir
   fi
 
   if which resize2fs; then
