@@ -58,6 +58,7 @@ setup_boxbuilderrc() {
       fi
     fi
   else
+    boxbuilder_branch=${boxbuilder_branch:-"master"}
     boxbuilderrc_download_url=${boxbuilderrc_download_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example"}
     echo "$_log_prefix Creating $HOME/.boxbuilderrc which will source $HOME/.boxbuilderrc_download ..."
     _boxbuilderrc_contents=$( cat <<-LINES
