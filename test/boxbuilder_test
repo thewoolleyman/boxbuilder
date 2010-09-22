@@ -272,8 +272,8 @@ suite() {
     suite_existing_boxbuilder_host
     echo "$_log_prefix All tests passed successfully (boxbuilder_remote_build_ami tests were not run)"
   else
-    suite_ubuntu_ami_build
-#    suite_centos_ami_build
+#    suite_ubuntu_ami_build
+    suite_centos_ami_build
     echo "$_log_prefix All tests passed successfully"
   fi
 }
