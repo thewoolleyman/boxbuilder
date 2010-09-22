@@ -346,9 +346,9 @@ automatically created..."
 
   echo "$_log_prefix  Ensuring 'admin' group exists ..."
   sudo /usr/sbin/chroot $_imagedir /usr/sbin/groupadd -f admin
-  _admin_gid=$(sudo /usr/sbin/chroot $_imagedir "grep 'admin' /etc/group | cut -d: -f3")
+  _admin_gid=$(sudo /usr/sbin/chroot $_imagedir grep 'admin' /etc/group | cut -d: -f3)
   echo "$_log_prefix  Automatically creating '$boxbuilder_user' user ..."
-  sudo /usr/sbin/chroot $_imagedir useradd $boxbuilder_user -m -g $_admin_gid
+  sudo /usr/sbin/chroot $_imagedir /usr/sbin/useradd $boxbuilder_user -m -g $_admin_gid
   echo "$_log_prefix  Finding home dir for '$boxbuilder_user' user ..."
   _boxbuilder_user_home=$(sudo /usr/sbin/chroot $_imagedir su - $boxbuilder_user -c "echo $HOME")
   if sudo /usr/sbin/chroot $_imagedir su - $boxbuilder_user; then
