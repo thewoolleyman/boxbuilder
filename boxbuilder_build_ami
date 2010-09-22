@@ -351,7 +351,7 @@ automatically created..."
   sudo /usr/sbin/chroot $_imagedir /usr/sbin/useradd $boxbuilder_user -m -g $_admin_gid
   echo "$_log_prefix  Finding home dir for '$boxbuilder_user' user ..."
   _boxbuilder_user_home=$(sudo /usr/sbin/chroot $_imagedir su - $boxbuilder_user -c "echo $HOME")
-  if sudo /usr/sbin/chroot $_imagedir su - $boxbuilder_user; then
+  if sudo /usr/sbin/chroot $_imagedir su - $boxbuilder_user -c 'id'; then
     echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' successfully created in chroot jail..."
   else
     echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' was NOT successfully created in chroot jail - something went wrong :( - try setting boxbuilder_debug=true ..."
@@ -381,12 +381,12 @@ grant_nopasswd_sudo_access_in_chroot() {
 
   _sudoers_additional_error_instructions='Please use visudo to manually make these changes: '
   if $_needs_requiretty_sudoers_removed; then
-    sudo /usr/sbin/chroot $_imagedir "cat /etc/sudoers | grep -v 'requiretty' > /tmp/sudoers.new"
+    sudo /usr/sbin/chroot $_imagedir bash -c "cat /etc/sudoers | grep -v 'requiretty' > /tmp/sudoers.new"
     _sudoers_additional_error_instructions="$_sudoers_additional_error_instructions Remove 'requiretty' line. "
   else
-    sudo /usr/sbin/chroot $_imagedir "cp /etc/sudoers /tmp/sudoers.new"
+    sudo /usr/sbin/chroot $_imagedir cp /etc/sudoers /tmp/sudoers.new
   fi
-  sudo /usr/sbin/chroot $_imagedir "chmod 0440 /tmp/sudoers.new"
+  sudo /usr/sbin/chroot $_imagedir chmod 0440 /tmp/sudoers.new
 
   if $_needs_nopasswd_sudoers_added; then
     echo "$_log_prefix  Giving user $boxbuilder_user NO PASSWORD sudo privileges"
