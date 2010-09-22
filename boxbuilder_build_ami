@@ -345,7 +345,7 @@ automatically created..."
   echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' does not exist, automatically creating it ..."
 
   echo "$_log_prefix  Ensuring 'admin' group exists ..."
-  sudo /usr/sbin/chroot $_imagedir groupadd -f admin
+  sudo /usr/sbin/chroot $_imagedir /usr/sbin/groupadd -f admin
   _admin_gid=$(sudo /usr/sbin/chroot $_imagedir "grep 'admin' /etc/group | cut -d: -f3")
   echo "$_log_prefix  Automatically creating '$boxbuilder_user' user ..."
   sudo /usr/sbin/chroot $_imagedir useradd $boxbuilder_user -m -g $_admin_gid
