@@ -367,7 +367,7 @@ grant_nopasswd_sudo_access_in_chroot() {
 
   _needs_nopasswd_sudoers_added=false
   if ! sudo grep -e "%admin.*ALL.*=.*NOPASSWD.*:.*ALL" $_imagedir/etc/sudoers; then
-    _needs_nopasswd_sudo=true
+    _needs_nopasswd_sudoers_added=true
   fi
 
   _needs_requiretty_sudoers_removed=false

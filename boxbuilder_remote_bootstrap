@@ -120,7 +120,7 @@ grant_nopasswd_sudo_access_from_boxbuilder_user() {
 
   _needs_nopasswd_sudoers_added=false
   if ! exec_remotely_quiet "sudo grep -e '%admin.*ALL.*=.*NOPASSWD.*:.*ALL' /etc/sudoers"; then
-    _needs_nopasswd_sudo=true
+    _needs_nopasswd_sudoers_added=true
   fi
 
   _needs_requiretty_sudoers_removed=false
