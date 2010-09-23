@@ -273,7 +273,7 @@ create_chroot_jail_from_base_image() {
   else
     sudo mount -o loop=/dev/$_loopback_device $_image $_imagedir-mount
   fi
-  sudo cp -r $_imagedir-mount $_imagedir
+  sudo cp -rp $_imagedir-mount $_imagedir
 
   if which resize2fs; then
     echo "$_log_prefix Resizing loop device at /dev/$_loopback_device to 5G ..."
