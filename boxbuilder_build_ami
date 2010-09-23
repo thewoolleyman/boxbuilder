@@ -249,7 +249,7 @@ create_chroot_jail_from_base_image() {
   echo "$_log_prefix Ensuring existing loop device at /dev/$_loopback_device is unmounted ..."
   _mounts="$(mount)"
   if _mount=$(echo "$_mounts" | grep /dev/$_loopback_device); then
-    echo "$_log_prefix Error - loopback device already mounted. Set _loopback_device to a different value than restart system.  Error mount: $_mount"
+    echo "$_log_prefix Error - loopback device already mounted. Set _loopback_device to a different value than restart system.  Existing mount: $_mount"
     return 1
     # TODO: This never worked.  Always got "bad magic number" error when trying to reuse previously-used loopback
     # _loop_mount=$(echo "$_mount" | cut -d ' ' -f 3)
@@ -265,15 +265,15 @@ create_chroot_jail_from_base_image() {
     _image_fs_type='' # default
   fi
   
+  sudo mkdir -p $_imagedir-mount
+
   echo "$_log_prefix Mounting loop device at /dev/$_loopback_device ..."
   if [[ $_image_fs_type = 'squashfs' ]]; then
-    sudo mkdir -p $_imagedir-mount
-    sudo mount -o loop=/dev/$_loopback_device -t $_image_fs_type $_image $_imagedir-readonly
-    sudo cp -r $_imagedir-mount $_imagedir
+    sudo mount -o loop=/dev/$_loopback_device -t $_image_fs_type $_image $_imagedir-mount
   else
-    sudo mkdir -p $_imagedir
-    sudo mount -o loop=/dev/$_loopback_device $_image $_imagedir
+    sudo mount -o loop=/dev/$_loopback_device $_image $_imagedir-mount
   fi
+  sudo cp -r $_imagedir-mount $_imagedir
 
   if which resize2fs; then
     echo "$_log_prefix Resizing loop device at /dev/$_loopback_device to 5G ..."
