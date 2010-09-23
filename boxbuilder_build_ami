@@ -287,15 +287,17 @@ create_chroot_jail_from_base_image() {
     fi
   fi
 
-  sudo /usr/sbin/chroot $_imagedir mount -t proc none /proc
-  sudo mkdir -p $_imagedir/dev/pts
-  sudo /usr/sbin/chroot $_imagedir mount -t devpts none /dev/pts
-
   echo "$_log_prefix Finished creating chroot jail from base image $_imagesource ..."
 }
 
 perform_initial_chroot_jail_setup() {
   echo "$_log_prefix Performing initial setup on chroot jail at $_imagedir ..."
+
+  sudo /usr/sbin/chroot $_imagedir mount -t proc none /proc
+  
+  sudo mkdir -p $_imagedir/dev/pts
+  sudo /usr/sbin/chroot $_imagedir mount -t devpts none /dev/pts
+
   if [[ $_platform = 'redhat' ]]; then
 
     echo "$_log_prefix  Making devices in in chroot jail..."
