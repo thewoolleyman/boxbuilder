@@ -327,6 +327,9 @@ LINES
 
     # restart networking in chroot to create /etc/resolv.conf (and other required stuff?)
     sudo /usr/sbin/chroot $_imagedir /etc/init.d/network restart
+
+    # ensure /etc/shadow exist
+    sudo /usr/sbin/chroot $_imagedir /usr/sbin/pwconv
   fi
 }
 
@@ -400,7 +403,7 @@ grant_nopasswd_sudo_access_in_chroot() {
     return 1
   fi
 
-  if ! sudo /usr/sbin/chroot $_imagedir visudo -c -s -f /tmp/sudoers.new; then
+  if ! sudo /usr/sbin/chroot $_imagedir /usr/sbin/visudo -c -s -f /tmp/sudoers.new; then
     echo "$_log_prefix error on line $LINENO -: Syntax error in /tmp/sudoers.new in chroot jail.  $_sudoers_additional_error_instructions"
     return 1
   fi
