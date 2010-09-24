@@ -447,7 +447,10 @@ copy_image_to_ami() {
   echo "$_log_prefix Cleaning up mounts and policy-rc.d in chroot jail before copying image ..."
   _mount_output=$(sudo /usr/sbin/chroot $_imagedir mount)
   if echo $_mount_output | grep '/proc'; then
-    sudo /usr/sbin/chroot $_imagedir umount /proc
+    if ! sudo /usr/sbin/chroot $_imagedir umount /proc; then
+      # TODO: On centos, this sometimes gives "Couldn't umount /proc: Inappropriate ioctl for device"
+      echo "$_log_prefix Error unmounting /proc in chroot jail, but we'll ignore it and hope we can still successfully copy it to the new AMI EBS image ..."
+    fi
   fi
   if echo $_mount_output | grep '/dev/pts'; then
     sudo /usr/sbin/chroot $_imagedir umount /dev/pts
