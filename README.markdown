@@ -3,8 +3,8 @@ BOXBUILDER
 
 Boxbuilder builds boxes!  Basic Bash scripts to bootstrap barebones-OS boxes with
 [chef-solo](http://wiki.opscode.com/display/chef/Chef+Solo).  It can also create
-EC2 AMIs.  Currently it supports Debian/Ubuntu, CentOS, and OSX/Homebrew.   Pull requests with support for
-new distros and package managers are welcome.
+EC2 AMIs.  Currently it supports Debian/Ubuntu, CentOS (mostly), and OSX/Homebrew (mostly).
+Pull requests with support for new distros and package managers are welcome.
 
 * Homepage: You're reading it - [http://github.com/thewoolleyman/boxbuilder](http://github.com/thewoolleyman/boxbuilder)
 * Tracker Project: [http://www.pivotaltracker.com/projects/101913](http://www.pivotaltracker.com/projects/101913)
