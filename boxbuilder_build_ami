@@ -248,10 +248,11 @@ create_chroot_jail_from_base_image() {
   _loopback_device=${_loopback_device:-'loop0'}
   echo "$_log_prefix Ensuring existing loop device at /dev/$_loopback_device is unmounted ..."
   _mounts="$(mount)"
-  if _mount=$(echo "$_mounts" | grep /dev/$_loopback_device); then
+  if echo "$_mounts" | grep "/dev/$_loopback_device" then
     echo "$_log_prefix Error - loopback device /dev/$_loopback_device already mounted. Will attempt to reuse existing mount.  If there are problems, reboot.  If there are still problems, you can try setting _loopback_device to a different value.  Existing loopback mount: $_mount"
     return 0
     # TODO: This never worked.  Always got "bad magic number" error when trying to reuse previously-used loopback
+    # _mount=$(echo "$_mounts" | grep "/dev/$_loopback_device")
     # _loop_mount=$(echo "$_mount" | cut -d ' ' -f 3)
     # sudo umount -dfl $_loop_mount
     # sudo losetup -d /dev/$_loopback_device
