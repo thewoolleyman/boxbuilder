@@ -343,6 +343,11 @@ LINES
 
     # ensure /etc/shadow exist
     sudo /usr/sbin/chroot $_imagedir /usr/sbin/pwconv
+
+    _kernel_module_archive_url="http://s3.amazonaws.com/ec2-downloads/ec2-modules-2.6.18-xenU-ec2-v1.4-x86_64.tgz"
+    _kernel_module_archive=/tmp/${_kernel_module_archive_url##*/} # grabs last path component of url to use as script name
+    sudo /usr/sbin/chroot $_imagedir wget -O /lib/modules/$_kernel_module_archive $_kernel_module_archive_url
+    sudo /usr/sbin/chroot $_imagedir tar -zxf /lib/modules/$_kernel_module_archive
   fi
 }
 
