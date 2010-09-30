@@ -244,9 +244,9 @@ suite_existing_boxbuilder_host() {
 
 suite_ami_build() {
   _test_remote_build_ami=true
-  echo "$_log_prefix Starting tests for $boxbuilder_user with builder_instance_ami_id boxbuilder_builder_instance_ami_id ..."
+  echo "$_log_prefix Starting tests for $boxbuilder_user with builder_instance_ami_id $boxbuilder_builder_instance_ami_id ..."
   suite_common
-  echo "$_log_prefix All tests passed successfully for $boxbuilder_user with builder_instance_ami_id boxbuilder_builder_instance_ami_id ..."
+  echo "$_log_prefix All tests passed successfully for $boxbuilder_user with builder_instance_ami_id $boxbuilder_builder_instance_ami_id ..."
 }
 
 suite_ubuntu_ami_build() {

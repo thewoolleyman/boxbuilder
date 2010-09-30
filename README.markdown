@@ -640,14 +640,18 @@ Set it to false if you want leave the build instance running in order to rerun o
 _EC2 Info_
 ==========
 
-* Current Ubuntu Base AMI (default): ami-4b4ba522 - Ubuntu 10.04 LTS amd64 server (Lucid Lynx) (us-east-1)
+* Current Ubuntu Base AMI (default): 
+  * 64-bit: ami-4b4ba522 - Ubuntu 10.04 LTS amd64 server (Lucid Lynx) (us-east-1)
+  * 32-bit: ami-1234de7b - ubuntu-lucid-10.04-i386-server-20100827
 
 * Alestic AMI list: [http://alestic.com](http://alestic.com)
 * Ubuntu AMI list: [http://uec-images.ubuntu.com/releases/lucid/release](http://uec-images.ubuntu.com/releases/lucid/release)
 
 ----
 
-* Current CentOS Base AMI: ami-4d42a924 - RightImage\_CentOS\_5.4\_x64\_v5.5.9\_EBS
+* Current CentOS Base AMI: 
+  * 64-bit: ami-4d42a924 - RightImage\_CentOS\_5.4\_x64\_v5.5.9\_EBS
+  * 32-bit: ami-2342a94a - RightImage_CentOS_5.4_i386_v5.5.9_EBS
 
 * RightScale AMI list: [http://support.rightscale.com/18-Release\_Notes/ServerTemplates\_and\_RightImages](http://support.rightscale.com/18-Release_Notes/ServerTemplates_and_RightImages)
 * Rightscale Image Setup Scripts: http://support.rightscale.com/index.php?title=06-FAQs/FAQ_0103_-_How_do_I_make_any_Amazon_Machine_Image_(AMI)_capable_of_running_RightScripts%3F

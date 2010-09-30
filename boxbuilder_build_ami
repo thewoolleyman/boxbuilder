@@ -64,6 +64,12 @@ detect_platform() {
 }
 
 setup_image_vars_redhat() {
+  if [[ $_arch = "x86_64" ]] ; then
+    _ebsopts="--kernel=aki-b51cf9dc --ramdisk=ari-b31cf9da --block-device-mapping /dev/sdb=ephemeral0"    
+  else
+    _ebsopts="--kernel=aki-a71cf9ce --ramdisk=ari-a51cf9cc --block-device-mapping /dev/sda2=ephemeral0"
+  fi
+
   _release="5.4"
   _standard_ami_prefix="redhat-$_release-$_arch"
   _standard_ami_description="redhat $_release $_arch"
@@ -74,6 +80,14 @@ setup_image_vars_redhat() {
 }
 
 setup_image_vars_debian() {
+  if [[ $_arch = "x86_64" ]] ; then
+    _ubuntu_arch=amd64
+    _ebsopts="--kernel=aki-0b4aa462 --ramdisk=ari-c515f6ac --block-device-mapping /dev/sdb=ephemeral0"
+  else
+    _ubuntu_arch=i386
+    _ebsopts="--kernel=aki-754aa41c --ramdisk=ari-0915f660  --block-device-mapping /dev/sda2=ephemeral0"
+  fi
+
   _codename="lucid"
   _release="10.04"
   _tag="server"
@@ -92,12 +106,8 @@ setup_image_vars() {
   # TODO: Make sure these kernel and ramdisk values are correct for all platforms
   if [[ $(uname -m) = "x86_64" ]] ; then
     _arch=x86_64
-    _ubuntu_arch=amd64
-    _ebsopts="--kernel=aki-0b4aa462 --ramdisk=ari-c515f6ac --block-device-mapping /dev/sdb=ephemeral0"
   else
     _arch=i386
-    _ubuntu_arch=i386
-    _ebsopts="--kernel=aki-754aa41c --ramdisk=ari-0915f660  --block-device-mapping /dev/sda2=ephemeral0"
   fi
 
   setup_image_vars_$_platform
