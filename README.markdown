@@ -649,7 +649,7 @@ _EC2 Info_
 
 * Current CentOS Base AMI: ami-4d42a924 - RightImage\_CentOS\_5.4\_x64\_v5.5.9\_EBS
 
-* RightScale AMI list: [http://support.rightscale.com/18-Release_Notes/ServerTemplates\_and\_RightImages/Current#V5\_Images](http://support.rightscale.com/18-Release_Notes/ServerTemplates_and_RightImages/Current#V5_Images)
+* RightScale AMI list: [http://support.rightscale.com/18-Release\_Notes/ServerTemplates\_and\_RightImages](http://support.rightscale.com/18-Release_Notes/ServerTemplates_and_RightImages)
 * Rightscale Image Setup Scripts: http://support.rightscale.com/index.php?title=06-FAQs/FAQ_0103_-_How_do_I_make_any_Amazon_Machine_Image_(AMI)_capable_of_running_RightScripts%3F
 * CentOS OS Images: http://mirrors.usc.edu/pub/linux/distributions/centos/5.5/os/x86_64/images/
 ----
