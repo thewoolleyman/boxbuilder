@@ -247,7 +247,9 @@ install_rvm() {
     mkdir -p $HOME/.rvm/src/
     rm -rf $HOME/.rvm/src/rvm/
     git clone --depth 1 git://github.com/wayneeseguin/rvm.git $HOME/.rvm/src/rvm
+    disable_error_checking # HACK - Latest stable RVM install is returning nonzero but no output.  Add ability to specify known good RVM version/tag.    
     $HOME/.rvm/src/rvm/install
+    enable_error_checking
 
     # HACK around bug in RVM latest-stable
     mkdir -p $HOME/.rvm/gems/cache
@@ -295,7 +297,6 @@ install_rvm_ruby() {
 
 set_rvm_default_ruby() {
   echo "$_log_prefix  Setting RVM default ruby: $boxbuilder_default_ruby"
-  # disable_error_checking
   $HOME/.rvm/bin/rvm --default use $boxbuilder_default_ruby
   if [[ ! $? = 0 ]]; then
     # TODO: This manual check is only required because RVM can't be invoked without
@@ -303,7 +304,6 @@ set_rvm_default_ruby() {
     echo "$_log_prefix  Error setting RVM default ruby"
     return 1
   fi
-  # enable_error_checking
   echo "$_log_prefix  Finished setting RVM default ruby: $boxbuilder_default_ruby"
 }
 
