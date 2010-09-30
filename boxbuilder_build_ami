@@ -80,10 +80,10 @@ setup_image_vars_debian() {
 
   _standard_ami_prefix="ubuntu-$_release-$_codename-$_tag-$_arch"
   _standard_ami_description="Ubuntu $_release $_codename $_tag $_arch"
-  _imagesource="http://uec-images.ubuntu.com/releases/$_codename/release/unpacked/ubuntu-$_release-$_tag-uec-$_arch2.img.tar.gz"
-  _image="/mnt/$_codename-$_tag-uec-$_arch2.img"
+  _imagesource="http://uec-images.ubuntu.com/releases/$_codename/release/unpacked/ubuntu-$_release-$_tag-uec-$_ubuntu_arch.img.tar.gz"
+  _image="/mnt/$_codename-$_tag-uec-$_ubuntu_arch.img"
   _image_fs_type="ext3"
-  _imagedir="/mnt/$_codename-uec-$_arch2"
+  _imagedir="/mnt/$_codename-uec-$_ubuntu_arch"
 }
 
 setup_image_vars() {
@@ -92,11 +92,11 @@ setup_image_vars() {
   # TODO: Make sure these kernel and ramdisk values are correct for all platforms
   if [[ $(uname -m) = "x86_64" ]] ; then
     _arch=x86_64
-    _arch2=amd64
+    _ubuntu_arch=amd64
     _ebsopts="--kernel=aki-0b4aa462 --ramdisk=ari-c515f6ac --block-device-mapping /dev/sdb=ephemeral0"
   else
     _arch=i386
-    _arch2=i386
+    _ubuntu_arch=i386
     _ebsopts="--kernel=aki-754aa41c --ramdisk=ari-0915f660  --block-device-mapping /dev/sda2=ephemeral0"
   fi
 
