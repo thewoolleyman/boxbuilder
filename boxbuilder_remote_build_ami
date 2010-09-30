@@ -183,12 +183,13 @@ set_up_ec2_tools() {
 
 start_builder_instance() {
   echo "$_log_prefix Starting builder instance to perform AMI build: ami=$boxbuilder_builder_instance_ami_id, instance_type=$boxbuilder_builder_instance_instance_type ..."
+  local boxbuilder_ec2_resource_tag=${boxbuilder_ec2_resource_tag:-$_autoterminating_temp_ec2_resource_tag}
   boxbuilder_builder_instance_id=$(ec2-run-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
     --key "$EC2_KEYPAIR_NAME" \
     --availability-zone us-east-1a \
     --instance-type "$boxbuilder_builder_instance_instance_type" \
     "$boxbuilder_builder_instance_ami_id" \
-    -d "$_autoterminating_temp_ec2_resource_tag" \
+    -d "$boxbuilder_ec2_resource_tag" \
     | egrep ^INSTANCE | cut -f2)
   echo "$_log_prefix  Started EC2 builder instance: instance_id=$boxbuilder_builder_instance_id"
 }
