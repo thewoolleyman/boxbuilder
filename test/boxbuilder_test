@@ -109,7 +109,7 @@ run_boxbuilder_remote_build_ami() {
   boxbuilder_ec2_resource_tag=${boxbuilder_ec2_resource_tag:-"boxbuilder_temp_resource_safe_to_terminate"}
   # TODO: grep boxbuilder_keypair value out of boxbuilder_remote_build_ami output
 
-  boxbuilder_terminate_ec2_resources=${boxbuilder_terminate_ec2_resources:-}
+  boxbuilder_terminate_ec2_resources=${boxbuilder_terminate_ec2_resources:-true}
   export boxbuilder_terminate_ec2_resources
 
   # add specific variables for building AMIs to boxbuilder_config
