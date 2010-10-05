@@ -479,8 +479,8 @@ start() {
   fi
   
   # Download public ssh key from EC2 metadata HTTP API
-  wget -O /home/$boxbuilder_user/.ssh/authorized_keys http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key
-  chmod 600 home/$boxbuilder_user/.ssh/authorized_keys
+  wget -O "/home/$boxbuilder_user/.ssh/authorized_keys" http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key
+  chmod 600 "/home/$boxbuilder_user/.ssh/authorized_keys"
 }
 
 stop() {
@@ -493,21 +493,23 @@ restart() {
 }
 
 case "\$1" in
-  start)
+  start\)
     start
     ;;
-  stop)
+  stop\)
     stop
     ;;
-  restart)
+  restart\)
     restart
     ;;
-  *)
+  *\)
     echo "Usage: \$0 [start|stop]"
     exit 1
 esac
 LINES
     )
+    echo "$_initd_ssh_keypair_setup"
+    sudo bash -c "echo \"$_initd_ssh_keypair_setup\" >> $_imagedir/etc/init.d/_initd_ssh_keypair_setup"
     sudo chmod +x $_imagedir/etc/init.d/ssh_keypair_setup
   fi
 
