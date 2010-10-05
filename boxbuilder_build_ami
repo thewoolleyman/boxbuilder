@@ -359,6 +359,7 @@ PermitRootLogin without-password
 LINES
 )
     echo "$_ssh_sshd_config_contents"
+    sudo mkdir -p $_imagedir/etc/ssh
     sudo bash -c "echo \"$_ssh_sshd_config_contents\" >> $_imagedir/etc/ssh/sshd_config"
 
     # restart networking in chroot to create /etc/resolv.conf (and other required stuff?)
