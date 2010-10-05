@@ -259,6 +259,7 @@ create_chroot_jail_from_base_image() {
   echo "$_log_prefix Ensuring existing loop device at /dev/$_loopback_device is unmounted ..."
   _mounts="$(mount)"
   if echo "$_mounts" | grep "/dev/$_loopback_device"; then
+    $_mount=$(echo "$_mounts" | grep "/dev/$_loopback_device")
     echo "$_log_prefix Error - loopback device /dev/$_loopback_device already mounted. Will attempt to reuse existing mount.  If there are problems, reboot.  If there are still problems, you can try setting _loopback_device to a different value.  Existing loopback mount: $_mount"
     return 0
     # TODO: This never worked.  Always got "bad magic number" error when trying to reuse previously-used loopback
@@ -308,6 +309,8 @@ perform_initial_chroot_jail_setup() {
   
   sudo mkdir -p $_imagedir/dev/pts
   sudo /usr/sbin/chroot $_imagedir mount -t devpts none /dev/pts
+  
+  sudo mkdir -p $_imagedir/etc
 
   if [[ $_platform = 'redhat' ]]; then
 
@@ -318,6 +321,18 @@ perform_initial_chroot_jail_setup() {
 
     echo "$_log_prefix  Installing base packages in chroot jail..."
     sudo yum -y --installroot="$_imagedir" groupinstall Base
+
+    _etc_fstab_contents=$( cat <<-LINES
+/dev/sda1  /         ext3    defaults        1 1
+/dev/sdb   /mnt      ext3    defaults        1 2
+none       /dev/pts  devpts  gid=5,mode=620  0 0
+none       /dev/shm  tmpfs   defaults        0 0
+none       /proc     proc    defaults        0 0
+none       /sys      sysfs   defaults        0 0
+LINES
+)
+    echo "$_etc_fstab_contents"
+    sudo bash -c "echo \"$_etc_fstab_contents\" >> $_imagedir/etc/fstab"
 
     _sysconfig_network_contents=$( cat <<-LINES
 HOSTNAME=localhost.localdomain
@@ -337,6 +352,14 @@ LINES
 )
     echo "$_sysconfig_network_scripts_ifcfg_eth0_contents"
     sudo bash -c "echo \"$_sysconfig_network_scripts_ifcfg_eth0_contents\" >> $_imagedir/etc/sysconfig/network-scripts/ifcfg-eth0"
+
+    _ssh_sshd_config_contents=$( cat <<-LINES
+UseDNS  no
+PermitRootLogin without-password
+LINES
+)
+    echo "$_ssh_sshd_config_contents"
+    sudo bash -c "echo \"$_ssh_sshd_config_contents\" >> $_imagedir/etc/ssh/sshd_config"
 
     # restart networking in chroot to create /etc/resolv.conf (and other required stuff?)
     sudo /usr/sbin/chroot $_imagedir /etc/init.d/network restart
