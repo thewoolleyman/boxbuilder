@@ -465,7 +465,7 @@ perform_remaining_chroot_jail_setup() {
 
   if [[ $_platform = 'redhat' ]]; then
     # script to retrieve ssh key on boot
-    _initd_ssh_keypair_setup=$( cat <<-LINES
+    sudo cat <<LINES > $_imagedir/etc/init.d/ssh_keypair_setup
 #!/usr/bin/env bash
 # chkconfig: 4 11 11
 # description: Add public key from EC2 SSH keypair to authorized keys
@@ -484,7 +484,7 @@ start() {
 }
 
 stop() {
-  echo "Tick tock and ya don't stop"
+  echo "Tick tock and ya dont stop"
 }
 
 restart() {
@@ -493,23 +493,20 @@ restart() {
 }
 
 case "\$1" in
-  start\)
+  start)
     start
     ;;
-  stop\)
+  stop)
     stop
     ;;
-  restart\)
+  restart)
     restart
     ;;
-  *\)
+  *)
     echo "Usage: \$0 [start|stop]"
     exit 1
 esac
 LINES
-    )
-    echo "$_initd_ssh_keypair_setup"
-    sudo bash -c "echo \"$_initd_ssh_keypair_setup\" >> $_imagedir/etc/init.d/_initd_ssh_keypair_setup"
     sudo chmod +x $_imagedir/etc/init.d/ssh_keypair_setup
   fi
 
