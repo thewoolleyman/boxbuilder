@@ -465,6 +465,8 @@ perform_remaining_chroot_jail_setup() {
 
   if [[ $_platform = 'redhat' ]]; then
     # script to retrieve ssh key on boot
+    sudo rm -f $_imagedir/etc/init.d/ssh_keypair_setup
+    sudo touch $_imagedir/etc/init.d/ssh_keypair_setup # you may think this is silly, but let me know how do a case statement in a heredoc in a subshell
     sudo cat <<LINES > $_imagedir/etc/init.d/ssh_keypair_setup
 #!/usr/bin/env bash
 # chkconfig: 4 11 11
