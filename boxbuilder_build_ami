@@ -318,6 +318,10 @@ perform_initial_chroot_jail_setup() {
     for _device in console null zero; do
       sudo /sbin/MAKEDEV -d $_imagedir/dev -x $_device
     done
+    
+    sudo touch $_imagedir/etc/mtab
+    echo "127.0.0.1		localhost 	localhost.localdomain" > /tmp/hosts
+    sudo cp /tmp/hosts $_imagedir/etc/hosts
 
     echo "$_log_prefix  Installing base packages in chroot jail..."
     sudo yum -y --installroot="$_imagedir" groupinstall Base
@@ -367,6 +371,7 @@ LINES
 
     # ensure /etc/shadow exist
     sudo /usr/sbin/chroot $_imagedir /usr/sbin/pwconv
+    sudo /usr/sbin/chroot authconfig --enableshadow --useshadow --enablemd5 --updateall
 
     _kernel_module_archive_url="http://s3.amazonaws.com/ec2-downloads/ec2-modules-2.6.18-xenU-ec2-v1.4-x86_64.tgz"
     _kernel_module_archive=/lib/modules/${_kernel_module_archive_url##*/} # grabs last path component of url to use as script name
