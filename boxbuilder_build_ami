@@ -509,6 +509,7 @@ esac
 LINES
     sudo cp /tmp/ssh_keypair_setup $_imagedir/etc/init.d/ssh_keypair_setup
     sudo chmod +x $_imagedir/etc/init.d/ssh_keypair_setup
+    sudo /usr/sbin/chroot $_imagedir /sbin/chkconfig --add ssh_keypair_setup
   fi
 }
 
