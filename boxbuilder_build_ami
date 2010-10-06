@@ -312,6 +312,8 @@ perform_initial_chroot_jail_setup() {
   
   sudo mkdir -p $_imagedir/etc
 
+  sudo cp /etc/resolv.conf $_imagedir/etc/
+
   if [[ $_platform = 'redhat' ]]; then
 
     echo "$_log_prefix  Making devices in in chroot jail..."
@@ -459,8 +461,6 @@ grant_nopasswd_sudo_access_in_chroot() {
 
 perform_remaining_chroot_jail_setup() {
   echo "$_log_prefix Performing remaining setup on chroot jail at $_imagedir ..."
-  # Allow network access from chroot environment
-  sudo cp /etc/resolv.conf $_imagedir/etc/
   # Remove hostname
   sudo rm -f $_imagedir/etc/hostname
   if [[ $_platform = 'debian' ]]; then
