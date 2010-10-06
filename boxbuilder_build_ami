@@ -373,7 +373,7 @@ LINES
 
     # ensure /etc/shadow exist
     sudo /usr/sbin/chroot $_imagedir /usr/sbin/pwconv
-    sudo /usr/sbin/chroot authconfig --enableshadow --useshadow --enablemd5 --updateall
+    sudo /usr/sbin/chroot $_imagedir authconfig --enableshadow --useshadow --enablemd5 --updateall
 
     _kernel_module_archive_url="http://s3.amazonaws.com/ec2-downloads/ec2-modules-2.6.18-xenU-ec2-v1.4-x86_64.tgz"
     _kernel_module_archive=/lib/modules/${_kernel_module_archive_url##*/} # grabs last path component of url to use as script name
