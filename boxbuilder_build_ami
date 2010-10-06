@@ -465,10 +465,7 @@ perform_remaining_chroot_jail_setup() {
 
   if [[ $_platform = 'redhat' ]]; then
     # script to retrieve ssh key on boot
-    sudo rm -f $_imagedir/etc/init.d/ssh_keypair_setup
-    sudo touch $_imagedir/etc/init.d/ssh_keypair_setup
-    sudo chown $boxbuilder_user $_imagedir/etc/init.d/ssh_keypair_setup # you may think this is silly, but let me know if you can do a case statement in a heredoc in a subshell
-    sudo cat <<LINES > $_imagedir/etc/init.d/ssh_keypair_setup
+    sudo cat <<LINES > /tmp/ssh_keypair_setup
 #!/usr/bin/env bash
 # chkconfig: 4 11 11
 # description: Add public key from EC2 SSH keypair to authorized keys
@@ -510,9 +507,9 @@ case "\$1" in
     exit 1
 esac
 LINES
+    sudo cp /tmp/ssh_keypair_setup $_imagedir/etc/init.d/ssh_keypair_setup
     sudo chmod +x $_imagedir/etc/init.d/ssh_keypair_setup
   fi
-
 }
 
 run_boxbuilder_bootstrap_in_chroot_jail_to_build_image() {
