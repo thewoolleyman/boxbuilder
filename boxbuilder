@@ -138,7 +138,7 @@ prerequisite_packages_redhat() {
   # This is the list from local_bootstrap.sh
   # echo "yum install git readline-devel readline bison file gcc gettext-devel expat-devel curl-devel libzip-devel openssl-devel openssl"
 
-  echo "make gcc autoconf automake zlib-devel openssl-devel readline-devel bison libxml2-devel git curl bzip2"
+  echo "make gcc autoconf automake zlib-devel openssl-devel readline-devel bison libxml2-devel git curl bzip2 openssh openssh-askpass openssh-clients openssh-server"
 }
 
 package_status_check_redhat() {
