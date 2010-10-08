@@ -362,6 +362,10 @@ LINES
     _ssh_sshd_config_contents=$( cat <<-LINES
 UseDNS  no
 PermitRootLogin without-password
+# HACK allow empty password auth to debug key based ssh auth
+PasswordAuthentication yes
+PermitEmptyPasswords
+# END HACK
 LINES
 )
     echo "$_ssh_sshd_config_contents"
@@ -409,6 +413,10 @@ automatically created..."
     echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' was NOT successfully created in chroot jail - something went wrong :( - try setting boxbuilder_debug=true ..."
     return 1
   fi
+  # HACK: temporarily add password access to debug why key-based ssh auth isn't working
+  sudo /usr/sbin/chroot $_imagedir yum -y install expect
+  sudo /usr/sbin/chroot $_imagedir passwd -d $boxbuilder_user
+  # END HACK
 }
 
 grant_nopasswd_sudo_access_in_chroot() {
