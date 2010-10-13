@@ -416,7 +416,9 @@ automatically created..."
   fi
   # HACK: temporarily add password access to debug why key-based ssh auth isn't working
   sudo /usr/sbin/chroot $_imagedir yum -y install expect
-  sudo /usr/sbin/chroot $_imagedir ln -s /etc /mnt/sysimage/etc # centos wanted this to exist or else 'passwd -d' gives 'Error 206'...
+  # centos wants /mnt/sysimage/etc to exist, or else 'passwd -d' gives 'Error 206'...
+  sudo /usr/sbin/chroot $_imagedir mkdir -p /mnt/sysimage 
+  sudo /usr/sbin/chroot $_imagedir ln -s /etc /mnt/sysimage/etc 
   sudo /usr/sbin/chroot $_imagedir passwd -d $boxbuilder_user
   # END HACK
 }
