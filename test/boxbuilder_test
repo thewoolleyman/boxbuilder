@@ -176,10 +176,18 @@ run_boxbuilder_remote_build_ami() {
   done
   echo "$_log_prefix Got hostname $boxbuilder_built_instance_host for instance $boxbuilder_built_instance_id"
   echo "$_log_prefix Waiting for ssh connectivity to $boxbuilder_built_instance_host ..."
+  let _instance_startup_elapsed_time=1
+  let _instance_startup_check_interval=5
   while ssh_up=$(ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_built_instance_host "echo 'ssh up'"); [[ "$ssh_up" != "ssh up" ]]; do
+    echo -n .
+    sleep $_instance_startup_check_interval
+    let _instance_startup_elapsed_time=$_instance_startup_elapsed_time+$_instance_startup_check_interval
     echo "$_log_prefix SSH connect response from $boxbuilder_built_instance_host: $ssh_up"
-    echo "$_log_prefix Trying to SSH to $boxbuilder_built_instance_host again after 3 seconds..."
-    sleep 5
+    echo "$_log_prefix Trying to SSH to $boxbuilder_built_instance_host again after 5 seconds..."
+    if (( $_instance_startup_elapsed_time > 360 )); then
+        echo "$_log_prefix Unable to SSH to$boxbuilder_built_instance_host after $_instance_startup_elapsed_time seconds.  Aborting."
+      return 1
+    fi
   done
   boxbuilder_host=$boxbuilder_built_instance_host
 }
