@@ -365,7 +365,7 @@ UseDNS  no
 PermitRootLogin without-password
 # HACK allow empty password auth to debug key based ssh auth
 PasswordAuthentication yes
-PermitEmptyPasswords
+PermitEmptyPasswords yes
 # END HACK
 LINES
 )
