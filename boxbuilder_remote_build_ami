@@ -201,7 +201,8 @@ get_builder_instance_host() {
   let _instance_startup_check_interval=5
   while boxbuilder_builder_instance_host=$(ec2-describe-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
      "$boxbuilder_builder_instance_id" | \
-    egrep ^INSTANCE | cut -f4) && [[ -z $boxbuilder_builder_instance_host ]]; do
+    egrep ^INSTANCE | cut -f4) && [[ -z $boxbuilder_builder_instance_host ]]
+    do
       echo -n .
       sleep $_instance_startup_check_interval
       let _instance_startup_elapsed_time=$_instance_startup_elapsed_time+$_instance_startup_check_interval
@@ -216,15 +217,23 @@ get_builder_instance_host() {
 
 verify_builder_instance_host_ssh_connectivity() {
   echo "$_log_prefix Waiting for ssh connectivity to $boxbuilder_builder_instance_host for either $boxbuilder_user or root..."
+  let _instance_startup_elapsed_time=1
+  let _instance_startup_check_interval=5
   while
     boxbuilder_user_ssh_up=$(ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "echo 'ssh up'")
     root_ssh_up=$(ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $EC2_KEYPAIR root@$boxbuilder_builder_instance_host "echo 'ssh up'")
     [[ "$boxbuilder_user_ssh_up" != "ssh up" && "$root_ssh_up" != "ssh up" ]]
     do
+      echo -n .
+      sleep $_instance_startup_check_interval
+      let _instance_startup_elapsed_time=$_instance_startup_elapsed_time+$_instance_startup_check_interval
       echo "$_log_prefix SSH connect response from $boxbuilder_user@$boxbuilder_builder_instance_host: $boxbuilder_user_ssh_up"
       echo "$_log_prefix SSH connect response from root@$boxbuilder_builder_instance_host: $root_ssh_up"
       echo "$_log_prefix Trying to SSH to $boxbuilder_builder_instance_host as $boxbuilder_user or root again after 5 seconds..."
-      sleep 5
+      if (( $_instance_startup_elapsed_time > 360 )); then
+          echo "$_log_prefix Unable to SSH to $boxbuilder_builder_instance_host as $boxbuilder_user or root after $_instance_startup_elapsed_time seconds.  Aborting."
+        return 1
+      fi
   done
   if [[ "$root_ssh_up" = "ssh up" ]]; then
     _root_ssh_access_exists=true
