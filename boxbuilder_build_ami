@@ -277,7 +277,6 @@ create_chroot_jail_from_base_image() {
     _image_fs_type='' # default
   fi
   
-
   echo "$_log_prefix Mounting loop device at /dev/$_loopback_device ..."
   if [[ $_image_fs_type = 'squashfs' ]]; then
     # squashfs is readonly, mount and then copy so chroot will be writeable
@@ -285,6 +284,7 @@ create_chroot_jail_from_base_image() {
     sudo mount -o loop=/dev/$_loopback_device -t $_image_fs_type $_image $_imagedir-mount
     sudo cp -rp $_imagedir-mount $_imagedir
   else
+    sudo mkdir -p $_imagedir
     sudo mount -o loop=/dev/$_loopback_device $_image $_imagedir
   fi
 
