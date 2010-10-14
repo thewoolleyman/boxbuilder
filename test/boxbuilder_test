@@ -185,7 +185,7 @@ run_boxbuilder_remote_build_ami() {
     echo "$_log_prefix SSH connect response from $boxbuilder_built_instance_host: $ssh_up"
     echo "$_log_prefix Trying to SSH to $boxbuilder_built_instance_host again after 5 seconds..."
     if (( $_instance_startup_elapsed_time > 360 )); then
-        echo "$_log_prefix Unable to SSH to$boxbuilder_built_instance_host after $_instance_startup_elapsed_time seconds.  Aborting."
+        echo "$_log_prefix Unable to SSH to $boxbuilder_built_instance_host after $_instance_startup_elapsed_time seconds.  Aborting."
       return 1
     fi
   done
