@@ -314,6 +314,7 @@ perform_initial_chroot_jail_setup() {
   sudo mkdir -p $_imagedir/etc
 
   sudo cp /etc/resolv.conf $_imagedir/etc/
+  sudo echo "\n# Google's public DNS servers.\nnameserver 8.8.8.8\nnameserver 8.8.4.4" >> $_imagedir/etc/ 
 
   if [[ $_platform = 'redhat' ]]; then
 
@@ -331,11 +332,12 @@ perform_initial_chroot_jail_setup() {
 
     _etc_fstab_contents=$( cat <<-LINES
 /dev/sda1  /         ext3    defaults        1 1
-/dev/sdb   /mnt      ext3    defaults        1 2
 none       /dev/pts  devpts  gid=5,mode=620  0 0
 none       /dev/shm  tmpfs   defaults        0 0
 none       /proc     proc    defaults        0 0
 none       /sys      sysfs   defaults        0 0
+/dev/sdc1  /mnt      ext3    defaults        0 0
+/dev/sdc2  swap      swap    defaults        0 0
 LINES
 )
     echo "$_etc_fstab_contents"
@@ -352,18 +354,42 @@ LINES
     sudo bash -c "echo \"$_sysconfig_network_contents\" >> $_imagedir/etc/sysconfig/network"
 
     _sysconfig_network_scripts_ifcfg_eth0_contents=$( cat <<-LINES
-ONBOOT=yes
 DEVICE=eth0
 BOOTPROTO=dhcp
+ONBOOT=yes
+TYPE=Ethernet
+USERCTL=yes
+PEERDNS=yes
+IPV6INIT=no
+PERSISTENT_DHCLIENT=yes
 LINES
 )
     echo "$_sysconfig_network_scripts_ifcfg_eth0_contents"
     sudo bash -c "echo \"$_sysconfig_network_scripts_ifcfg_eth0_contents\" >> $_imagedir/etc/sysconfig/network-scripts/ifcfg-eth0"
 
     _ssh_sshd_config_contents=$( cat <<-LINES
-UseDNS  no
-PermitRootLogin without-password
+Port 22
+Protocol 2
+SyslogFacility AUTHPRIV
+
+PermitRootLogin yes
+MaxAuthTries 4
+#PasswordAuthentication no
+ChallengeResponseAuthentication no
+
+GSSAPIAuthentication yes
+GSSAPICleanupCredentials yes
+UsePAM yes
+
+AcceptEnv LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
+AcceptEnv LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT
+AcceptEnv LC_IDENTIFICATION LC_ALL
+X11Forwarding yes
+
+Subsystem sftp /usr/libexec/openssh/sftp-server
+
 # HACK allow empty password auth to debug key based ssh auth
+PermitRootLogin without-password
 PasswordAuthentication yes
 PermitEmptyPasswords yes
 # END HACK
@@ -527,6 +553,7 @@ LINES
     sudo cp /tmp/ssh_keypair_setup $_imagedir/etc/init.d/ssh_keypair_setup
     sudo chmod +x $_imagedir/etc/init.d/ssh_keypair_setup
     sudo /usr/sbin/chroot $_imagedir /sbin/chkconfig --add ssh_keypair_setup
+    sudo /usr/sbin/chroot $_imagedir /sbin/chkconfig --level 345 sshd on
   fi
 }
 
