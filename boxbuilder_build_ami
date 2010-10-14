@@ -314,7 +314,9 @@ perform_initial_chroot_jail_setup() {
   sudo mkdir -p $_imagedir/etc
 
   sudo cp /etc/resolv.conf $_imagedir/etc/
-  sudo echo "\n# Google's public DNS servers.\nnameserver 8.8.8.8\nnameserver 8.8.4.4" >> $_imagedir/etc/ 
+  # Add Google's public DNS servers
+  sudo bash -c "echo 'nameserver 8.8.8.8' >> $_imagedir/etc/resolv.conf"
+  sudo bash -c "echo 'nameserver 8.8.4.4' >> $_imagedir/etc/resolv.conf"
 
   if [[ $_platform = 'redhat' ]]; then
 
