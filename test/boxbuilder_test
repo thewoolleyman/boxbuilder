@@ -265,7 +265,8 @@ suite_ubuntu_ami_build() {
 
 suite_centos_ami_build() {
   boxbuilder_user=${boxbuilder_user:-"centos"}
-  boxbuilder_builder_instance_ami_id=${boxbuilder_builder_instance_ami_id:-"ami-4d42a924"}
+  # boxbuilder_builder_instance_ami_id=${boxbuilder_builder_instance_ami_id:-"ami-4d42a924"}
+  boxbuilder_builder_instance_ami_id=${boxbuilder_builder_instance_ami_id:-"ami-1402f77d"} # rightscale doesn't have a centos 55 ami, this is a random one I found
   suite_ami_build
 }
 
