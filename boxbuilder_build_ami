@@ -256,7 +256,7 @@ create_chroot_jail_from_base_image() {
   fi
 
   # Ensure existing loop device is unmounted (allows script to be run multiple times)
-  _loopback_device=${_loopback_device:-'loop0'}
+  _loopback_device=${_loopback_device:-'loop5'}
   echo "$_log_prefix Ensuring existing loop device at /dev/$_loopback_device is unmounted ..."
   _mounts="$(mount)"
   if echo "$_mounts" | grep "/dev/$_loopback_device"; then
