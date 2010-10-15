@@ -332,6 +332,9 @@ perform_initial_chroot_jail_setup() {
     echo "$_log_prefix  Installing base packages in chroot jail..."
     sudo yum -y --installroot="$_imagedir" groupinstall Base
 
+    echo "$_log_prefix  Installing base packages in chroot jail..."
+    sudo yum -y --installroot="$_imagedir" install openssh-server
+
     _etc_fstab_contents=$( cat <<-LINES
 /dev/sda1  /         ext3    defaults        1 1
 none       /dev/pts  devpts  gid=5,mode=620  0 0
