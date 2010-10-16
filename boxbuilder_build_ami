@@ -460,8 +460,6 @@ AcceptEnv LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT
 AcceptEnv LC_IDENTIFICATION LC_ALL
 X11Forwarding yes
 
-Subsystem sftp /usr/libexec/openssh/sftp-server
-
 # HACK allow empty password auth to debug key based ssh auth
 PermitRootLogin without-password
 PasswordAuthentication yes
