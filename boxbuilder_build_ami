@@ -331,66 +331,66 @@ perform_initial_chroot_jail_setup() {
     sudo cp /tmp/hosts $_imagedir/etc/hosts
     
     _etc_yumreposd_centos_base=$( cat <<-LINES
-    # CentOS-Base.repo
-    #
-    # The mirror system uses the connecting IP address of the client and the
-    # update status of each mirror to pick mirrors that are updated to and
-    # geographically close to the client.  You should use this for CentOS updates
-    # unless you are manually picking other mirrors.
-    #
-    # If the mirrorlist= does not work for you, as a fall back you can try the 
-    # remarked out baseurl= line instead.
-    #
-    #
+# CentOS-Base.repo
+#
+# The mirror system uses the connecting IP address of the client and the
+# update status of each mirror to pick mirrors that are updated to and
+# geographically close to the client.  You should use this for CentOS updates
+# unless you are manually picking other mirrors.
+#
+# If the mirrorlist= does not work for you, as a fall back you can try the 
+# remarked out baseurl= line instead.
+#
+#
 
-    [base]
-    name=CentOS-5.5 - Base
-    mirrorlist=http://mirrorlist.centos.org/?release=5.5&arch=x86_64&repo=os
-    #baseurl=http://mirror.centos.org/centos/5.5/os/x86_64/
-    gpgcheck=1
-    gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+[base]
+name=CentOS-5.5 - Base
+mirrorlist=http://mirrorlist.centos.org/?release=5.5&arch=x86_64&repo=os
+#baseurl=http://mirror.centos.org/centos/5.5/os/x86_64/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
 
-    #released updates 
-    [updates]
-    name=CentOS-5.5 - Updates
-    mirrorlist=http://mirrorlist.centos.org/?release=5.5&arch=x86_64&repo=updates
-    #baseurl=http://mirror.centos.org/centos/5.5/updates/x86_64/
-    gpgcheck=1
-    gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+#released updates 
+[updates]
+name=CentOS-5.5 - Updates
+mirrorlist=http://mirrorlist.centos.org/?release=5.5&arch=x86_64&repo=updates
+#baseurl=http://mirror.centos.org/centos/5.5/updates/x86_64/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
 
-    #packages used/produced in the build but not released
-    [addons]
-    name=CentOS-5.5 - Addons
-    mirrorlist=http://mirrorlist.centos.org/?release=5.5&arch=x86_64&repo=addons
-    #baseurl=http://mirror.centos.org/centos/5.5/addons/x86_64/
-    gpgcheck=1
-    gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+#packages used/produced in the build but not released
+[addons]
+name=CentOS-5.5 - Addons
+mirrorlist=http://mirrorlist.centos.org/?release=5.5&arch=x86_64&repo=addons
+#baseurl=http://mirror.centos.org/centos/5.5/addons/x86_64/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
 
-    #additional packages that may be useful
-    [extras]
-    name=CentOS-5.5 - Extras
-    mirrorlist=http://mirrorlist.centos.org/?release=5.5&arch=x86_64&repo=extras
-    #baseurl=http://mirror.centos.org/centos/5.5/extras/x86_64/
-    gpgcheck=1
-    gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+#additional packages that may be useful
+[extras]
+name=CentOS-5.5 - Extras
+mirrorlist=http://mirrorlist.centos.org/?release=5.5&arch=x86_64&repo=extras
+#baseurl=http://mirror.centos.org/centos/5.5/extras/x86_64/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
 
-    #additional packages that extend functionality of existing packages
-    [centosplus]
-    name=CentOS-5.5 - Plus
-    mirrorlist=http://mirrorlist.centos.org/?release=5.5&arch=x86_64&repo=centosplus
-    #baseurl=http://mirror.centos.org/centos/5.5/centosplus/x86_64/
-    gpgcheck=1
-    enabled=0
-    gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+#additional packages that extend functionality of existing packages
+[centosplus]
+name=CentOS-5.5 - Plus
+mirrorlist=http://mirrorlist.centos.org/?release=5.5&arch=x86_64&repo=centosplus
+#baseurl=http://mirror.centos.org/centos/5.5/centosplus/x86_64/
+gpgcheck=1
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
 
-    #contrib - packages by Centos Users
-    [contrib]
-    name=CentOS-5.5 - Contrib
-    mirrorlist=http://mirrorlist.centos.org/?release=5.5&arch=x86_64&repo=contrib
-    #baseurl=http://mirror.centos.org/centos/5.5/contrib/x86_64/
-    gpgcheck=1
-    enabled=0
-    gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
+#contrib - packages by Centos Users
+[contrib]
+name=CentOS-5.5 - Contrib
+mirrorlist=http://mirrorlist.centos.org/?release=5.5&arch=x86_64&repo=contrib
+#baseurl=http://mirror.centos.org/centos/5.5/contrib/x86_64/
+gpgcheck=1
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-5
 LINES
 )
 
