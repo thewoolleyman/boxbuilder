@@ -395,6 +395,7 @@ LINES
 )
 
     echo "$_etc_yumreposd_centos_base"
+    sudo mkdir -p $_imagedir/etc/yum.repos.d
     sudo bash -c "echo \"$_etc_yumreposd_centos_base\" >> $_imagedir/etc/yum.repos.d/Centos-Base.repo"
 
     echo "$_log_prefix  Installing base packages in chroot jail..."
