@@ -293,7 +293,7 @@ suite() {
       suite_ubuntu_ami_build
     fi
 
-    test_centos_ami=${test_centos_ami:-false}
+    test_centos_ami=${test_centos_ami:-true}
     if $test_centos_ami; then
       suite_centos_ami_build
     fi
