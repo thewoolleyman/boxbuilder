@@ -588,7 +588,7 @@ set -o errexit
 
 start() {
   if [[ ! -d /home/$boxbuilder_user/.ssh ]]; then
-          mkdir -p /home/$boxbuilder_user/.ssh
+          su - $boxbuilder_user 'mkdir /home/$boxbuilder_user/.ssh'
           chmod 700 /home/$boxbuilder_user/.ssh
   fi
   
