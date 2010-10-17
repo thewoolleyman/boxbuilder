@@ -459,12 +459,6 @@ AcceptEnv LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
 AcceptEnv LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT
 AcceptEnv LC_IDENTIFICATION LC_ALL
 X11Forwarding yes
-
-# HACK allow empty password auth to debug key based ssh auth
-PermitRootLogin without-password
-PasswordAuthentication yes
-PermitEmptyPasswords yes
-# END HACK
 LINES
 )
     echo "$_ssh_sshd_config_contents"
@@ -512,12 +506,6 @@ automatically created..."
     echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' was NOT successfully created in chroot jail - something went wrong :( - try setting boxbuilder_debug=true ..."
     return 1
   fi
-  # HACK: temporarily add password access to debug why key-based ssh auth isn't working
-  # centos wants /mnt/sysimage/etc to exist, or else 'passwd -d' gives 'Error 206'...
-  sudo /usr/sbin/chroot $_imagedir mkdir -p /mnt/sysimage 
-  sudo /usr/sbin/chroot $_imagedir ln -s /etc /mnt/sysimage/etc 
-  sudo /usr/sbin/chroot $_imagedir passwd -d $boxbuilder_user
-  # END HACK
 }
 
 grant_nopasswd_sudo_access_in_chroot() {
