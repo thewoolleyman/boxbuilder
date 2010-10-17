@@ -107,12 +107,17 @@ setup() {
 run_boxbuilder_remote_build_ami() {
   export boxbuilder_builder_instance_ami_id
   export PATH=$EC2_HOME/bin:$PATH # TODO: this should be automatic, see tracker stories
-  boxbuilder_ec2_resource_tag=${boxbuilder_ec2_resource_tag:-"boxbuilder_temp_resource_safe_to_terminate"}
-  export boxbuilder_ec2_resource_tag
   # TODO: grep boxbuilder_keypair value out of boxbuilder_remote_build_ami output
 
   boxbuilder_terminate_ec2_resources=${boxbuilder_terminate_ec2_resources:-true}
   export boxbuilder_terminate_ec2_resources
+  
+  if [[ $boxbuilder_terminate_ec2_resources == false ]]; then
+    boxbuilder_ec2_resource_tag="boxbuilder_non_autoterminating_temp_resource_safe_to_terminate_$(date +%Y%m%d-%H%M)"
+  fi
+
+  boxbuilder_ec2_resource_tag=${boxbuilder_ec2_resource_tag:-"boxbuilder_temp_resource_safe_to_terminate"}
+  export boxbuilder_ec2_resource_tag
 
   # add specific variables for building AMIs to boxbuilder_config
   boxbuilder_config="$boxbuilder_config; export boxbuilder_ec2_resource_tag=$boxbuilder_ec2_resource_tag; export boxbuilder_ami_prefix=$boxbuilder_ec2_resource_tag"
