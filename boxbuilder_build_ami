@@ -633,13 +633,12 @@ run_boxbuilder_bootstrap_in_chroot_jail_to_build_image() {
   echo "$_log_prefix Performing custom setup in $_imagedir using script at $boxbuilder_bootstrap_url ..."
   _boxbuilder_bootstrap_script=/tmp/${boxbuilder_bootstrap_url##*/} # grabs last path component of url to use as script name
   echo "$_log_prefix Downloading $_boxbuilder_bootstrap_script from $boxbuilder_bootstrap_url ..."
-  sudo /usr/sbin/chroot $_imagedir wget -O $_boxbuilder_bootstrap_script $boxbuilder_bootstrap_url
+  sudo /usr/sbin/chroot $_imagedir su - $boxbuilder_user bash -c "wget -O $_boxbuilder_bootstrap_script $boxbuilder_bootstrap_url"
   echo "$_log_prefix $boxbuilder_bootstrap_url successfully downloaded to $_boxbuilder_bootstrap_script ..."
 
   echo "$_log_prefix Changing permissions on $_boxbuilder_bootstrap_script ..."
   sudo /usr/sbin/chroot $_imagedir chmod a+x $_boxbuilder_bootstrap_script
   echo "$_log_prefix Running $_boxbuilder_bootstrap_script ..."
-  # TODO: does this pass everything in environment and $boxbuilder_config, or do we need to do more?
   sudo /usr/sbin/chroot $_imagedir su - $boxbuilder_user bash -c "export boxbuilder_config='$boxbuilder_config' \
     && export boxbuilder_debug=$boxbuilder_debug \
     && $_boxbuilder_bootstrap_script"
