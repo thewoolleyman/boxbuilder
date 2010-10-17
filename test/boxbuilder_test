@@ -80,7 +80,8 @@ setup() {
 
   boxbuilder_keypair=${boxbuilder_keypair:-}
   if [[ -z $boxbuilder_keypair ]]; then
-    boxbuilder_keypair=( $HOME/.ec2/keypair-*.pem ) # grab first file using bash array
+    _all_keypairs=( $HOME/.ec2/keypair-*.pem ) # put all keypair filenames into bash array
+    boxbuilder_keypair=${_all_keypairs[0]} # grab first keypair filename
     echo "$_log_prefix boxbuilder_keypair is not set, loading from $HOME/.ec2/keypair-*.pem ..."
   fi
   if [[ ! -f $boxbuilder_keypair ]]; then
