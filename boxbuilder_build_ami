@@ -472,7 +472,8 @@ LINES
     sudo /usr/sbin/chroot $_imagedir /usr/sbin/pwconv
     sudo /usr/sbin/chroot $_imagedir authconfig --enableshadow --useshadow --enablemd5 --updateall
 
-    _kernel_module_archive_url="http://s3.amazonaws.com/ec2-downloads/ec2-modules-2.6.18-xenU-ec2-v1.4-x86_64.tgz"
+    # _kernel_module_archive_url=${_kernel_module_archive_url:-"http://s3.amazonaws.com/ec2-downloads/ec2-modules-2.6.18-xenU-ec2-v1.4-x86_64.tgz"} # for old rightscale builder ami
+    _kernel_module_archive_url=${_kernel_module_archive_url:-"http://s3.amazonaws.com/ec2-downloads/ec2-modules-2.6.21.7-2.fc8xen-ec2-v1.0-x86_64.tgz"} # matches aki-b51cf9dc
     _kernel_module_archive=/lib/modules/${_kernel_module_archive_url##*/} # grabs last path component of url to use as script name
     sudo /usr/sbin/chroot $_imagedir wget -O $_kernel_module_archive $_kernel_module_archive_url
     sudo /usr/sbin/chroot $_imagedir tar -zxf $_kernel_module_archive
