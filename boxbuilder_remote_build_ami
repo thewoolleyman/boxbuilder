@@ -198,7 +198,7 @@ get_builder_instance_host() {
   echo "$_log_prefix Finding hostname for $boxbuilder_builder_instance_id ..."
   _instance_startup_elapsed_time=${_instance_startup_elapsed_time:-}
   let _instance_startup_elapsed_time=1 # HACK: don't initialize to zero avoid error due to nonzero rc.  arithmetic false is not shell false.  zero is false is one :)  See http://wiki.bash-hackers.org/syntax/arith_expr#arithmetic_expressions_and_return_codes
-  let _instance_startup_check_interval=5
+  let _instance_startup_check_interval=10
   while boxbuilder_builder_instance_host=$(ec2-describe-instances --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT \
      "$boxbuilder_builder_instance_id" | \
     egrep ^INSTANCE | cut -f4) && [[ -z $boxbuilder_builder_instance_host ]]
@@ -206,7 +206,7 @@ get_builder_instance_host() {
       echo -n .
       sleep $_instance_startup_check_interval
       let _instance_startup_elapsed_time=$_instance_startup_elapsed_time+$_instance_startup_check_interval
-      if (( $_instance_startup_elapsed_time > 360 )); then
+      if (( $_instance_startup_elapsed_time > 150 )); then
         echo "$_log_prefix Unable to start instance for AMI $boxbuilder_builder_instance_ami_id after $_instance_startup_elapsed_time seconds.  Aborting."
         return 1
       fi
@@ -218,7 +218,7 @@ get_builder_instance_host() {
 verify_builder_instance_host_ssh_connectivity() {
   echo "$_log_prefix Waiting for ssh connectivity to $boxbuilder_builder_instance_host for either $boxbuilder_user or root..."
   let _instance_startup_elapsed_time=1
-  let _instance_startup_check_interval=5
+  let _instance_startup_check_interval=10
   while
     boxbuilder_user_ssh_up=$(ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $EC2_KEYPAIR $boxbuilder_user@$boxbuilder_builder_instance_host "echo 'ssh up'")
     root_ssh_up=$(ssh -o 'StrictHostKeyChecking no' -o 'PasswordAuthentication no' -i $EC2_KEYPAIR root@$boxbuilder_builder_instance_host "echo 'ssh up'")
@@ -230,7 +230,7 @@ verify_builder_instance_host_ssh_connectivity() {
       echo "$_log_prefix SSH connect response from $boxbuilder_user@$boxbuilder_builder_instance_host: $boxbuilder_user_ssh_up"
       echo "$_log_prefix SSH connect response from root@$boxbuilder_builder_instance_host: $root_ssh_up"
       echo "$_log_prefix Trying to SSH to $boxbuilder_builder_instance_host as $boxbuilder_user or root again after 5 seconds..."
-      if (( $_instance_startup_elapsed_time > 360 )); then
+      if (( $_instance_startup_elapsed_time > 150 )); then
           echo "$_log_prefix Unable to SSH to $boxbuilder_builder_instance_host as $boxbuilder_user or root after $_instance_startup_elapsed_time seconds.  Aborting."
         return 1
       fi
