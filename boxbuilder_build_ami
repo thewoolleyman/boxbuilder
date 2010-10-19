@@ -462,7 +462,8 @@ X11Forwarding yes
 
 LINES
 )
-    
+
+    boxbuilder_ami_no_password_ssh_debug_access=${boxbuilder_ami_no_password_ssh_debug_access:-false}
     if [[ $boxbuilder_ami_no_password_ssh_debug_access = true ]]; then
 
       _no_password_sshd_config_contents=$( cat <<-LINES
