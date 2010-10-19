@@ -279,13 +279,8 @@ enable_rvm() {
   echo "$_log_prefix  Finished enabling RVM in init file $init_file"
 }
 
-override_rubygems_download_url() {
-  sed -i'.bak' -e 's/http:\/\/rubyforge.org\/frs\/download.php\/70696/http:\/\/rvm.beginrescueend.com\/src\/rubygems-1.3.7.tgz/' $HOME/.rvm/config/db
-}
-
 install_rvm_ruby() {
   echo "$_log_prefix  Installing RVM default ruby: $boxbuilder_default_ruby"
-  override_rubygems_download_url
   _rvm_info_output=$($HOME/.rvm/bin/rvm info)
   _rvm_info_output_first_line=$(echo "$_rvm_info_output" | head -n 1)
   if echo "$_rvm_info_output_first_line" | grep "$boxbuilder_default_ruby"; then
