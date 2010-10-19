@@ -303,7 +303,7 @@ suite() {
       unset_vars
     fi
 
-    test_centos_ami=${test_centos_ami:-true}
+    test_centos_ami=${test_centos_ami:-false}
     if $test_centos_ami; then
       suite_centos_ami_build
       unset_vars
