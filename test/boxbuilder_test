@@ -276,6 +276,15 @@ suite_centos_ami_build() {
   suite_ami_build
 }
 
+unset_vars() {
+  unset boxbuilder_user
+  unset boxbuilder_host
+  unset boxbuilder_builder_instance_ami_id
+  unset boxbuilder_created_ami_ebs_snapshot_id
+  unset boxbuilder_created_ami_id
+  unset boxbuilder_built_instance_id
+}
+
 suite() {
   echo "$_log_prefix Starting tests ..."
   if [ -e $HOME/.boxbuilder_testrc ]; then
@@ -291,11 +300,13 @@ suite() {
     test_ubuntu_ami=${test_ubuntu_ami:-true}
     if $test_ubuntu_ami; then
       suite_ubuntu_ami_build
+      unset_vars
     fi
 
     test_centos_ami=${test_centos_ami:-true}
     if $test_centos_ami; then
       suite_centos_ami_build
+      unset_vars
     fi
 
     echo "$_log_prefix All tests passed successfully"
