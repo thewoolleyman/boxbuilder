@@ -706,7 +706,6 @@ You can also use settings to do things like work on a topic branch of boxbuilder
 and disable automatic termination of EC2 instances, so you can inspect and manually
 run any failing commands.  Here's an example which does both:
 
-    export boxbuilder_ec2_resource_tag="manual_test_$(date +%Y%m%d-%H%M)" && \
     export boxbuilder_terminate_ec2_resources=false && \
     export boxbuilder_branch='centos' && \
     export boxbuilder_config="export boxbuilder_branch='centos'" && \
