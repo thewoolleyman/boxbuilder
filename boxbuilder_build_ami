@@ -459,9 +459,27 @@ AcceptEnv LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
 AcceptEnv LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT
 AcceptEnv LC_IDENTIFICATION LC_ALL
 X11Forwarding yes
+
 LINES
 )
+    
+    if [[ $boxbuilder_ami_no_password_ssh_debug_access = true ]]; then
+
+      _no_password_sshd_config_contents=$( cat <<-LINES
+
+# HACK allow empty password auth to debug key based ssh auth problems
+PermitRootLogin without-password
+PasswordAuthentication yes
+PermitEmptyPasswords yes
+# END HACK
+
+LINES
+)
+      _ssh_sshd_config_contents="$_ssh_sshd_config_contents $_no_password_sshd_config_contents"
+    fi
+
     echo "$_ssh_sshd_config_contents"
+    
     sudo mkdir -p $_imagedir/etc/ssh
     sudo bash -c "echo \"$_ssh_sshd_config_contents\" >> $_imagedir/etc/ssh/sshd_config"
 
@@ -506,6 +524,14 @@ automatically created..."
   else
     echo "$_log_prefix  boxbuilder_user '$boxbuilder_user' was NOT successfully created in chroot jail - something went wrong :( - try setting boxbuilder_debug=true ..."
     return 1
+  fi
+
+  if [[ $boxbuilder_ami_no_password_ssh_debug_access = true ]]; then
+    # centos wants /mnt/sysimage/etc to exist, or else 'passwd -d' gives 'Error 206'...
+    sudo /usr/sbin/chroot $_imagedir mkdir -p /mnt/sysimage 
+    sudo /usr/sbin/chroot $_imagedir ln -s /etc /mnt/sysimage/etc 
+    # allow empty password auth to debug key based ssh auth problems
+    sudo /usr/sbin/chroot $_imagedir passwd -d $boxbuilder_user
   fi
 }
 
