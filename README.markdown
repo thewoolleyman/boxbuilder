@@ -681,7 +681,13 @@ _Known Issues_
 _Testing_
 =========
 
+CI
+--
+
 Continuous Integration for Boxbuilder is at [http://ci.pivotallabs.com:3333/builds/boxbuilder](http://ci.pivotallabs.com:3333/builds/boxbuilder)
+
+Test Suite
+----------
 
 Boxbuilder has an integration test in test/boxbuilder_test which does the following:
 
@@ -689,6 +695,7 @@ Boxbuilder has an integration test in test/boxbuilder_test which does the follow
   example configuration and chef repos
 * Starts a new EC2 instance from the newly-built AMI
 * Verifies the AMI was built correctly by performing assertions on the instance via SSH
+* Repeats entire process for both Ubuntu and Centos (soon)
 * Terminates/deletes all test resources (instance, AMI, and snapshot)
 
 test/boxbuilder\_test requires the same variables to be set as does the 'boxbuilder\_remote\_build\_ami'
@@ -699,16 +706,37 @@ The test takes several minutes to run, because that is how long it takes boxbuil
 to run.  Be patient.  The terminal will also be locked and prevent input while boxbuilder\_remote\_build\_ami
 is running.
 
-If you are hacking boxbuilder, and the test fails, try setting boxbuilder\_debug to true.  This
+Debugging
+---------
+
+**'boxbuilder\_debug'** - If you are hacking boxbuilder, and the test fails, try setting boxbuilder\_debug to true.  This
 will give a very verbose output to help you find the failure.
 
-You can also use settings to do things like work on a topic branch of boxbuilder,
-and disable automatic termination of EC2 instances, so you can inspect and manually
-run any failing commands.  Here's an example which does both:
+**'boxbuilder\_branch'** - You can work on a topic branch of
+boxbuilder ([this story](http://www.pivotaltracker.com/story/show/5156467) will eliminate the need
+to use boxbuilder\_config):
 
-    export boxbuilder_terminate_ec2_resources=false && \
     export boxbuilder_branch='centos' && \
     export boxbuilder_config="export boxbuilder_branch='centos'" && \
+    test/boxbuilder_test
+
+**'boxbuilder\_terminate\_ec2\_resources'** - You can disable automatic termination of EC2 instances, to inspect and manually
+run any failing commands:
+
+    export boxbuilder_terminate_ec2_resources=false && \
+    test/boxbuilder_test
+
+**'boxbuilder\_ami\_no\_password\_ssh\_debug\_access'** - This option opens a **GAPING SECURITY HOLE**
+on your box, by allowing no-password ssh authentication to 'boxbuilder\_user'.  However, it is very handy
+if EC2 key-based ssh authentication is broken on your newly-built AMI:
+
+    export boxbuilder_ami_no_password_ssh_debug_access=false && \
+    test/boxbuilder_test
+
+**'test\_ubuntu\_ami'** and **'test\_centos\_ami'** - These options allow you to enable or disable
+tests for Ubuntu or Centos.  Here's an example running Centos tests only::
+
+    export test_ubuntu_ami=false && export test_centos_ami=true && \
     test/boxbuilder_test
 
 ----
