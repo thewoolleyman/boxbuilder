@@ -689,22 +689,39 @@ Continuous Integration for Boxbuilder is at [http://ci.pivotallabs.com:3333/buil
 Test Suite
 ----------
 
-Boxbuilder has an integration test in test/boxbuilder_test which does the following:
+Boxbuilder has an integration test suite in test/boxbuilder_test.  By default, it
+tests everything including AMI creation, using your EC2 account.
+If you only want to test boxbuilder's ability to build remote boxes, and are not interested in 
+using EC2 or testing AMI creation, you can specify an existing 'boxbuilder\_host' which is
+running.  This will disable tests which access EC2 and test AMI building.
+
+**AMI Testing**:
 
 * Runs boxbuilder\_remote\_build\_ami to create an AMI with the default
   example configuration and chef repos
 * Starts a new EC2 instance from the newly-built AMI
 * Verifies the AMI was built correctly by performing assertions on the instance via SSH
-* Repeats entire process for both Ubuntu and Centos (soon)
-* Terminates/deletes all test resources (instance, AMI, and snapshot)
+* Terminates/deletes all EC2 test resources (instance, AMI, and snapshot)
+* Repeats entire process for both Ubuntu (green) and Centos ([soon](http://www.pivotaltracker.com/story/show/5062065))
 
-test/boxbuilder\_test requires the same variables to be set as does the 'boxbuilder\_remote\_build\_ami'
-script.  It will prompt with an error if any required variable is unset.  It will also read
-any other variables set in $HOME/.boxbuilder\_testrc.
+**Existing boxbuilder\_host testing**:
 
-The test takes several minutes to run, because that is how long it takes boxbuilder\_remote\_build\_ami
-to run.  Be patient.  The terminal will also be locked and prevent input while boxbuilder\_remote\_build\_ami
-is running.
+* Runs boxbuilder\_remote\_bootstrap to create an AMI with the default
+  example configuration and chef repos
+* Verifies the box was built correctly by performing assertions on the instance via SSH
+* Repeats entire process for both Ubuntu (green) and Centos ([soon](http://www.pivotaltracker.com/story/show/5062065))
+
+**$HOME/.boxbuilder\_testrc** -  The test suite will execute $HOME/.boxbuilder\_testrc before running tests.
+
+**AMI/EC2 Testing** - When testing AMIs which requires EC2 access, test/boxbuilder\_test requires the same variables
+to be set as does the 'boxbuilder\_remote\_build\_ami'
+script.  It will prompt with an error if any required variable is unset.
+
+**NON-EC2 Testing against a boxbuilder\_host** - If you don't want to enter EC2 credentials, specify an existing 'boxbuilder\_host' to build.
+
+The tests take several minutes to run, because that is how long it takes boxbuilder\_remote\_build\_ami
+to run.  Be patient.  At some points, the terminal will also be locked and prevent input while boxbuilder\_remote\_build\_ami
+is running ([because of pseudo-tty](http://www.pivotaltracker.com/story/show/5775971)).
 
 Debugging
 ---------
