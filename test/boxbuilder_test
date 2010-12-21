@@ -283,6 +283,8 @@ unset_vars() {
   unset boxbuilder_created_ami_ebs_snapshot_id
   unset boxbuilder_created_ami_id
   unset boxbuilder_built_instance_id
+  # re-initialize local script variables used in onexit hook, to avoid unbound variable errors
+  boxbuilder_built_instance_id=''
 }
 
 suite() {
