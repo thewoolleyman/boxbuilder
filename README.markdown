@@ -6,9 +6,9 @@ Boxbuilder builds boxes!  Basic Bash scripts to bootstrap barebones-OS boxes wit
 EC2 AMIs.  Currently it supports Debian/Ubuntu, CentOS (mostly), and OSX/Homebrew (mostly).
 Pull requests with support for new distros and package managers are welcome.
 
-* Homepage: You're reading it - [https://github.comthewoolleyman/boxbuilder](https://github.comthewoolleyman/boxbuilder)
+* Homepage: You're reading it - [https://github.com/thewoolleyman/boxbuilder](https://github.com/thewoolleyman/boxbuilder)
 * Tracker Project: [http://www.pivotaltracker.com/projects/101913](http://www.pivotaltracker.com/projects/101913)
-* Bug Reports/Feature Requests: [https://github.comthewoolleyman/boxbuilder/issues](https://github.comthewoolleyman/boxbuilder/issues)
+* Bug Reports/Feature Requests: [https://github.com/thewoolleyman/boxbuilder/issues](https://github.com/thewoolleyman/boxbuilder/issues)
 
 **WARNING! BOXBUILDER INCURS EC2 RESOURCE CHARGES!
 The 'build\_ami' scripts will automatically create EC2 instances, EBS volumes and EBS snapshots.
@@ -36,22 +36,22 @@ _Instructions_
 **Step 1. Run the script to create a default box or AMI**
 
 By default, boxbuilder runs using a example default config file at
-[https://github.comthewoolleyman/boxbuilder/raw/master/boxbuilderrc\_download\_example](https://github.comthewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example),
+[https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc\_download\_example](https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example),
 which in turn references example default chef repositories.
 
 Your first step should be to run boxbuilder with the default config and ensure you can create a example test box or AMI.  This
 will verify that your EC2 account and credentials are properly configured.
 
 To build a box, download and run
-'[boxbuilder\_bootstrap](https://github.comthewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap)'
+'[boxbuilder\_bootstrap](https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap)'
 on a clean Debian/Ubuntu, CentOS, or OSX box, or download and run
-'[boxbuilder\_remote\_bootstrap](https://github.comthewoolleyman/boxbuilder/raw/master/boxbuilder_remote_bootstrap)'
+'[boxbuilder\_remote\_bootstrap](https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_remote_bootstrap)'
 from your local shell.
 
 To build an AMI image (of a 'box' built by boxbuilder in a chroot jail on an EC2 box), download and run
-'[boxbuilder\_build\_ami](https://github.comthewoolleyman/boxbuilder/raw/master/boxbuilder_build_ami)' on a running AMI
+'[boxbuilder\_build\_ami](https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_build_ami)' on a running AMI
 instance, or download and run
-'[boxbuilder\_remote_build\_ami](https://github.comthewoolleyman/boxbuilder/raw/master/boxbuilder_remote_build_ami)'
+'[boxbuilder\_remote_build\_ami](https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_remote_build_ami)'
 from your local shell.
 
 You will be prompted to enter all required variables for the script you are running, such as
@@ -61,8 +61,8 @@ each script in the sections below.
 Check the output of the script for a success message, and/or any errors.  Log into the newly-built
 box (or an instance started from your newly-built AMI), and verify everything worked.  To verify,
 you can check that the example test chef recipes created touchfiles in the home directory:
-[https://github.comthewoolleyman/boxbuilder\_example\_main\_chef\_repo/blob/master/cookbooks/boxbuilder\_example\_main\_cookbook/recipes/touchfile.rb](https://github.comthewoolleyman/boxbuilder_example_main_chef_repo/blob/master/cookbooks/boxbuilder_example_main_cookbook/recipes/touchfile.rb) and
-[https://github.comthewoolleyman/boxbuilder\_example\_dependency\_chef\_repo/blob/master/cookbooks/boxbuilder\_example\_dependency\_cookbook/recipes/touchfile.rb](https://github.comthewoolleyman/boxbuilder_example_main_chef_repo/blob/master/cookbooks/boxbuilder_example_main_cookbook/recipes/touchfile.rb)
+[https://github.com/thewoolleyman/boxbuilder\_example\_main\_chef\_repo/blob/master/cookbooks/boxbuilder\_example\_main\_cookbook/recipes/touchfile.rb](https://github.com/thewoolleyman/boxbuilder_example_main_chef_repo/blob/master/cookbooks/boxbuilder_example_main_cookbook/recipes/touchfile.rb) and
+[https://github.com/thewoolleyman/boxbuilder\_example\_dependency\_chef\_repo/blob/master/cookbooks/boxbuilder\_example\_dependency\_cookbook/recipes/touchfile.rb](https://github.com/thewoolleyman/boxbuilder_example_main_chef_repo/blob/master/cookbooks/boxbuilder_example_main_cookbook/recipes/touchfile.rb)
 
 If you have problems, try setting 'boxbuilder\_debug' to true.
 
@@ -98,7 +98,7 @@ AMI builds are more complex to create and test.  Most importantly, you must be a
 runs in a chroot jail.  This means that some chef actions will not work as expected or at all.  To
 work around this, you can have a "chroot" recipe which runs after all others, and prevents any actions
 which are not chroot-safe from running.  For an example of this, see the Rails CI build (warning: incomplete and may move):
-[https://github.comthewoolleyman/railsci\_chef\_repo/blob/master/cookbooks/railsci/chroot/recipes/default.rb](https://github.comthewoolleyman/railsci_chef_repo/blob/master/cookbooks/railsci/chroot/recipes/default.rb)
+[https://github.com/thewoolleyman/railsci\_chef\_repo/blob/master/cookbooks/railsci/chroot/recipes/default.rb](https://github.com/thewoolleyman/railsci_chef_repo/blob/master/cookbooks/railsci/chroot/recipes/default.rb)
 
 The recommended way to work directly on a chef repo which builds an AMI is to run 'boxbuilder\_remote\_build\_ami'
 with the 'boxbuilder\_terminate\_ec2\_resources' variable set to 'false'.  This will leave the EC2 builder instance
@@ -173,8 +173,8 @@ Here's the main features and supported usage for the various boxbuilder config a
   with commands to automatically set, download and source (execute)
   $HOME/.boxbuilderrc\_download from the url specified in the 'boxbuilderrc\_download\_url'
   environment variable.  By default, it points to
-  the '[boxbuilderrc\_download\_example](https://github.comthewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example)'
-  file at [https://github.comthewoolleyman/boxbuilder/raw/master/boxbuilderrc\_download\_example](https://github.comthewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example)
+  the '[boxbuilderrc\_download\_example](https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example)'
+  file at [https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc\_download\_example](https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example)
 * The auto-creation of a $HOME/.boxbuilderrc file is a simple "auto-update" mechanism, which
   will result in the latest version of the config at 'boxbuilderrc\_download\_url' to be automatically
   downloaded and used every time boxbuilder is run.
@@ -229,7 +229,7 @@ is intended to be easily invoked on a clean box via wget or curl with a bash one
 
 For example, log in or SSH to the box being built, and paste the following:
 
-    wget -O /tmp/boxbuilder_bootstrap https://github.comthewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap && chmod +x /tmp/boxbuilder_bootstrap && /tmp/boxbuilder_bootstrap
+    wget -O /tmp/boxbuilder_bootstrap https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap && chmod +x /tmp/boxbuilder_bootstrap && /tmp/boxbuilder_bootstrap
     # Be sure to log out or source $HOME/.bashrc after the first build
 
 ----
@@ -272,7 +272,7 @@ For example, run the following from a Bash shell on your workstation.  You will 
 which you can export from your shell, or set in
 $HOME/.boxbuilder\_remote\_bootstraprc:
 
-    wget -O /tmp/boxbuilder_remote_bootstrap https://github.comthewoolleyman/boxbuilder/raw/master/boxbuilder_remote_bootstrap && chmod +x /tmp/boxbuilder_remote_bootstrap && /tmp/boxbuilder_remote_bootstrap
+    wget -O /tmp/boxbuilder_remote_bootstrap https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_remote_bootstrap && chmod +x /tmp/boxbuilder_remote_bootstrap && /tmp/boxbuilder_remote_bootstrap
 
 Note that the config file is $HOME/.boxbuilder\_remote\_bootstraprc, NOT
 $HOME/.boxbuilderrc (which is the config for the current box, not the
@@ -309,7 +309,7 @@ the remote box which is being built.
 onto the remote box being built.  Override it to use your custom boxbuilder\_bootstrap script instead of
 the default.
 
-    boxbuilder_bootstrap_url=https://github.comthewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap
+    boxbuilder_bootstrap_url=https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap
 
 ----
 &nbsp;
@@ -343,7 +343,7 @@ which exports variables for your custom chef repo locations and config.
 
 See more details in the instruction and configuration sections above.
 
-    boxbuilderrc_download_url=https://github.comthewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example
+    boxbuilderrc_download_url=https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example
 
 ----
 
@@ -478,7 +478,7 @@ info to create the complete AMI name: "-ubuntu-{release}-{codename}-{tag}-{arch}
 into the AMI chroot jail being built.  Override it to use your custom boxbuilder\_bootstrap script instead of
 the default.
 
-    boxbuilder_bootstrap_url=https://github.comthewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap
+    boxbuilder_bootstrap_url=https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap
 
 ----
 &nbsp;
@@ -603,7 +603,7 @@ the AMI is built, but this is not guaranteed.
 onto the EC2 builder instance.  Override it to use your custom 'boxbuilder\_build\_ami' script instead of
 the default.
 
-    boxbuilder_build_ami_url=https://github.comthewoolleyman/boxbuilder/raw/master/boxbuilder_build_ami
+    boxbuilder_build_ami_url=https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_build_ami
 
 ----
 

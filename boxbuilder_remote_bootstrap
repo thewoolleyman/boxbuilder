@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  https://github.comthewoolleyman/boxbuilder
+#  https://github.com/thewoolleyman/boxbuilder
 #  Copyright (c) 2010 Chad Woolley - The MIT License
 
 boxbuilder_debug=${boxbuilder_debug:-false}
@@ -274,7 +274,7 @@ setup() {
   boxbuilder_user=${boxbuilder_user:?"Please set 'boxbuilder_user' to the ssh user on the box being built"}
   boxbuilder_host=${boxbuilder_host:?"Please set 'boxbuilder_host' to the hostname or IP of the box being built"}
   boxbuilder_branch=${boxbuilder_branch:-"master"}
-  boxbuilder_bootstrap_url=${boxbuilder_bootstrap_url:-"https://github.comthewoolleyman/boxbuilder/raw/$boxbuilder_branch/boxbuilder_bootstrap"}
+  boxbuilder_bootstrap_url=${boxbuilder_bootstrap_url:-"https://github.com/thewoolleyman/boxbuilder/raw/$boxbuilder_branch/boxbuilder_bootstrap"}
 
   echo "$_log_prefix  Finished environment variable setup:"
   echo "boxbuilder_config=$boxbuilder_config"
