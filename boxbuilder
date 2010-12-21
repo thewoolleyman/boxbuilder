@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  http://github.com/thewoolleyman/boxbuilder
+#  https://github.comthewoolleyman/boxbuilder
 #  Copyright (c) 2010 Chad Woolley - The MIT License
 
 boxbuilder_debug=${boxbuilder_debug:-false}
@@ -59,7 +59,7 @@ setup_boxbuilderrc() {
     fi
   else
     boxbuilder_branch=${boxbuilder_branch:-"master"}
-    boxbuilderrc_download_url=${boxbuilderrc_download_url:-"http://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example"}
+    boxbuilderrc_download_url=${boxbuilderrc_download_url:-"https://github.comthewoolleyman/boxbuilder/raw/master/boxbuilderrc_download_example"}
     echo "$_log_prefix Creating $HOME/.boxbuilderrc which will source $HOME/.boxbuilderrc_download ..."
     _boxbuilderrc_contents=$( cat <<-LINES
 # This boxbuilder config file was created automatically

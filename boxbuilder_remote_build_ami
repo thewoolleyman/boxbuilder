@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  http://github.com/thewoolleyman/boxbuilder
+#  https://github.comthewoolleyman/boxbuilder
 #  Copyright (c) 2010 Chad Woolley - The MIT License
 
 boxbuilder_debug=${boxbuilder_debug:-false}
@@ -81,7 +81,7 @@ setup() {
   boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder_remote_build_ami=boxbuilder_config_placeholder_from_boxbuilder_remote_build_ami'}
   eval $boxbuilder_config
   boxbuilder_branch=${boxbuilder_branch:-"master"}
-  boxbuilder_build_ami_url=${boxbuilder_build_ami_url:-"http://github.com/thewoolleyman/boxbuilder/raw/$boxbuilder_branch/boxbuilder_build_ami"}
+  boxbuilder_build_ami_url=${boxbuilder_build_ami_url:-"https://github.comthewoolleyman/boxbuilder/raw/$boxbuilder_branch/boxbuilder_build_ami"}
   boxbuilder_user=${boxbuilder_user:?"Please set 'boxbuilder_user' to the default ssh user defined by the builder instance AMI ('ubuntu' on Ubuntu AMIs)"}
   boxbuilder_builder_instance_id=${boxbuilder_builder_instance_id:-""}
   boxbuilder_builder_instance_instance_type=${boxbuilder_builder_instance_instance_type:-"m1.large"}

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  http://github.com/thewoolleyman/boxbuilder
+#  https://github.comthewoolleyman/boxbuilder
 #  Copyright (c) 2010 Chad Woolley - The MIT License
 
 boxbuilder_debug=${boxbuilder_debug:-false}
@@ -130,7 +130,7 @@ setup() {
   boxbuilder_config=${boxbuilder_config:-'export boxbuilder_config_placeholder_from_boxbuilder_build_ami=boxbuilder_config_placeholder_from_boxbuilder_build_ami'}
   eval $boxbuilder_config
   boxbuilder_branch=${boxbuilder_branch:-"master"}
-  boxbuilder_bootstrap_url=${boxbuilder_bootstrap_url:-"http://github.com/thewoolleyman/boxbuilder/raw/$boxbuilder_branch/boxbuilder_bootstrap"}
+  boxbuilder_bootstrap_url=${boxbuilder_bootstrap_url:-"https://github.comthewoolleyman/boxbuilder/raw/$boxbuilder_branch/boxbuilder_bootstrap"}
   boxbuilder_user=${boxbuilder_user:-"$USER"}
   boxbuilder_ami_prefix=${boxbuilder_ami_prefix:-"built-by-boxbuilder"}
   boxbuilder_ec2_api_tools_url=${boxbuilder_ec2_api_tools_url:-"http://s3.amazonaws.com/ec2-downloads/ec2-api-tools.zip"}

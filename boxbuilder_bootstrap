@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#  http://github.com/thewoolleyman/boxbuilder
+#  https://github.comthewoolleyman/boxbuilder
 #  Copyright (c) 2010 Chad Woolley - The MIT License
 
 boxbuilder_debug=${boxbuilder_debug:-false}
