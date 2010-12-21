@@ -40,23 +40,23 @@ By default, boxbuilder runs using a example default config file at
 which in turn references example default chef repositories.
 
 Your first step should be to run boxbuilder with the default config and ensure you can create a example test box or AMI.  This
-will verify that your EC2 account and credentials are properly configured.
+will verify that your EC2 account and credentials are properly configured.  All the default config does is touch some files in the home directory, to prove boxbuilder worked correctly.
 
 To build a local box, download and run
 '[boxbuilder\_bootstrap](https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap)'
 on a clean Debian/Ubuntu, CentOS, or OSX box.  
 
-Here's example commands to build a local box by downloading and running boxbuilder\_bootstrap using wget (installed default on linux) or curl (installed by default on OSX):
+Here's example commands to build a local box with the default config by downloading and running boxbuilder\_bootstrap using wget (installed default on linux) or curl (installed by default on OSX):
 
-    wget --no-check-certificate -O /tmp/boxbuilder_remote_bootstrap https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap && chmod +x /tmp/boxbuilder_bootstrap && /tmp/boxbuilder_bootstrap
+    wget --no-check-certificate -O /tmp/boxbuilder_bootstrap https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap && chmod +x /tmp/boxbuilder_bootstrap && /tmp/boxbuilder_bootstrap
 
-    curl -L -o /tmp/boxbuilder_remote_bootstrap https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap && chmod +x /tmp/boxbuilder_bootstrap && /tmp/boxbuilder_bootstrap
+    curl -L -o /tmp/boxbuilder_bootstrap https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap && chmod +x /tmp/boxbuilder_bootstrap && /tmp/boxbuilder_bootstrap
 
 To build a remote box (which should be accessible via SSH via a private ssh key specified in 'boxbuilder_keypair'), download and run
 '[boxbuilder\_remote\_bootstrap](https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_remote_bootstrap)'
 from your local shell to build a remote box.
 
-Here example commands to build a remote box by downloading and running boxbuilder\_remote\_bootstrap using wget (installed default on linux) or curl (installed by default on OSX):
+Here example commands to build a remote box with the default config by downloading and running boxbuilder\_remote\_bootstrap using wget (installed default on linux) or curl (installed by default on OSX):
 
     wget --no-check-certificate -O /tmp/boxbuilder_remote_bootstrap https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_remote_bootstrap && chmod +x /tmp/boxbuilder_remote_bootstrap && /tmp/boxbuilder_remote_bootstrap
 
