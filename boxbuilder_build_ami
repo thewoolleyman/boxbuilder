@@ -215,7 +215,7 @@ set_up_ec2_tools() {
     fi
     _ec2_api_tools_zipfile=$_ec2_tools_path/${boxbuilder_ec2_api_tools_url##*/} # grabs last path component of url to use as zipfile name
     echo "$_log_prefix EC2 API Tools do not exist at $_ec2_api_tools_path.  Downloading from $boxbuilder_ec2_api_tools_url to $_ec2_api_tools_path ..."
-    wget -O $_ec2_api_tools_zipfile $boxbuilder_ec2_api_tools_url
+    wget --no-check-certificate -O $_ec2_api_tools_zipfile $boxbuilder_ec2_api_tools_url
     echo "$_log_prefix Reading top-level directory for $_ec2_api_tools_zipfile ..."
     # Zipfile is structured with top-level directory containing the release date, so we must determine what it is, extract, and symlink it to _ec2_api_tools_path
     disable_error_checking
@@ -240,10 +240,10 @@ create_chroot_jail_from_base_image() {
   else
     if [[ "$_imagesource" = *.img ]]; then
       echo "$_log_prefix Downloading image from $_imagesource ..."
-      sudo wget --progress=dot:mega -O $_image $_imagesource
+      sudo wget --no-check-certificate --progress=dot:mega -O $_image $_imagesource
     else
       echo "$_log_prefix Downloading image from $_imagesource and unzipping to $_image ..."
-      wget --progress=dot:mega -O- $_imagesource | sudo tar xzf - -C /mnt
+      wget --no-check-certificate --progress=dot:mega -O- $_imagesource | sudo tar xzf - -C /mnt
     fi
   fi
 
@@ -494,7 +494,7 @@ LINES
     # _kernel_module_archive_url=${_kernel_module_archive_url:-"http://s3.amazonaws.com/ec2-downloads/ec2-modules-2.6.18-xenU-ec2-v1.4-x86_64.tgz"} # for old rightscale builder ami
     _kernel_module_archive_url=${_kernel_module_archive_url:-"http://s3.amazonaws.com/ec2-downloads/ec2-modules-2.6.21.7-2.fc8xen-ec2-v1.0-x86_64.tgz"} # matches aki-b51cf9dc
     _kernel_module_archive=/lib/modules/${_kernel_module_archive_url##*/} # grabs last path component of url to use as script name
-    sudo /usr/sbin/chroot $_imagedir wget -O $_kernel_module_archive $_kernel_module_archive_url
+    sudo /usr/sbin/chroot $_imagedir wget --no-check-certificate -O $_kernel_module_archive $_kernel_module_archive_url
     sudo /usr/sbin/chroot $_imagedir tar -zxf $_kernel_module_archive
   fi
 }
@@ -609,7 +609,7 @@ start() {
   fi
   
   # Download public ssh key from EC2 metadata HTTP API
-  wget -O "/home/$boxbuilder_user/.ssh/authorized_keys" http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key
+  wget --no-check-certificate -O "/home/$boxbuilder_user/.ssh/authorized_keys" http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key
   chmod 600 "/home/$boxbuilder_user/.ssh/authorized_keys"
 }
 
@@ -649,7 +649,7 @@ run_boxbuilder_bootstrap_in_chroot_jail_to_build_image() {
   echo "$_log_prefix Performing custom setup in $_imagedir using script at $boxbuilder_bootstrap_url ..."
   _boxbuilder_bootstrap_script=/tmp/${boxbuilder_bootstrap_url##*/} # grabs last path component of url to use as script name
   echo "$_log_prefix Downloading $_boxbuilder_bootstrap_script from $boxbuilder_bootstrap_url ..."
-  sudo /usr/sbin/chroot $_imagedir su - $boxbuilder_user bash -c "wget -O $_boxbuilder_bootstrap_script $boxbuilder_bootstrap_url"
+  sudo /usr/sbin/chroot $_imagedir su - $boxbuilder_user bash -c "wget --no-check-certificate -O $_boxbuilder_bootstrap_script $boxbuilder_bootstrap_url"
   echo "$_log_prefix $boxbuilder_bootstrap_url successfully downloaded to $_boxbuilder_bootstrap_script ..."
 
   echo "$_log_prefix Changing permissions on $_boxbuilder_bootstrap_script ..."
@@ -705,7 +705,7 @@ copy_image_to_ami() {
     | cut -f2)
   
   echo "$_log_prefix Retrieving current instance id ..."
-  _instance_id=$(wget --progress=dot -qO- http://instance-data/latest/meta-data/instance-id)
+  _instance_id=$(wget --no-check-certificate --progress=dot -qO- http://instance-data/latest/meta-data/instance-id)
   
   echo "$_log_prefix Attaching new volume $_volumeid to current instance $_instance_id at device /dev/sdi ..."
   ec2-attach-volume --private-key $EC2_PRIVATE_KEY --cert $EC2_CERT --device /dev/sdi --instance "$_instance_id" "$_volumeid"

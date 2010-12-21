@@ -225,11 +225,11 @@ _boxbuilder\_bootstrap script_
 
 'boxbuilder\_bootstrap' is a single downloadable helper script which will check out the
 boxbuilder project to $HOME/.boxbuilder, and run the main '$HOME/.boxbuilder/boxbuilder' script.  It
-is intended to be easily invoked on a clean box via wget or curl with a bash one-liner.
+is intended to be easily invoked on a clean box via wget --no-check-certificate or curl with a bash one-liner.
 
 For example, log in or SSH to the box being built, and paste the following:
 
-    wget -O /tmp/boxbuilder_bootstrap https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap && chmod +x /tmp/boxbuilder_bootstrap && /tmp/boxbuilder_bootstrap
+    wget --no-check-certificate -O /tmp/boxbuilder_bootstrap https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_bootstrap && chmod +x /tmp/boxbuilder_bootstrap && /tmp/boxbuilder_bootstrap
     # Be sure to log out or source $HOME/.bashrc after the first build
 
 ----
@@ -272,7 +272,7 @@ For example, run the following from a Bash shell on your workstation.  You will 
 which you can export from your shell, or set in
 $HOME/.boxbuilder\_remote\_bootstraprc:
 
-    wget -O /tmp/boxbuilder_remote_bootstrap https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_remote_bootstrap && chmod +x /tmp/boxbuilder_remote_bootstrap && /tmp/boxbuilder_remote_bootstrap
+    wget --no-check-certificate -O /tmp/boxbuilder_remote_bootstrap https://github.com/thewoolleyman/boxbuilder/raw/master/boxbuilder_remote_bootstrap && chmod +x /tmp/boxbuilder_remote_bootstrap && /tmp/boxbuilder_remote_bootstrap
 
 Note that the config file is $HOME/.boxbuilder\_remote\_bootstraprc, NOT
 $HOME/.boxbuilderrc (which is the config for the current box, not the

@@ -163,7 +163,7 @@ set_up_ec2_tools() {
     fi
     _ec2_api_tools_zipfile=$_ec2_tools_path/${boxbuilder_ec2_api_tools_url##*/} # grabs last path component of url to use as zipfile name
     echo "$_log_prefix EC2 API Tools do not exist at $_ec2_api_tools_path.  Downloading from $boxbuilder_ec2_api_tools_url to $_ec2_api_tools_path ..."
-    wget -O $_ec2_api_tools_zipfile $boxbuilder_ec2_api_tools_url
+    wget --no-check-certificate -O $_ec2_api_tools_zipfile $boxbuilder_ec2_api_tools_url
     echo "$_log_prefix Reading top-level directory for $_ec2_api_tools_zipfile ..."
     # Zipfile is structured with top-level directory containing the release date, so we must determine what it is, extract, and symlink it to _ec2_api_tools_path
     disable_error_checking
@@ -428,9 +428,9 @@ upload_ec2_credentials() {
 remote_build_ami() {
   _boxbuilder_build_ami_script=/tmp/${boxbuilder_build_ami_url##*/} # grabs last path component of url to use as script name
   echo "$_log_prefix Downloading $boxbuilder_build_ami_url to $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
-  exec_remotely "wget -O $_boxbuilder_build_ami_script $boxbuilder_build_ami_url"
+  exec_remotely "wget --no-check-certificate -O $_boxbuilder_build_ami_script $boxbuilder_build_ami_url"
   while exists=$(exec_remotely_quiet "if [[ -e $_boxbuilder_build_ami_script ]] ; then echo exists; fi"); [[ "$exists" != "exists" ]]; do
-    echo "$_log_prefix Waiting for wget to finish downloading  $boxbuilder_build_ami_url to $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
+    echo "$_log_prefix Waiting for wget --no-check-certificate to finish downloading  $boxbuilder_build_ami_url to $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
     sleep 5
   done
   echo "$_log_prefix $boxbuilder_build_ami_url successfully downloaded to $_boxbuilder_build_ami_script on $boxbuilder_builder_instance_host ..."
